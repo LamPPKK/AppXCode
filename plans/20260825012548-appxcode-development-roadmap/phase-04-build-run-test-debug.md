@@ -11,6 +11,9 @@ target families before distributing that workflow across multiple computers.
   simulators, devices, schemes, configurations, and destinations.
 - Stream structured build progress and map compiler/linker diagnostics to project
   files and editor locations.
+- Recreate the AppCode Classic bottom-tool-window workflow for Build, Run, Test, and
+  Debug, including stable tabs, compact task trees, source navigation, console
+  filters, failure focus, and keyboard-driven transitions back to the editor.
 - Model signing teams, identities, profiles, entitlements, capabilities, and safe
   automatic/manual signing behavior without exposing private keys to the client.
 - Build run configurations for applications, extensions, command-line tools, tests,
@@ -31,6 +34,9 @@ target families before distributing that workflow across multiple computers.
   supported OS bands.
 - Compare test counts, names, statuses, failures, attachments, and durations with
   Xcode results.
+- Run the canonical AppCode interaction scenarios and compare focus changes, action
+  availability, information hierarchy, and keyboard operation with the approved UX
+  baseline.
 - Exercise app extensions, watch companion relationships, disconnected devices,
   locked devices, expired profiles, simulator resets, and cancelled builds.
 

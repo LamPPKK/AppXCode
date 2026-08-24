@@ -22,6 +22,8 @@ macOS product around cross-platform limitations.
   simulator, device, signing, and remote-session recovery.
 - Complete accessibility, localization readiness, keyboard navigation, settings
   migration, update rollback, diagnostics collection, and support tooling.
+- Close the AppCode Classic UX parity ledger for Project, editor, navigation,
+  search, Build, Run, Test, Debug, Git, inspections, settings, and window modes.
 - Profile startup, indexing, memory, completion, remote sync, build streaming, and
   long-running IDE sessions against agreed budgets.
 - Complete threat modeling, penetration review, dependency audit, artifact signing,
@@ -36,6 +38,8 @@ macOS product around cross-platform limitations.
 - Run the complete fixture, platform, remote-agent, and real-device matrices.
 - Conduct dogfooding and external beta projects without requiring conversion from
   Xcode.
+- Conduct task-based usability tests with former AppCode users and visual-regression
+  reviews across the approved macOS appearance matrix.
 - Verify update and rollback across supported client/agent version combinations.
 - Reopen every modified project in supported Xcode versions and confirm reproducible
   builds and controlled diffs.
