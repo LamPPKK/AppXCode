@@ -21,6 +21,9 @@ trusted macOS build node.
 - Support remote dependency resolution, build cache policy, log streaming, test
   attachments, debug symbols, and task cancellation.
 - Package and continuously test native Linux and Windows clients.
+- Define frontend/backend plugin placement and compatibility independently for
+  remote sessions, including split plugins, client-only UI plugins, backend-only
+  analysis plugins, version skew, and missing-side diagnostics.
 - Preserve macOS as the reference behavior and avoid delaying macOS maintenance or
   feature delivery to force lowest-common-denominator client behavior.
 - Define user-owned Mac and future hosted-Mac operating models without coupling the

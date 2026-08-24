@@ -10,6 +10,12 @@ remote execution later.
 
 - Bootstrap the Gradle/IntelliJ build, standalone product metadata, bundled plugins,
   runtime, packaging, update channel, and CI verification.
+- Preserve standard IntelliJ plugin discovery, descriptor validation, classloading,
+  extension registration, signing policy, installation/update, enable/disable,
+  dynamic-unload where supported, crash attribution, safe mode, and recovery.
+- Publish an exact product module/plugin inventory and provide actionable plugin
+  incompatibility diagnostics for missing dependency, build range, forbidden API,
+  signature, and product-module failures.
 - Implement the current IntelliJ New UI shell with native macOS menu integration,
   simplified customizable toolbar, scheme/destination controls, editor-centered
   layout, current tool-window stripes, status/navigation area, light/dark themes,
@@ -34,6 +40,8 @@ remote execution later.
 - Verify cancellation, reconnect, version mismatch, corrupted artifact, and stale
   workspace behavior.
 - Verify platform-neutral modules contain no accidental macOS-only dependencies.
+- Run the approved core-compatible plugin catalog through descriptor checks, Plugin
+  Verifier, install/enable/restart/unload smoke tests, and IDE startup recovery.
 - Compare the shell with the current platform guidelines and approved product states
   at supported display scales,
   window sizes, light/dark appearance, keyboard navigation, and increased contrast.

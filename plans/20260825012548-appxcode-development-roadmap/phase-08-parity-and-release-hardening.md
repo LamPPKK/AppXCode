@@ -24,6 +24,9 @@ macOS product around cross-platform limitations.
   migration, update rollback, diagnostics collection, and support tooling.
 - Close the modern AppXCode UX quality ledger for Project, editor, navigation,
   search, Build, Run, Test, Debug, Git, inspections, settings, and window modes.
+- Close the declared plugin compatibility catalog for the release, publish exact
+  supported tiers/modules, and verify install, update, disable, uninstall, crash
+  isolation, safe mode, and recovery behavior.
 - Profile startup, indexing, memory, completion, remote sync, build streaming, and
   long-running IDE sessions against agreed budgets.
 - Complete threat modeling, penetration review, dependency audit, artifact signing,

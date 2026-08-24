@@ -12,6 +12,12 @@ not a visual template. AppXCode will provide a modern, code-centered workspace w
 configurable Project, Build, Run, Test, Debug, Git, and inspection tool windows,
 plus its own branding and distributable visual assets.
 
+Plugin compatibility is a core product requirement. AppXCode will preserve the
+standard IntelliJ plugin model and target broad compatibility with plugins whose
+declared IntelliJ build range and required public modules are present. Plugins tied
+to proprietary or product-specific JetBrains modules cannot be promised compatible
+unless AppXCode legitimately provides and verifies those dependencies.
+
 On macOS, AppXCode uses the locally installed Xcode toolchain through an internal
 build-agent boundary. Future Linux and Windows editions will connect to a macOS
 build agent, while a device gateway on the developer's workstation can install,
@@ -26,6 +32,7 @@ The current development plan is:
 
 - [AppXCode development roadmap](plans/20260825012548-appxcode-development-roadmap/plan.md)
 - [Modern AppXCode experience workstream](plans/20260825012548-appxcode-development-roadmap/modern-appxcode-experience.md)
+- [IntelliJ plugin compatibility workstream](plans/20260825012548-appxcode-development-roadmap/intellij-plugin-compatibility.md)
 
 Implementation should not begin until the Phase 0 decisions and acceptance gates
 in the roadmap have been reviewed.

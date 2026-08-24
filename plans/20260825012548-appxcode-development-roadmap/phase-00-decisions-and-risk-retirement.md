@@ -21,6 +21,9 @@ Resolve the high-cost unknowns before choosing irreversible implementation detai
 - Assemble a living reference pack from the latest stable IntelliJ Platform UI
   guidelines and current macOS conventions; decide the platform-version policy,
   density, theme, icon, branding, accessibility, and custom-component policies.
+- Inventory the upstream IntelliJ modules AppXCode can lawfully ship, classify
+  representative Marketplace plugins by declared dependencies, run Plugin Verifier
+  against a custom product build, and decide the product-code/repository strategy.
 - Create the first compatibility fixtures and a feature-parity ledger.
 
 ## Deliverables
@@ -28,6 +31,8 @@ Resolve the high-cost unknowns before choosing irreversible implementation detai
 - Accepted architecture decision records in `docs/adr`.
 - Initial compatibility and parity matrices.
 - Modern AppXCode UX quality matrix and legally reviewed reference/asset policy.
+- Initial plugin support tiers, module inventory, compatibility catalog, and
+  Marketplace/custom-repository decision record.
 - Spike reports with reproducible evidence and discarded approaches.
 - Approved repository/module layout and dependency policy.
 - A risk register with owners and review cadence.

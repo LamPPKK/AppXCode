@@ -22,6 +22,8 @@ all later editions are measured. Its target capabilities are:
 - Build, run, test, and debug workflows for simulators and physical devices.
 - A modern macOS experience based on the latest stable IntelliJ Platform UI, with
   AppCode used as the feature and workflow reference rather than a visual template.
+- Broad compatibility with IntelliJ plugins whose declared build range and required
+  public platform modules are satisfied by AppXCode.
 - Future Linux and Windows companion editions that use a macOS build agent and can
   interact with a physical device connected locally.
 
@@ -58,6 +60,34 @@ devices, test plans, and remote build-agent state.
 
 The detailed cross-cutting workstream is documented in
 [Modern AppXCode experience](modern-appxcode-experience.md).
+
+### Plugin compatibility promise
+
+AppXCode will preserve the standard IntelliJ plugin architecture, descriptor,
+classloading, extension points, Action System, settings, signing, installation,
+update, enable/disable, and safe-mode behavior. Compatibility is evaluated from the
+plugin's declared IntelliJ build range, required modules/plugins, incompatible
+modules, API usage, and runtime verification.
+
+The product cannot honestly guarantee every plugin ever published for IntelliJ-
+based IDEs. Plugins may depend on commercial, product-specific, missing, internal,
+or obsolete APIs. AppXCode instead defines support tiers:
+
+1. **Core-compatible:** plugins using supported public modules shipped by AppXCode,
+   including the shared platform, language, VCS, XML, and debugger module families.
+   These are the primary compatibility commitment.
+2. **Bundled-feature compatible:** plugins depending on optional open-source modules
+   or plugins that AppXCode deliberately bundles and verifies.
+3. **Product-specific:** plugins tied to IntelliJ IDEA Ultimate, PyCharm, Rider,
+   CLion, legacy AppCode, or other unavailable product modules. These remain
+   unsupported unless each dependency is lawfully provided and its API contract is
+   verified.
+4. **Unsafe/undeclared:** plugins using internal APIs, invalid dependency metadata,
+   incompatible build ranges, or declared incompatibility. AppXCode must reject or
+   quarantine them rather than bypass their metadata.
+
+The detailed policy and validation program are documented in
+[IntelliJ plugin compatibility](intellij-plugin-compatibility.md).
 
 ## 2. Confirmed constraints
 
@@ -128,6 +158,8 @@ The exact Gradle modules will be validated during Phase 0. The intended ownershi
 boundaries are:
 
 - `platform/client`: standalone IntelliJ application shell.
+- `platform/plugin-compatibility`: product module inventory, plugin compatibility
+  evaluation, diagnostics, test catalog, and repository integration.
 - `platform/protocol`: versioned contracts and capability models.
 - `services/build-agent`: macOS Xcode, build, signing, and artifact service.
 - `services/device-gateway`: physical-device discovery and transport.
@@ -174,6 +206,7 @@ Detailed phase plans:
 Cross-cutting workstream:
 
 - [Modern AppXCode experience](modern-appxcode-experience.md)
+- [IntelliJ plugin compatibility](intellij-plugin-compatibility.md)
 
 ## 6. Validation strategy
 
@@ -213,6 +246,8 @@ its local build agent and Apple-supported simulator/device tooling.
 - Golden screenshot and interaction tests for the modern AppXCode experience across
   supported macOS appearance, display scale, window size, and accessibility modes.
 - IntelliJ Plugin Verifier and supported-JDK compatibility checks.
+- Automated descriptor/module classification plus binary verification and smoke
+  testing for the declared plugin compatibility catalog.
 - Golden-file tests proving lossless Xcode project reads and controlled writes.
 - Performance benchmarks for indexing, completion latency, remote synchronization,
   build event throughput, and memory use.
@@ -227,6 +262,13 @@ its local build agent and Apple-supported simulator/device tooling.
 
 Mitigation: isolate platform APIs behind narrow modules, continuously run Plugin
 Verifier, and maintain an explicit IDE compatibility matrix.
+
+### Marketplace expectations exceeding available modules
+
+Mitigation: publish a machine-readable product module inventory, show exact
+compatibility reasons in the plugin manager, maintain support tiers, verify a
+versioned catalog continuously, and never claim support for a product-specific or
+commercial dependency that AppXCode does not provide.
 
 ### UI customization drifting from the IntelliJ Platform
 
@@ -300,6 +342,10 @@ Phase 0 must resolve:
 - Minimum test/debug capabilities required before each platform is marked supported.
 - IntelliJ UI baseline/update policy and which Apple-specific controls justify
   AppXCode-owned components rather than standard platform UI.
+- AppXCode product code and JetBrains Marketplace integration path, including whether
+  a signed AppXCode compatibility repository is required.
+- Initial bundled public-module set and the plugin compatibility service-level
+  target for each AppXCode/IntelliJ release band.
 
 ## 10. Non-goals
 
@@ -308,6 +354,8 @@ Phase 0 must resolve:
 - Converting projects into a proprietary format.
 - Reimplementing the Swift compiler, Xcode build system, or Apple code-signing
   service.
+- Guaranteeing compatibility with plugins that depend on unavailable proprietary,
+  product-specific, internal, or out-of-range IntelliJ APIs.
 - Claiming full compatibility with every Xcode/iOS release without an explicit,
   tested support policy.
 
