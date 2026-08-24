@@ -1,12 +1,23 @@
-# Phase 8 — Parity and Release Hardening
+# Phase 8 — macOS Release and Cross-Platform Expansion Hardening
 
 ## Objective
 
-Close the declared AppCode capability gaps and prepare a supportable 1.0 product.
+First close the declared AppCode capability gaps and prepare the primary macOS
+application for a supportable production release. After Phases 6-7, repeat the
+relevant hardening gates for the Linux and Windows expansion without redefining the
+macOS product around cross-platform limitations.
+
+## Release tracks
+
+- **Phase 8A — macOS:** starts after Phases 1-5 and produces the primary AppXCode
+  release. It does not wait for Linux/Windows clients or their device gateway.
+- **Phase 8B — Cross-platform expansion:** starts after Phases 6-7 and validates
+  Linux/Windows behavior against the released macOS reference implementation.
 
 ## Workstreams
 
-- Audit every promised capability against the parity ledger and support matrix.
+- Audit every promised macOS capability against the parity ledger and support
+  matrix, then maintain a separate expansion ledger for Linux and Windows.
 - Stabilize project import, indexing, dependency refresh, build, test, debugger,
   simulator, device, signing, and remote-session recovery.
 - Complete accessibility, localization readiness, keyboard navigation, settings
@@ -31,8 +42,16 @@ Close the declared AppCode capability gaps and prepare a supportable 1.0 product
 - Require zero unresolved critical security, data-loss, signing, project-corruption,
   or silent-refactoring defects before release.
 
-## Exit gate
+## Exit gates
 
-All capabilities advertised for 1.0 have passing evidence, operational ownership,
-documented limitations, and a supported recovery path. Remaining parity items are
-explicitly deferred rather than implied complete.
+### macOS primary release
+
+All macOS capabilities advertised for the release have passing evidence,
+operational ownership, documented limitations, and a supported recovery path. No
+Linux or Windows deliverable is required for this gate.
+
+### Cross-platform expansion release
+
+The Linux and Windows capability ledger passes its declared remote-build and device
+matrix against the macOS reference behavior. Platform-specific limitations are
+explicitly documented rather than weakening or redefining the macOS product.

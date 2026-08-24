@@ -9,7 +9,9 @@ Scope: Product architecture and phased delivery plan
 ## 1. Product goal
 
 AppXCode will be an IntelliJ Platform-based IDE for developing applications for
-iOS, iPadOS, macOS, watchOS, and tvOS. Its target capabilities are:
+iOS, iPadOS, macOS, watchOS, and tvOS. The native macOS application is the primary
+product, the first production release, and the reference experience against which
+all later editions are measured. Its target capabilities are:
 
 - JetBrains-style code analysis, navigation, completion, inspections, and safe
   refactoring for Swift and mixed Apple-platform projects.
@@ -18,12 +20,25 @@ iOS, iPadOS, macOS, watchOS, and tvOS. Its target capabilities are:
 - First-class Swift Package Manager, CocoaPods, and Git workflows.
 - Unified execution and reporting for XCTest, Quick, Kiwi, and Catch/Catch2.
 - Build, run, test, and debug workflows for simulators and physical devices.
-- A macOS client first, followed by Linux and Windows clients that use a macOS
-  build agent and can interact with a physical device connected locally.
+- Future Linux and Windows companion editions that use a macOS build agent and can
+  interact with a physical device connected locally.
 
 Feature parity is the product destination, not a requirement for the first usable
 release. Every phase must produce a testable increment and pass its exit gate
 before the next dependent phase becomes a release commitment.
+
+### Product priority
+
+1. Deliver the best possible AppCode successor as a native macOS desktop product.
+2. Preserve remote-capable internal boundaries so macOS implementation choices do
+   not make future Linux and Windows editions impractical.
+3. Begin production Linux and Windows work only after the macOS feature set is
+   usable and stable. Cross-platform expansion must not block the macOS release.
+
+The macOS product may use local optimizations and supported Apple integrations as
+long as they remain behind replaceable interfaces. Feature design, acceptance, and
+release decisions are led by the macOS experience rather than by the lowest common
+denominator across desktop operating systems.
 
 ## 2. Confirmed constraints
 
@@ -41,14 +56,17 @@ before the next dependent phase becomes a release commitment.
 
 ## 3. Recommended architecture
 
-AppXCode should be remote-first even when all components run on one Mac.
+AppXCode is macOS-first and remote-capable. Even when all components run on one
+Mac, Apple-specific operations should cross explicit service boundaries so they can
+later be hosted remotely without weakening the primary local experience.
 
 ### 3.1 AppXCode client
 
-The IntelliJ Platform application owns the editor, project UI, Git integration,
-run configurations, test UI, debugger UI, settings, and user interaction. It must
-not invoke Xcode-specific executables directly. All build and device operations go
-through versioned service contracts.
+The primary macOS IntelliJ Platform application owns the editor, project UI, Git
+integration, run configurations, test UI, debugger UI, settings, and user
+interaction. It must not invoke Xcode-specific executables directly. All build and
+device operations go through versioned service contracts. Future Linux and Windows
+clients reuse these contracts after the macOS workflows are proven.
 
 ### 3.2 Language services
 
@@ -110,14 +128,15 @@ semantics.
 | Phase | Outcome | Depends on |
 |---|---|---|
 | 0 | Architecture, licensing, compatibility policy, and executable technical spikes | None |
-| 1 | Standalone IDE foundation with remote-first service contracts | Phase 0 |
+| 1 | Primary macOS IDE foundation with remote-capable service contracts | Phase 0 |
 | 2 | Useful Swift editing, navigation, completion, analysis, and index foundation | Phase 1 |
 | 3 | Lossless Xcode/SPM/CocoaPods project model and Git-aware synchronization | Phases 1-2 |
 | 4 | Build, run, test, and debug on macOS across supported Apple platforms | Phases 2-3 |
 | 5 | Advanced inspections, refactoring, and mixed-language intelligence | Phases 2-4 |
-| 6 | Remote macOS build node plus production Linux and Windows clients | Phases 1-5 |
-| 7 | Physical-device gateway on Linux and Windows | Phases 4 and 6 |
-| 8 | AppCode-parity audit, compatibility hardening, and 1.0 release readiness | Phases 1-7 |
+| 6 | Future remote macOS build node plus production Linux and Windows clients | Phases 1-5 and the macOS release gate |
+| 7 | Future physical-device gateway on Linux and Windows | Phases 4 and 6 |
+| 8A | macOS AppCode-parity audit, hardening, and primary-product release | Phases 1-5; does not depend on Phases 6-7 |
+| 8B | Cross-platform expansion hardening and release readiness | Phases 6-7 and the macOS release baseline |
 
 Detailed phase plans:
 
@@ -129,7 +148,7 @@ Detailed phase plans:
 - [Phase 5 — Advanced intelligence and refactoring](phase-05-advanced-intelligence-refactoring.md)
 - [Phase 6 — Cross-platform remote development](phase-06-cross-platform-remote-development.md)
 - [Phase 7 — Cross-platform physical devices](phase-07-cross-platform-physical-devices.md)
-- [Phase 8 — Parity and release hardening](phase-08-parity-and-release-hardening.md)
+- [Phase 8 — macOS release and cross-platform expansion hardening](phase-08-parity-and-release-hardening.md)
 
 ## 6. Validation strategy
 
@@ -158,6 +177,10 @@ For every supported platform, a release candidate must demonstrate:
 7. Repeat the workflow through a remote build agent.
 8. For iOS/iPadOS, repeat install/run/test on a device connected to a supported
    Linux or Windows gateway before that gateway is declared production-ready.
+
+Items 7-8 apply to the later cross-platform editions and do not block the primary
+macOS release. The macOS release must instead pass every applicable workflow using
+its local build agent and Apple-supported simulator/device tooling.
 
 ### Quality gates
 
@@ -214,7 +237,10 @@ device implementations out of the core until their distribution model is approve
 
 ## 8. Assumptions
 
-- The first production-quality host is macOS.
+- The macOS application is the primary product, first production release, and
+  long-term reference implementation.
+- Linux and Windows are later companion editions; their delivery must not delay or
+  reduce the quality of the macOS application.
 - Linux and Windows users have access to a user-owned, team-owned, or hosted Mac
   build node with a compatible Xcode installation.
 - AppXCode will not redistribute Apple SDKs to non-Apple operating systems.
@@ -256,4 +282,6 @@ gaps for the declared support matrix; all platform end-to-end gates pass locally
 and remotely; Linux/Windows device support passes its declared compatibility suite;
 security, licensing, performance, and recovery reviews are complete; and the IDE
 can coexist with Xcode on the same projects without conversion or destructive
-project-file changes.
+project-file changes. The primary macOS product can reach its production release
+gate after Phases 1-5 and the macOS portion of Phase 8; completion of the broader
+cross-platform roadmap is a later milestone.

@@ -2,8 +2,9 @@
 
 ## Objective
 
-Run the full AppXCode client on Linux and Windows while Apple-specific semantics,
-builds, signing, tests, and debugging execute on a trusted macOS build node.
+After the primary macOS application is stable, extend AppXCode to Linux and Windows
+while Apple-specific semantics, builds, signing, tests, and debugging execute on a
+trusted macOS build node.
 
 ## Workstreams
 
@@ -20,6 +21,8 @@ builds, signing, tests, and debugging execute on a trusted macOS build node.
 - Support remote dependency resolution, build cache policy, log streaming, test
   attachments, debug symbols, and task cancellation.
 - Package and continuously test native Linux and Windows clients.
+- Preserve macOS as the reference behavior and avoid delaying macOS maintenance or
+  feature delivery to force lowest-common-denominator client behavior.
 - Define user-owned Mac and future hosted-Mac operating models without coupling the
   client protocol to either deployment model.
 

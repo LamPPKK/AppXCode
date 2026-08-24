@@ -1,13 +1,15 @@
 # AppXCode
 
 AppXCode is a planned IntelliJ Platform-based IDE for Apple-platform development.
-Its long-term goal is to restore the productive parts of AppCode while making the
-editor experience available on macOS, Linux, and Windows.
+The macOS application is the primary product and will receive the complete,
+production-grade Apple development experience first. Its long-term goal is to
+restore the productive parts of AppCode and later extend the editor experience to
+Linux and Windows.
 
-Apple-platform builds remain backed by a macOS machine with Xcode. A future
-cross-platform client will connect to a macOS build agent, while a device gateway
-on the developer's workstation can install, launch, test, and debug signed builds
-on locally connected devices.
+On macOS, AppXCode uses the locally installed Xcode toolchain through an internal
+build-agent boundary. Future Linux and Windows editions will connect to a macOS
+build agent, while a device gateway on the developer's workstation can install,
+launch, test, and debug signed builds on locally connected devices.
 
 ## Project status
 

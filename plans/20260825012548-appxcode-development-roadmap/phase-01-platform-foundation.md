@@ -2,8 +2,9 @@
 
 ## Objective
 
-Establish a standalone, testable IntelliJ application whose Apple-specific work is
-performed through local or remote service contracts.
+Establish the primary standalone macOS IntelliJ application whose Apple-specific
+work is performed through service contracts that support local execution first and
+remote execution later.
 
 ## Workstreams
 
@@ -17,11 +18,12 @@ performed through local or remote service contracts.
 - Add secure local-agent startup and design remote authentication and trust setup.
 - Introduce telemetry that is opt-in, privacy-preserving, and suitable for measuring
   performance and failures without collecting source code or secrets.
-- Build hermetic test fixtures and CI jobs for macOS, Linux, and Windows client code.
+- Build the macOS packaging and release pipeline. Run platform-neutral contract
+  tests on Linux and Windows without treating those clients as Phase 1 products.
 
 ## Validation
 
-- Package and launch the empty product on every target desktop OS.
+- Package and launch the primary product on supported macOS versions.
 - Run the same mock task through loopback and remote protocol implementations.
 - Verify cancellation, reconnect, version mismatch, corrupted artifact, and stale
   workspace behavior.
@@ -31,4 +33,4 @@ performed through local or remote service contracts.
 
 The product shell is installable, protocol contracts are versioned and tested, and
 all later Apple operations have an approved service boundary instead of direct IDE
-process invocation.
+process invocation. No Linux or Windows product milestone blocks this gate.
