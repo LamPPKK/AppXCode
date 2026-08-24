@@ -18,16 +18,16 @@ Resolve the high-cost unknowns before choosing irreversible implementation detai
   from macOS, then assess Linux/Windows discovery and installation separately.
 - Evaluate protocol transport, authentication, capability negotiation, and artifact
   transfer options through architecture decision records.
-- Assemble an approved AppCode Classic reference pack from public JetBrains
-  documentation, record the interaction inventory, and decide the reference release,
-  density, theme, icon, branding, and accessibility policies.
+- Assemble a living reference pack from the latest stable IntelliJ Platform UI
+  guidelines and current macOS conventions; decide the platform-version policy,
+  density, theme, icon, branding, accessibility, and custom-component policies.
 - Create the first compatibility fixtures and a feature-parity ledger.
 
 ## Deliverables
 
 - Accepted architecture decision records in `docs/adr`.
 - Initial compatibility and parity matrices.
-- AppCode Classic UX parity matrix and legally reviewed reference/asset policy.
+- Modern AppXCode UX quality matrix and legally reviewed reference/asset policy.
 - Spike reports with reproducible evidence and discarded approaches.
 - Approved repository/module layout and dependency policy.
 - A risk register with owners and review cadence.

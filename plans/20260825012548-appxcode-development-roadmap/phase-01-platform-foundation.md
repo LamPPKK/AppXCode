@@ -10,10 +10,10 @@ remote execution later.
 
 - Bootstrap the Gradle/IntelliJ build, standalone product metadata, bundled plugins,
   runtime, packaging, update channel, and CI verification.
-- Implement the AppCode Classic shell: native macOS menu integration, compact main
-  toolbar, scheme/destination controls, navigation bar, editor-centered layout,
-  configurable tool-window bars, status bar, light/dark themes, and keyboard-first
-  focus behavior.
+- Implement the current IntelliJ New UI shell with native macOS menu integration,
+  simplified customizable toolbar, scheme/destination controls, editor-centered
+  layout, current tool-window stripes, status/navigation area, light/dark themes,
+  optional Compact Mode, and keyboard-first focus behavior.
 - Establish owned design tokens and branding while using stable IntelliJ Platform
   components for accessibility, scaling, themes, and customization.
 - Establish client, protocol, build-agent, and device-gateway module boundaries.
@@ -34,7 +34,8 @@ remote execution later.
 - Verify cancellation, reconnect, version mismatch, corrupted artifact, and stale
   workspace behavior.
 - Verify platform-neutral modules contain no accidental macOS-only dependencies.
-- Compare the shell with approved reference states at supported display scales,
+- Compare the shell with the current platform guidelines and approved product states
+  at supported display scales,
   window sizes, light/dark appearance, keyboard navigation, and increased contrast.
 
 ## Exit gate

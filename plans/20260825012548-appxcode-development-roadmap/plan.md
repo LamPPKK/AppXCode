@@ -20,8 +20,8 @@ all later editions are measured. Its target capabilities are:
 - First-class Swift Package Manager, CocoaPods, and Git workflows.
 - Unified execution and reporting for XCTest, Quick, Kiwi, and Catch/Catch2.
 - Build, run, test, and debug workflows for simulators and physical devices.
-- A familiar AppCode Classic interaction model adapted to the current IntelliJ
-  Platform and modern macOS accessibility and appearance requirements.
+- A modern macOS experience based on the latest stable IntelliJ Platform UI, with
+  AppCode used as the feature and workflow reference rather than a visual template.
 - Future Linux and Windows companion editions that use a macOS build agent and can
   interact with a physical device connected locally.
 
@@ -44,15 +44,20 @@ denominator across desktop operating systems.
 
 ### Experience direction
 
-The default visual and interaction baseline is AppCode Classic before the optional
-2022.3 New UI. AppXCode should feel immediately familiar to an experienced AppCode
-user: editor-centered, information-dense, keyboard-first, configurable, and built
-around docked tool windows. Fidelity is measured by workflow, information hierarchy,
-and interaction cost rather than pixel-for-pixel copying. AppXCode must use its own
-name, logo, icons where required, and other legally distributable assets.
+The visual baseline is the latest stable IntelliJ Platform UI at the time of each
+supported AppXCode release, adapted to current macOS conventions. The design should
+reduce visual complexity, progressively reveal advanced controls, keep the editor
+central, and offer Compact Mode for users who prefer higher information density.
+AppCode remains a capability and productivity reference only; visual parity with
+the discontinued IDE is explicitly not a goal.
+
+AppXCode must use stable platform components, current light/dark themes, accessible
+states, its own identity, and legally distributable assets. Product-specific UI is
+reserved for Apple concepts such as schemes, destinations, signing, simulators,
+devices, test plans, and remote build-agent state.
 
 The detailed cross-cutting workstream is documented in
-[AppCode Classic experience](appcode-classic-experience.md).
+[Modern AppXCode experience](modern-appxcode-experience.md).
 
 ## 2. Confirmed constraints
 
@@ -131,8 +136,8 @@ boundaries are:
 - `plugins/apple-run`: targets, destinations, run configurations, deployment.
 - `plugins/apple-test`: framework adapters and unified test model.
 - `plugins/apple-debug`: LLDB and IntelliJ debugger integration.
-- `design/appcode-classic`: approved references, interaction inventory, design
-  decisions, tokens, and visual-regression baselines.
+- `design/modern-appxcode`: current IntelliJ/macOS references, interaction inventory,
+  design decisions, tokens, and visual-regression baselines.
 - `tests/fixtures`: representative Xcode, SwiftPM, CocoaPods, and mixed projects.
 - `docs/adr`: durable architecture and licensing decisions.
 
@@ -168,7 +173,7 @@ Detailed phase plans:
 
 Cross-cutting workstream:
 
-- [AppCode Classic experience](appcode-classic-experience.md)
+- [Modern AppXCode experience](modern-appxcode-experience.md)
 
 ## 6. Validation strategy
 
@@ -205,7 +210,7 @@ its local build agent and Apple-supported simulator/device tooling.
 ### Quality gates
 
 - Automated unit, integration, protocol-compatibility, and UI smoke tests.
-- Golden screenshot and interaction tests for the AppCode Classic experience across
+- Golden screenshot and interaction tests for the modern AppXCode experience across
   supported macOS appearance, display scale, window size, and accessibility modes.
 - IntelliJ Plugin Verifier and supported-JDK compatibility checks.
 - Golden-file tests proving lossless Xcode project reads and controlled writes.
@@ -223,12 +228,12 @@ its local build agent and Apple-supported simulator/device tooling.
 Mitigation: isolate platform APIs behind narrow modules, continuously run Plugin
 Verifier, and maintain an explicit IDE compatibility matrix.
 
-### AppCode visual fidelity becoming a brittle clone
+### UI customization drifting from the IntelliJ Platform
 
-Mitigation: preserve proven workflow and information architecture while using
-current IntelliJ components, owned branding, explicit design tokens, accessibility
-requirements, and screenshot/interaction regression tests. Avoid private JetBrains
-assets and undocumented UI internals.
+Mitigation: follow the latest stable IntelliJ UI guidelines, prefer supported
+platform components, keep Apple-specific custom UI behind clear ownership boundaries,
+and continuously test themes, scaling, accessibility, and platform upgrades. Avoid
+private JetBrains assets and undocumented UI internals.
 
 ### Incomplete SourceKit-LSP feature coverage
 
@@ -293,8 +298,8 @@ Phase 0 must resolve:
 - Swift parser/PSI implementation source and ownership strategy.
 - Device library adoption, process isolation, and license compatibility.
 - Minimum test/debug capabilities required before each platform is marked supported.
-- Exact AppCode Classic reference release and which user customizations become the
-  AppXCode default rather than optional presets.
+- IntelliJ UI baseline/update policy and which Apple-specific controls justify
+  AppXCode-owned components rather than standard platform UI.
 
 ## 10. Non-goals
 

@@ -22,7 +22,7 @@ macOS product around cross-platform limitations.
   simulator, device, signing, and remote-session recovery.
 - Complete accessibility, localization readiness, keyboard navigation, settings
   migration, update rollback, diagnostics collection, and support tooling.
-- Close the AppCode Classic UX parity ledger for Project, editor, navigation,
+- Close the modern AppXCode UX quality ledger for Project, editor, navigation,
   search, Build, Run, Test, Debug, Git, inspections, settings, and window modes.
 - Profile startup, indexing, memory, completion, remote sync, build streaming, and
   long-running IDE sessions against agreed budgets.
