@@ -24,6 +24,9 @@ trusted macOS build node.
 - Define frontend/backend plugin placement and compatibility independently for
   remote sessions, including split plugins, client-only UI plugins, backend-only
   analysis plugins, version skew, and missing-side diagnostics.
+- Extend the Flutter profile so host-native Android/web/desktop workflows can run
+  locally where supported while iOS/macOS work is routed to the macOS build node;
+  preserve hot reload, debug, DevTools, artifact, and source-path semantics.
 - Preserve macOS as the reference behavior and avoid delaying macOS maintenance or
   feature delivery to force lowest-common-denominator client behavior.
 - Define user-owned Mac and future hosted-Mac operating models without coupling the

@@ -18,6 +18,11 @@ declared IntelliJ build range and required public modules are present. Plugins t
 to proprietary or product-specific JetBrains modules cannot be promised compatible
 unless AppXCode legitimately provides and verifies those dependencies.
 
+Flutter is a named, optimized compatibility profile rather than an incidental
+Marketplace check. The macOS product will target certified official Dart/Flutter
+plugin combinations and integrate Flutter's iOS/macOS workflow with AppXCode's
+Xcode, CocoaPods, signing, simulator, device, test, and debugger systems.
+
 On macOS, AppXCode uses the locally installed Xcode toolchain through an internal
 build-agent boundary. Future Linux and Windows editions will connect to a macOS
 build agent, while a device gateway on the developer's workstation can install,
@@ -33,6 +38,7 @@ The current development plan is:
 - [AppXCode development roadmap](plans/20260825012548-appxcode-development-roadmap/plan.md)
 - [Modern AppXCode experience workstream](plans/20260825012548-appxcode-development-roadmap/modern-appxcode-experience.md)
 - [IntelliJ plugin compatibility workstream](plans/20260825012548-appxcode-development-roadmap/intellij-plugin-compatibility.md)
+- [Flutter optimized profile](plans/20260825012548-appxcode-development-roadmap/flutter-optimized-profile.md)
 
 Implementation should not begin until the Phase 0 decisions and acceptance gates
 in the roadmap have been reviewed.

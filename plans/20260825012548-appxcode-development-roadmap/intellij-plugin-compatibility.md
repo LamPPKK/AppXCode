@@ -38,6 +38,12 @@ Git, terminal, Markdown, JSON, YAML, Kotlin, and other dependencies selected dur
 Phase 0. Inclusion is not assumed until license, footprint, security, maintenance,
 and interaction checks pass.
 
+The first named Tier 2 profile is the official Flutter plugin (`io.flutter`) together
+with its exact Dart plugin and IntelliJ dependency graph. Flutter certification has
+additional workflow gates documented in
+[Flutter optimized profile](flutter-optimized-profile.md); passing generic plugin
+startup alone is insufficient.
+
 ### Tier 3 — Product-specific
 
 Do not claim compatibility by default for plugins requiring modules or plugins that
@@ -160,6 +166,10 @@ Prioritize widely used platform-level developer productivity, themes, keymaps,
 editor, Git, documentation, AI-assistance, and collaboration plugins that do not
 require unrelated product-specific language modules. Catalog size and certification
 targets are set only after Phase 0 measures CI cost and Marketplace access.
+
+Maintain a dedicated, pinned Flutter/Dart profile in the Certified catalog. An
+AppXCode release must not automatically offer an unverified newest Flutter or Dart
+plugin merely because its declared build range appears compatible.
 
 ## AppXCode plugin SDK
 

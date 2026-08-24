@@ -24,6 +24,8 @@ all later editions are measured. Its target capabilities are:
   AppCode used as the feature and workflow reference rather than a visual template.
 - Broad compatibility with IntelliJ plugins whose declared build range and required
   public platform modules are satisfied by AppXCode.
+- A certified, optimized Flutter profile using the official Dart/Flutter IntelliJ
+  plugins and deep integration between Flutter projects and native Apple tooling.
 - Future Linux and Windows companion editions that use a macOS build agent and can
   interact with a physical device connected locally.
 
@@ -88,6 +90,26 @@ or obsolete APIs. AppXCode instead defines support tiers:
 
 The detailed policy and validation program are documented in
 [IntelliJ plugin compatibility](intellij-plugin-compatibility.md).
+
+### Flutter compatibility profile
+
+Flutter is the first named Tier 2 compatibility profile. AppXCode will certify exact
+combinations of its IntelliJ Platform build, official Dart plugin, official Flutter
+plugin, bundled dependency modules, Flutter SDK release band, Xcode, and CocoaPods.
+The integration remains upstream-first: prefer the official plugins and contribute
+fixes upstream rather than silently maintaining an incompatible fork.
+
+The primary macOS scope optimizes Dart editing, Flutter project import, SDK/FVM and
+pub workflows, device selection, Run/Debug/Profile, hot reload/restart, DevTools,
+Widget Inspector, tests, and direct navigation into the generated/native iOS and
+macOS Xcode workspaces. Flutter iOS builds still use Xcode and macOS. Android, web,
+Windows, and Linux are valid Flutter deployment targets, but their tooling becomes
+a separate expanded profile and must not block the primary Apple-focused release.
+Flutter does not currently provide official watchOS or tvOS deployment support, so
+AppXCode must not imply that native watchOS/tvOS support extends to Flutter apps.
+
+The detailed workstream is documented in
+[Flutter optimized profile](flutter-optimized-profile.md).
 
 ## 2. Confirmed constraints
 
@@ -160,6 +182,8 @@ boundaries are:
 - `platform/client`: standalone IntelliJ application shell.
 - `platform/plugin-compatibility`: product module inventory, plugin compatibility
   evaluation, diagnostics, test catalog, and repository integration.
+- `integrations/flutter-apple`: thin AppXCode-owned adapters between certified
+  Dart/Flutter plugins and native Xcode/build/device capabilities.
 - `platform/protocol`: versioned contracts and capability models.
 - `services/build-agent`: macOS Xcode, build, signing, and artifact service.
 - `services/device-gateway`: physical-device discovery and transport.
@@ -207,6 +231,7 @@ Cross-cutting workstream:
 
 - [Modern AppXCode experience](modern-appxcode-experience.md)
 - [IntelliJ plugin compatibility](intellij-plugin-compatibility.md)
+- [Flutter optimized profile](flutter-optimized-profile.md)
 
 ## 6. Validation strategy
 
@@ -248,6 +273,9 @@ its local build agent and Apple-supported simulator/device tooling.
 - IntelliJ Plugin Verifier and supported-JDK compatibility checks.
 - Automated descriptor/module classification plus binary verification and smoke
   testing for the declared plugin compatibility catalog.
+- A pinned Flutter compatibility matrix and end-to-end fixtures covering Dart
+  analysis, pub, hot reload/restart, tests, DevTools, native iOS/macOS plugins,
+  signing, simulators, and physical devices.
 - Golden-file tests proving lossless Xcode project reads and controlled writes.
 - Performance benchmarks for indexing, completion latency, remote synchronization,
   build event throughput, and memory use.
@@ -269,6 +297,13 @@ Mitigation: publish a machine-readable product module inventory, show exact
 compatibility reasons in the plugin manager, maintain support tiers, verify a
 versioned catalog continuously, and never claim support for a product-specific or
 commercial dependency that AppXCode does not provide.
+
+### Flutter plugin dependency graph diverges from AppXCode
+
+Mitigation: certify exact Dart/Flutter/plugin/module version sets, verify the
+official plugin against every AppXCode release candidate, keep AppXCode integration
+thin, contribute compatibility changes upstream, and provide an explicit supported
+matrix instead of automatically installing an unverified latest version.
 
 ### UI customization drifting from the IntelliJ Platform
 
@@ -346,6 +381,9 @@ Phase 0 must resolve:
   a signed AppXCode compatibility repository is required.
 - Initial bundled public-module set and the plugin compatibility service-level
   target for each AppXCode/IntelliJ release band.
+- Flutter/Dart plugin distribution permission, pinned release matrix, required
+  IntelliJ/Android modules, and the boundary between primary Apple targets and the
+  expanded Android/web/desktop Flutter profile.
 
 ## 10. Non-goals
 

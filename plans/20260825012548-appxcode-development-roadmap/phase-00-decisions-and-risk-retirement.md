@@ -24,6 +24,10 @@ Resolve the high-cost unknowns before choosing irreversible implementation detai
 - Inventory the upstream IntelliJ modules AppXCode can lawfully ship, classify
   representative Marketplace plugins by declared dependencies, run Plugin Verifier
   against a custom product build, and decide the product-code/repository strategy.
+- Spike the official Dart and Flutter IntelliJ plugins against the candidate AppXCode
+  distribution; inventory their exact runtime dependencies, distribution terms,
+  project import, analysis, hot reload, debug, DevTools, and native iOS workspace
+  integration requirements.
 - Create the first compatibility fixtures and a feature-parity ledger.
 
 ## Deliverables
@@ -33,6 +37,8 @@ Resolve the high-cost unknowns before choosing irreversible implementation detai
 - Modern AppXCode UX quality matrix and legally reviewed reference/asset policy.
 - Initial plugin support tiers, module inventory, compatibility catalog, and
   Marketplace/custom-repository decision record.
+- Flutter/Dart compatibility spike, pinned version proposal, dependency gap report,
+  and upstream-versus-adapter decision record.
 - Spike reports with reproducible evidence and discarded approaches.
 - Approved repository/module layout and dependency policy.
 - A risk register with owners and review cadence.

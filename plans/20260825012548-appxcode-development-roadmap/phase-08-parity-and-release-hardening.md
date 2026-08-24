@@ -27,6 +27,8 @@ macOS product around cross-platform limitations.
 - Close the declared plugin compatibility catalog for the release, publish exact
   supported tiers/modules, and verify install, update, disable, uninstall, crash
   isolation, safe mode, and recovery behavior.
+- Publish and pass the exact AppXCode/Dart-plugin/Flutter-plugin/Flutter-SDK/Xcode/
+  CocoaPods compatibility matrix and all optimized Flutter profile gates.
 - Profile startup, indexing, memory, completion, remote sync, build streaming, and
   long-running IDE sessions against agreed budgets.
 - Complete threat modeling, penetration review, dependency audit, artifact signing,

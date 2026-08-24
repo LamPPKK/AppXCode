@@ -17,6 +17,11 @@ workspaces without conversion or destructive rewriting.
   binary targets, and packages embedded in Xcode projects.
 - Detect CocoaPods workspaces, lockfiles, generated projects, source roots, build
   settings, and safe user-initiated installation/update workflows.
+- Recognize Flutter applications, packages, plugins, modules/add-to-app projects,
+  monorepos, `pubspec.yaml`, lockfiles, generated metadata, and their iOS/macOS
+  Xcode workspaces without treating generated native files as unrelated projects.
+- Integrate Flutter SDK/FVM selection, `pub get`, dependency refresh, code generation
+  status, and native CocoaPods/SPM dependencies with one coherent project model.
 - Integrate IntelliJ Git facilities with generated-file policies, change lists,
   history, branches, conflict handling, and project refresh.
 - Add file watching and incremental model refresh without discarding unsaved editor
@@ -31,6 +36,8 @@ workspaces without conversion or destructive rewriting.
 - For approved write operations, prove round-trip preservation of unknown fields and
   minimal deterministic diffs.
 - Switch branches and dependency versions without stale indexes or generated files.
+- Open Flutter fixtures, navigate Dart-to-native plugin code and back, refresh pub
+  dependencies, and preserve generated/native workspace consistency.
 
 ## Exit gate
 

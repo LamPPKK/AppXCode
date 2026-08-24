@@ -26,6 +26,12 @@ target families before distributing that workflow across multiple computers.
   Catch/Catch2, including discovery, gutter actions, filtering, rerun-failed,
   streamed results, attachments, and result-bundle retention.
 - Bring platforms up in the planned order: iOS/iPadOS, macOS, tvOS, watchOS.
+- Certify Flutter Run/Debug/Profile modes on iOS simulator/device and macOS, including
+  target selection, hot reload, hot restart, logs, Dart breakpoints, Widget
+  Inspector, DevTools, performance tooling, and transitions into native Swift/
+  Objective-C debugging where the supported plugin/toolchain stack permits it.
+- Integrate `flutter test`, widget/golden tests, and `integration_test` results into
+  the unified test UI while preserving official Flutter semantics and artifacts.
 
 ## Validation
 
@@ -39,6 +45,8 @@ target families before distributing that workflow across multiple computers.
   current-platform UX baseline.
 - Exercise app extensions, watch companion relationships, disconnected devices,
   locked devices, expired profiles, simulator resets, and cancelled builds.
+- Run pinned Flutter fixtures through edit, analyze, pub, build, hot reload/restart,
+  test, profile, debug, signing, archive, and real-device scenarios.
 
 ## Exit gate
 
