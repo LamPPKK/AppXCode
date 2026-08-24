@@ -23,6 +23,12 @@ Marketplace check. The macOS product will target certified official Dart/Flutter
 plugin combinations and integrate Flutter's iOS/macOS workflow with AppXCode's
 Xcode, CocoaPods, signing, simulator, device, test, and debugger systems.
 
+AppXCode also plans an `Embedded Devices` tool window that keeps Apple Simulator,
+eligible physical-device screens, and an optional experimental `vphone-cli`
+destination inside the IDE, with docking and detached-window modes. vPhone runs as
+an isolated external provider, is disabled by default, and never authorizes
+AppXCode to relax SIP/AMFI or modify firmware implicitly.
+
 On macOS, AppXCode uses the locally installed Xcode toolchain through an internal
 build-agent boundary. Future Linux and Windows editions will connect to a macOS
 build agent, while a device gateway on the developer's workstation can install,
@@ -39,6 +45,7 @@ The current development plan is:
 - [Modern AppXCode experience workstream](plans/20260825012548-appxcode-development-roadmap/modern-appxcode-experience.md)
 - [IntelliJ plugin compatibility workstream](plans/20260825012548-appxcode-development-roadmap/intellij-plugin-compatibility.md)
 - [Flutter optimized profile](plans/20260825012548-appxcode-development-roadmap/flutter-optimized-profile.md)
+- [Embedded Devices and vPhone integration](plans/20260825012548-appxcode-development-roadmap/embedded-device-hub.md)
 
 Implementation should not begin until the Phase 0 decisions and acceptance gates
 in the roadmap have been reviewed.

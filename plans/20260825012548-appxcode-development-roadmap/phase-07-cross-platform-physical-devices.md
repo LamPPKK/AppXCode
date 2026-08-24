@@ -24,6 +24,9 @@ built and signed on a macOS build node.
   devices and watchOS-through-paired-iPhone separately.
 - Provide a supported fallback in which the physical device connects to the Mac
   build node when the local gateway cannot satisfy a capability.
+- Route eligible physical-device screen frames and input capabilities through the
+  provider-neutral Embedded Devices session. Do not reuse the vPhone adapter or
+  imply that display access proves install, test, or debugger support.
 
 ## Validation
 

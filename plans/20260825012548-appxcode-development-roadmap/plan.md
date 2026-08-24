@@ -26,6 +26,9 @@ all later editions are measured. Its target capabilities are:
   public platform modules are satisfied by AppXCode.
 - A certified, optimized Flutter profile using the official Dart/Flutter IntelliJ
   plugins and deep integration between Flutter projects and native Apple tooling.
+- An `Embedded Devices` tool window for in-IDE simulator/device interaction, with
+  Apple Simulator as the production default and an isolated, opt-in experimental
+  provider for `Lakr233/vphone-cli`.
 - Future Linux and Windows companion editions that use a macOS build agent and can
   interact with a physical device connected locally.
 
@@ -111,6 +114,26 @@ AppXCode must not imply that native watchOS/tvOS support extends to Flutter apps
 The detailed workstream is documented in
 [Flutter optimized profile](flutter-optimized-profile.md).
 
+### Embedded Devices and vPhone profile
+
+AppXCode will provide a provider-neutral `Embedded Devices` tool window similar in
+workflow to Android Studio's embedded Running Devices experience. It will dock an
+interactive Apple destination beside the editor, correlate it with Run/Test/Debug,
+and allow detach, resize, screenshot, recording, input, and lifecycle actions only
+where the selected provider advertises verified capabilities.
+
+Apple Simulator is the production-default macOS provider. `Lakr233/vphone-cli` is a
+separate experimental provider: it runs out of process, is user-installed and
+version-pinned, and is controlled through machine-readable CLI output, its host
+control socket, and a local VNC display transport. AppXCode will not disable SIP or
+AMFI, alter NVRAM/Recovery settings, download or patch firmware, or redistribute
+Apple firmware as an implicit part of this integration. Install, test, debug, and
+Flutter capabilities remain gated until proven for the exact host, vPhone,
+firmware, and VM-variant tuple.
+
+The detailed workstream is documented in
+[Embedded Devices and vPhone integration](embedded-device-hub.md).
+
 ## 2. Confirmed constraints
 
 - Xcode and Apple SDK-backed builds require a macOS build environment.
@@ -124,6 +147,9 @@ The detailed workstream is documented in
 - Windows/Linux physical-device integration depends on protocols that Apple does
   not publish as a supported third-party IDE workflow. It must be isolated behind
   a replaceable device backend and treated as a compatibility-sensitive feature.
+- The current `vphone-cli` host path requires Apple Silicon, macOS 15 or later,
+  Xcode/iOS SDK access, private PV=3 entitlements, and SIP/AMFI relaxation. It is
+  experimental, disabled by default, and cannot be a prerequisite for the core IDE.
 
 ## 3. Recommended architecture
 
@@ -174,6 +200,21 @@ The exact transport must be selected by an architecture decision record in Phase
 0; gRPC with a schema-first contract is the leading candidate, not yet a locked
 implementation choice.
 
+### 3.6 Embedded device providers
+
+The IDE owns a provider-neutral destination, display, input, and device-session
+model. Apple Simulator, physical-device viewing, vPhone, and future remote streams
+are adapters behind capability negotiation. Provider helpers run outside the IDE;
+no private Apple framework, firmware patcher, VNC native dependency, or third-party
+device implementation loads into IntelliJ's process.
+
+For vPhone, the helper inventories VMs through `vphone-cli` machine-readable output,
+supervises lifecycle without changing host security or firmware, uses the local
+control socket for supported input/clipboard/screenshot operations, and terminates
+the VNC display connection before forwarding bounded frames to the IDE. Run, Test,
+Debug, and Flutter services bind to the same session identity but retain ownership
+of their build, result, and debugger semantics.
+
 ## 4. Planned repository boundaries
 
 The exact Gradle modules will be validated during Phase 0. The intended ownership
@@ -184,6 +225,11 @@ boundaries are:
   evaluation, diagnostics, test catalog, and repository integration.
 - `integrations/flutter-apple`: thin AppXCode-owned adapters between certified
   Dart/Flutter plugins and native Xcode/build/device capabilities.
+- `platform/device-api`: provider-neutral destinations, sessions, video frames,
+  input, lifecycle, and fine-grained capability models.
+- `integrations/embedded-devices`: tool-window UI and run-session correlation.
+- `services/device-provider-vphone`: optional out-of-process `vphone-cli`, control-
+  socket, and VNC adapter with no authority to change host security settings.
 - `platform/protocol`: versioned contracts and capability models.
 - `services/build-agent`: macOS Xcode, build, signing, and artifact service.
 - `services/device-gateway`: physical-device discovery and transport.
@@ -232,6 +278,7 @@ Cross-cutting workstream:
 - [Modern AppXCode experience](modern-appxcode-experience.md)
 - [IntelliJ plugin compatibility](intellij-plugin-compatibility.md)
 - [Flutter optimized profile](flutter-optimized-profile.md)
+- [Embedded Devices and vPhone integration](embedded-device-hub.md)
 
 ## 6. Validation strategy
 
@@ -276,6 +323,9 @@ its local build agent and Apple-supported simulator/device tooling.
 - A pinned Flutter compatibility matrix and end-to-end fixtures covering Dart
   analysis, pub, hot reload/restart, tests, DevTools, native iOS/macOS plugins,
   signing, simulators, and physical devices.
+- Embedded-device provider matrices and interaction tests covering frame/input
+  transforms, latency, focus, rotation, resizing, reconnect, isolation, and exact
+  capability gating for Apple Simulator, physical screens, vPhone, and remote Mac.
 - Golden-file tests proving lossless Xcode project reads and controlled writes.
 - Performance benchmarks for indexing, completion latency, remote synchronization,
   build event throughput, and memory use.
@@ -329,6 +379,21 @@ Mitigation: capability negotiation, pluggable toolchain/device backends, an OS a
 Xcode support policy, nightly compatibility testing, and graceful degradation with
 clear diagnostics.
 
+### vPhone weakens host protection or changes incompatibly
+
+Mitigation: keep vPhone optional, disabled by default, user-installed, version-
+pinned, out of process, and independently revocable. Never automate SIP/AMFI/NVRAM
+or firmware patching. Gate every capability by executable evidence, publish the
+host-security state, and keep Apple Simulator/physical-device workflows as the
+supported release authority.
+
+### Embedded device streaming harms IDE stability or privacy
+
+Mitigation: decode outside the UI thread with bounded queues and resources, isolate
+provider transports in helpers, authenticate remote streams, show capture and
+clipboard indicators, test malformed inputs and reconnect, and always provide a
+separate-window fallback.
+
 ### Remote workspace inconsistency
 
 Mitigation: content-addressed synchronization, explicit source revisions, atomic
@@ -374,6 +439,11 @@ Phase 0 must resolve:
 - Workspace synchronization strategy and treatment of generated files.
 - Swift parser/PSI implementation source and ownership strategy.
 - Device library adoption, process isolation, and license compatibility.
+- Public Apple integration boundary for simulator/device screen embedding and the
+  supported separate-window fallback when no reusable public surface exists.
+- vPhone version/distribution policy, allowed VM variants, host-security warning,
+  firmware responsibility, provider protocol, install/test/debug capability matrix,
+  and criteria for remaining external-preview versus shipping experimentally.
 - Minimum test/debug capabilities required before each platform is marked supported.
 - IntelliJ UI baseline/update policy and which Apple-specific controls justify
   AppXCode-owned components rather than standard platform UI.
@@ -396,6 +466,9 @@ Phase 0 must resolve:
   product-specific, internal, or out-of-range IntelliJ APIs.
 - Claiming full compatibility with every Xcode/iOS release without an explicit,
   tested support policy.
+- Presenting vPhone as an Apple-supported Simulator, silently weakening host
+  security, redistributing Apple firmware, or treating patched/jailbroken VM
+  behavior as proof of App Store compatibility.
 
 ## 11. Definition of roadmap completion
 

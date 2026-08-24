@@ -144,6 +144,10 @@ plugin remains viable.
 
 - Discover compatible Flutter targets and present simulator, physical device,
   desktop, browser, and remote targets with capability-aware filtering.
+- Bind eligible iOS simulator, physical iPhone, and experimental vPhone Flutter
+  sessions to the provider-neutral Embedded Devices tool window without changing
+  official Flutter run, hot reload/restart, VM service, debugger, or DevTools
+  lifecycle semantics.
 - Support Flutter flavors, Dart entrypoints, build modes, environment definitions,
   additional tool arguments, and per-project run configurations.
 - Preserve official hot reload and hot restart semantics, state, availability, and
@@ -169,6 +173,10 @@ plugin remains viable.
   when evidence exists; otherwise preserve the real native diagnostic source.
 - Support physical-device Developer Mode, trust, signing, provisioning, install,
   launch, logs, and debug through the normal AppXCode destination model.
+- Treat vPhone as its own destination class. Advertise Flutter build/install/hot-
+  reload/test/debug only after the exact vPhone firmware/variant and toolchain tuple
+  passes those actions; never substitute vPhone success for simulator/real-device
+  release validation.
 - Support archive/export/TestFlight/App Store preparation through Flutter and Xcode
   flows without hiding the resulting native artifacts or signing decisions.
 

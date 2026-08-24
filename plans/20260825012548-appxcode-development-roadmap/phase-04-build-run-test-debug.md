@@ -20,6 +20,14 @@ target families before distributing that workflow across multiple computers.
   and multi-target relationships.
 - Add simulator/device install, launch, stop, logs, screenshots, crash reports, and
   process attachment through backend capabilities.
+- Ship the local Apple Simulator path in the Embedded Devices tool window and bind
+  its destination/session identity to Run, Test, Debug, logs, screenshots, recording,
+  input, rotation, and lifecycle state. Preserve a supported detached fallback.
+- Add local physical-device screen viewing only where a verified Apple or approved
+  gateway capability exists; do not infer interaction/debug support from display.
+- Offer the `vphone-cli` provider only as an optional experimental feature after its
+  Phase 0 security gates pass. Manage existing VMs first; keep firmware preparation,
+  security-policy changes, and destructive VM management outside normal Run/Debug.
 - Integrate LLDB with IntelliJ debugger abstractions for source breakpoints, stacks,
   threads, variables, watches, expressions, stepping, and source mapping.
 - Build one unified test model and adapters for XCTest, Quick, Kiwi, and
@@ -47,6 +55,9 @@ target families before distributing that workflow across multiple computers.
   locked devices, expired profiles, simulator resets, and cancelled builds.
 - Run pinned Flutter fixtures through edit, analyze, pub, build, hot reload/restart,
   test, profile, debug, signing, archive, and real-device scenarios.
+- Exercise every embedded provider through first frame, input transforms, rotation,
+  resize, multi-device tabs, detach/redock, IDE restart, provider crash, reconnect,
+  unsupported actions, and teardown; measure the agreed latency/resource budgets.
 
 ## Exit gate
 

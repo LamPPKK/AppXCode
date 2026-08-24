@@ -106,6 +106,20 @@ need and an accessibility, theme, scale, and maintenance plan.
 - Source, stack, variable, and inline-value state remain synchronized without
   unexpected focus or panel replacement.
 
+### Embedded Devices
+
+- Running Apple Simulator, eligible physical-device, vPhone, and remote Mac screens
+  share one provider-neutral tool window with unmistakable provider/security badges.
+- The default compact view keeps the interactive device beside the editor; users
+  can dock it on either side or below, move it to an editor split, detach it, enter
+  full screen, and restore the previous arrangement.
+- Fit/zoom, orientation, bezel, screenshot, recording, input, clipboard, hardware-
+  key, reconnect, and lifecycle actions appear only for advertised capabilities.
+- Run, Test, Debug, Logs, Inspector, and device state remain correlated without
+  merging their authoritative models into the video canvas.
+- Capture, microphone, clipboard, trust, relaxed host-security, and remote-stream
+  states are visible and accessible; closing a session releases them immediately.
+
 ### Git, problems, and inspections
 
 - Changes, commit, log, branches, diff, shelf/stash, conflicts, TODO, Problems, and
@@ -153,6 +167,8 @@ need and an accessibility, theme, scale, and maintenance plan.
 
 - Deliver the macOS application shell, current IntelliJ layout, Action System,
   themes, Compact Mode, keymap, settings, scaling, and accessibility foundation.
+- Deliver the Embedded Devices shell against a deterministic fake provider and
+  validate docking, detach, focus, scaling, input mapping, and privacy states.
 
 ### Phases 2-5
 
@@ -184,6 +200,8 @@ Users must be able to efficiently:
    expression.
 7. Review and commit a focused Git change without losing editor context.
 8. Diagnose and recover from an unavailable toolchain, agent, simulator, or device.
+9. Run an app with its device screen beside the editor, interact with it, switch to
+   Debug/Test/Logs without losing context, then detach and redock the screen.
 
 ### Acceptance gates
 

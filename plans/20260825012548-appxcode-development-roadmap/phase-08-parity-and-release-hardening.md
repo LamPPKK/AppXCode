@@ -29,6 +29,10 @@ macOS product around cross-platform limitations.
   isolation, safe mode, and recovery behavior.
 - Publish and pass the exact AppXCode/Dart-plugin/Flutter-plugin/Flutter-SDK/Xcode/
   CocoaPods compatibility matrix and all optimized Flutter profile gates.
+- Publish and pass exact embedded-provider matrices for Apple Simulator, eligible
+  physical screens, remote Mac, and any experimental vPhone release tuple. Keep
+  vPhone experimental until its security, compatibility, recovery, latency, and
+  legal gates explicitly justify a status change.
 - Profile startup, indexing, memory, completion, remote sync, build streaming, and
   long-running IDE sessions against agreed budgets.
 - Complete threat modeling, penetration review, dependency audit, artifact signing,

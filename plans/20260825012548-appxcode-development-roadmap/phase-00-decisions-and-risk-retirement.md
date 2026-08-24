@@ -28,6 +28,16 @@ Resolve the high-cost unknowns before choosing irreversible implementation detai
   distribution; inventory their exact runtime dependencies, distribution terms,
   project import, analysis, hot reload, debug, DevTools, and native iOS workspace
   integration requirements.
+- Spike the provider-neutral Embedded Devices model against a deterministic fake,
+  Apple Simulator, and a pinned `Lakr233/vphone-cli` release. For vPhone, verify
+  machine-readable inventory, supervised lifecycle, local VNC display, control-
+  socket input/screenshot/clipboard, failure recovery, and resource isolation.
+- Determine the public Apple boundary for embedding simulator and physical-device
+  screens. Record a supported fallback instead of relying on undocumented Xcode UI
+  internals or loading private frameworks into the IDE.
+- Prove or reject build/install/launch, logs, XCTest-family execution, LLDB attach,
+  and Flutter hot reload/debug on candidate vPhone firmware/variant tuples. Complete
+  host-security, firmware, licensing, redistribution, and supply-chain review.
 - Create the first compatibility fixtures and a feature-parity ledger.
 
 ## Deliverables
@@ -39,6 +49,8 @@ Resolve the high-cost unknowns before choosing irreversible implementation detai
   Marketplace/custom-repository decision record.
 - Flutter/Dart compatibility spike, pinned version proposal, dependency gap report,
   and upstream-versus-adapter decision record.
+- Embedded device provider/display/input ADRs, measured performance report, Apple
+  public-API boundary, and vPhone security/distribution/capability decision record.
 - Spike reports with reproducible evidence and discarded approaches.
 - Approved repository/module layout and dependency policy.
 - A risk register with owners and review cadence.

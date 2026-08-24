@@ -23,6 +23,9 @@ remote execution later.
 - Establish owned design tokens and branding while using stable IntelliJ Platform
   components for accessibility, scaling, themes, and customization.
 - Establish client, protocol, build-agent, and device-gateway module boundaries.
+- Establish the provider-neutral destination/session model and an Embedded Devices
+  tool-window shell against deterministic fake frames and input acknowledgements;
+  cover docking, detach, scaling, focus, accessibility, privacy state, and recovery.
 - Implement capability discovery, task lifecycle, progress, cancellation, structured
   diagnostics, logging, and version compatibility semantics.
 - Define source identity and local/remote path mapping before editor integrations
@@ -45,6 +48,9 @@ remote execution later.
 - Compare the shell with the current platform guidelines and approved product states
   at supported display scales,
   window sizes, light/dark appearance, keyboard navigation, and increased contrast.
+- Verify the fake embedded-device provider cannot block the UI thread, exhaust an
+  unbounded frame queue, send input through stale transforms, or retain capture/
+  clipboard permission after its session closes.
 
 ## Exit gate
 

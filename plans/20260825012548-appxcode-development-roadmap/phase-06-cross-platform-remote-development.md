@@ -20,6 +20,10 @@ trusted macOS build node.
   local syntax behavior during latency or disconnection.
 - Support remote dependency resolution, build cache policy, log streaming, test
   attachments, debug symbols, and task cancellation.
+- Stream authenticated Mac-hosted Apple Simulator and eligible vPhone sessions into
+  the same Embedded Devices UI on Linux/Windows, with adaptive quality, bounded
+  back-pressure, explicit latency/capture state, reconnect, and revocation. vPhone
+  remains installed and executed only on the compatible Mac.
 - Package and continuously test native Linux and Windows clients.
 - Define frontend/backend plugin placement and compatibility independently for
   remote sessions, including split plugins, client-only UI plugins, backend-only
@@ -40,6 +44,9 @@ trusted macOS build node.
   version skew, workspace eviction, and interrupted artifact transfers.
 - Verify signing assets and Apple credentials never leave the build node.
 - Verify no Apple SDK content is copied into the client workspace or distribution.
+- Verify remote device video/input authorization is separate from build permission
+  and that malformed frames, client disconnect, or revoked sessions cannot retain
+  input, capture, clipboard, or device-control access.
 
 ## Exit gate
 
