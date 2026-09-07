@@ -5,6 +5,8 @@ import java.util.concurrent.atomic.AtomicBoolean
 import dev.appxcode.ide.project.XcodeContainer
 import dev.appxcode.ide.project.XcodeProjectModel
 import java.nio.file.Path
+import dev.appxcode.ide.toolchain.AppleToolchain
+import dev.appxcode.ide.toolchain.AppleToolchainDetector
 @Service(Service.Level.PROJECT)
 class AppXCodeProjectService(private val project: Project) {
     private val initialized = AtomicBoolean(false)
@@ -12,4 +14,5 @@ class AppXCodeProjectService(private val project: Project) {
     fun isInitialized(): Boolean = initialized.get()
     fun projectName(): String = project.name
     fun discoverXcodeContainers(root: Path): List<XcodeContainer> = XcodeProjectModel.discover(root)
+    fun appleToolchain(): AppleToolchain = AppleToolchainDetector.detect()
 }
