@@ -87,6 +87,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun swiftDiagnostics(files: List<Path>): List<SwiftDiagnostic> = swiftLanguage?.diagnostics(files).orEmpty()
     fun formatSwift(file: Path): FormatResult = swiftFormatter.format(file)
     fun formatSwiftFiles(files: Iterable<Path>): BatchFormatResult = swiftFormatter.formatFiles(files)
+    fun swiftFormatterAvailable(root: Path): Boolean = swiftFormatter.isAvailable(root)
     fun indexObjectiveC(files: Iterable<Path>) { objcSymbols.index(files) }
     fun findObjectiveCSymbols(name: String): List<ObjCSymbol> = objcSymbols.find(name)
     fun completeObjectiveC(prefix: String): List<ObjCSymbol> = objcSymbols.complete(prefix)
