@@ -10,6 +10,7 @@ data class BuildAgentRequest(
         require(protocolVersion == CURRENT_PROTOCOL_VERSION) { "Unsupported build agent protocol: $protocolVersion" }
         require(requestId.isNotBlank()) { "Build agent request id must not be blank" }
         require(operation.isNotBlank()) { "Build agent operation must not be blank" }
+        require(operation == operation.trim()) { "Build agent operation must not contain surrounding whitespace" }
         require(projectPath.isNotBlank()) { "Build agent project path must not be blank" }
     }
 }
@@ -37,6 +38,12 @@ data class BuildAgentResponse(
 }
 
 const val CURRENT_PROTOCOL_VERSION: Int = 1
+
+enum class BuildAgentOperation {
+    BUILD, TEST, ARCHIVE, EXPORT, INSTALL, LOGS;
+
+    val wireName: String get() = name.lowercase()
+}
 
 object BuildAgentErrorCode {
     const val UNSUPPORTED_PROTOCOL = "unsupported_protocol"
