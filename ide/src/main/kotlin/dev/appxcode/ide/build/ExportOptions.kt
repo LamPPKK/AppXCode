@@ -1,6 +1,7 @@
 package dev.appxcode.ide.build
 
 import java.nio.file.Path
+import java.nio.file.Files
 
 enum class ExportMethod { APP_STORE, AD_HOC, DEVELOPMENT, ENTERPRISE }
 
@@ -11,7 +12,20 @@ data class ExportOptions(
     val method: ExportMethod,
     val teamId: String? = null,
     val signingStyle: String? = null,
-)
+) {
+    fun writePlist(): Path {
+        val body = buildString {
+            append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<plist version=\"1.0\"><dict>")
+            append("<key>method</key><string>").append(method.name.lowercase().replace('_', '-')).append("</string>")
+            teamId?.let { append("<key>teamID</key><string>").append(it).append("</string>") }
+            signingStyle?.let { append("<key>signingStyle</key><string>").append(it).append("</string>") }
+            append("</dict></plist>")
+        }
+        optionsPlist.parent?.let(Files::createDirectories)
+        Files.writeString(optionsPlist, body)
+        return optionsPlist
+    }
+}
 
 class XcodeExportService(private val runner: (List<String>) -> XcodeBuildResult = { command ->
     val process = ProcessBuilder(command).redirectErrorStream(true).start()
