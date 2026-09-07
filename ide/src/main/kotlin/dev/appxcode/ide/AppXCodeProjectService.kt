@@ -178,6 +178,28 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun hasRunConfiguration(name: String): Boolean = runConfigurations.contains(name)
     fun clearRunConfigurations() = runConfigurations.clear()
     fun xcodeBuild(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.execute(configuration, container, timeout)
+    fun xcodeBuildOnDevice(configuration: RunConfiguration, container: Path, device: AppleDevice, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult {
+        require(device.state == dev.appxcode.ide.device.DeviceState.AVAILABLE) { "Device is not available: ${device.id}" }
+        val platform = when (device.platform.lowercase()) {
+            "ios" -> "iOS"
+            "ipados", "ipad os" -> "iPadOS"
+            "watchos", "watch os" -> "watchOS"
+            "tvos", "tv os" -> "tvOS"
+            "macos", "mac os" -> "macOS"
+            else -> device.platform
+        }
+        val kind = if (device.kind == dev.appxcode.ide.device.DeviceKind.PHYSICAL) dev.appxcode.ide.build.DestinationKind.DEVICE else dev.appxcode.ide.build.DestinationKind.SIMULATOR
+        val destination = dev.appxcode.ide.build.AppleDestination(configuration.destination.platform, kind, device.name, device.id)
+            .copy(platform = when (platform) {
+                "iOS" -> dev.appxcode.ide.build.ApplePlatform.IOS
+                "iPadOS" -> dev.appxcode.ide.build.ApplePlatform.IPADOS
+                "watchOS" -> dev.appxcode.ide.build.ApplePlatform.WATCHOS
+                "tvOS" -> dev.appxcode.ide.build.ApplePlatform.TVOS
+                "macOS" -> dev.appxcode.ide.build.ApplePlatform.MACOS
+                else -> configuration.destination.platform
+            })
+        return xcodeBuildService.execute(configuration.copy(destination = destination), container, timeout)
+    }
     fun xcodeRun(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.run(configuration, container, timeout)
     fun xcodeRunOnDevice(configuration: RunConfiguration, container: Path, device: AppleDevice, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult {
         require(device.state == dev.appxcode.ide.device.DeviceState.AVAILABLE) { "Device is not available: ${device.id}" }
