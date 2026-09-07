@@ -6,10 +6,22 @@ data class BuildDiagnostic(val file: Path?, val line: Int?, val column: Int?, va
 enum class DiagnosticSeverity { ERROR, WARNING, NOTE }
 
 object XcodeDiagnosticParser {
-    private val pattern = Regex("^(.+?):(\\d+):(\\d+): (error|warning|note): (.+)$")
+    private val withColumn = Regex("^(.+?):(\\d+):(\\d+):\\s*(error|warning|note):\\s*(.+)$", RegexOption.IGNORE_CASE)
+    private val withoutColumn = Regex("^(.+?):(\\d+):\\s*(error|warning|note):\\s*(.+)$", RegexOption.IGNORE_CASE)
     fun parse(output: String): List<BuildDiagnostic> = output.lineSequence().mapNotNull { line ->
-        val match = pattern.find(line.trim()) ?: return@mapNotNull null
-        val severity = when (match.groupValues[4]) { "error" -> DiagnosticSeverity.ERROR; "warning" -> DiagnosticSeverity.WARNING; else -> DiagnosticSeverity.NOTE }
-        BuildDiagnostic(Path.of(match.groupValues[1]), match.groupValues[2].toInt(), match.groupValues[3].toInt(), match.groupValues[5], severity)
+        val value = line.trim()
+        val match = withColumn.matchEntire(value)
+        if (match != null) {
+            val severity = severity(match.groupValues[4])
+            return@mapNotNull BuildDiagnostic(Path.of(match.groupValues[1].trim()), match.groupValues[2].toInt(), match.groupValues[3].toInt(), match.groupValues[5].trim(), severity)
+        }
+        val short = withoutColumn.matchEntire(value) ?: return@mapNotNull null
+        BuildDiagnostic(Path.of(short.groupValues[1].trim()), short.groupValues[2].toInt(), null, short.groupValues[4].trim(), severity(short.groupValues[3]))
     }.toList()
+
+    private fun severity(value: String): DiagnosticSeverity = when (value.lowercase()) {
+        "error" -> DiagnosticSeverity.ERROR
+        "warning" -> DiagnosticSeverity.WARNING
+        else -> DiagnosticSeverity.NOTE
+    }
 }
