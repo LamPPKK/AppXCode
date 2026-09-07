@@ -36,6 +36,10 @@ import dev.appxcode.ide.language.SwiftSymbol
 import dev.appxcode.ide.language.SwiftSymbolIndex
 import dev.appxcode.ide.language.ObjCSymbol
 import dev.appxcode.ide.language.ObjCSymbolIndex
+import dev.appxcode.ide.language.SwiftLanguageService
+import dev.appxcode.ide.language.SwiftLanguageServiceFactory
+import dev.appxcode.ide.language.SwiftCompletion
+import dev.appxcode.ide.language.SwiftDiagnostic
 import dev.appxcode.ide.project.XcodeTarget
 import dev.appxcode.ide.project.XcodeProjectModel
 @Service(Service.Level.PROJECT)
@@ -43,6 +47,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     private val initialized = AtomicBoolean(false)
     private val swiftSymbols = SwiftSymbolIndex()
     private val objcSymbols = ObjCSymbolIndex()
+    @Volatile private var swiftLanguage: SwiftLanguageService? = null
     private val git = GitService()
     private val dependencyResolver = DependencyResolver()
     private val debugSessions = DebugSessionRegistry()
@@ -60,6 +65,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
                 }
             }
         }
+        if (swiftLanguage == null) project.basePath?.let { swiftLanguage = SwiftLanguageServiceFactory.create(appleToolchain(), Path.of(it)) }
     }
     fun onProjectFileChange(listener: (Path) -> Unit) { changeListeners += listener }
     fun isInitialized(): Boolean = initialized.get()
@@ -73,6 +79,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun indexSwift(files: Iterable<Path>) { swiftSymbols.index(files) }
     fun findSwiftSymbols(name: String): List<SwiftSymbol> = swiftSymbols.find(name)
     fun completeSwift(prefix: String): List<SwiftSymbol> = swiftSymbols.complete(prefix)
+    fun swiftCompletions(file: Path, line: Int, column: Int): List<SwiftCompletion> = swiftLanguage?.complete(file, line, column).orEmpty()
+    fun swiftDiagnostics(files: List<Path>): List<SwiftDiagnostic> = swiftLanguage?.diagnostics(files).orEmpty()
     fun indexObjectiveC(files: Iterable<Path>) { objcSymbols.index(files) }
     fun findObjectiveCSymbols(name: String): List<ObjCSymbol> = objcSymbols.find(name)
     fun completeObjectiveC(prefix: String): List<ObjCSymbol> = objcSymbols.complete(prefix)
@@ -97,6 +105,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     override fun dispose() {
         projectWatcher?.close()
         projectWatcher = null
+        (swiftLanguage as? AutoCloseable)?.close()
+        swiftLanguage = null
         changeListeners.clear()
     }
 }
