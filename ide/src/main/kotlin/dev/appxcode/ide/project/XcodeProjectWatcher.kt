@@ -15,6 +15,7 @@ class XcodeProjectWatcher(private val root: Path) : AutoCloseable {
     private val worker = thread(isDaemon = true, name = "appxcode-project-watcher") { loop() }
 
     init {
+        require(java.nio.file.Files.isDirectory(root)) { "Project watcher root must be a directory" }
         java.nio.file.Files.walk(root).use { paths -> paths.filter(java.nio.file.Files::isDirectory).forEach { it.register(service, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY) } }
     }
     fun onChange(listener: (Path) -> Unit) { listeners += listener }
@@ -32,7 +33,7 @@ class XcodeProjectWatcher(private val root: Path) : AutoCloseable {
                         }
                     }
                 }
-                if (path.fileName.toString().let { it.endsWith(".xcodeproj") || it.endsWith(".xcworkspace") || it == "Package.resolved" || it == "Podfile.lock" }) listeners.forEach { it(path) }
+                if (path.fileName.toString().let { it.endsWith(".xcodeproj") || it.endsWith(".xcworkspace") || it == "project.pbxproj" || it.endsWith(".xcscheme") || it == "Package.resolved" || it == "Podfile.lock" }) listeners.forEach { listener -> runCatching { listener(path) } }
             }
             if (!key.reset()) break
         }
