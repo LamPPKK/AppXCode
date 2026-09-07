@@ -29,6 +29,7 @@ class FlutterToolService(
     fun sessionOutput(): String = sessionOutput.toString()
     fun run(root: Path, deviceId: String? = null): FlutterCommandResult = execute(root, "run", deviceId)
     fun test(root: Path): FlutterCommandResult = execute(root, "test", null)
+    fun pubGet(root: Path): FlutterCommandResult = execute(root, "pub", null)
     fun hotReload(root: Path): FlutterCommandResult = sendSignal(root, "r")
     fun hotRestart(root: Path): FlutterCommandResult = sendSignal(root, "R")
 
