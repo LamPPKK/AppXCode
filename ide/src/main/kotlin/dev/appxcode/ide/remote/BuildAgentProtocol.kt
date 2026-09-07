@@ -286,6 +286,11 @@ data class BuildAgentHealth(
     val message: String = "",
     val observedAtEpochMillis: Long = System.currentTimeMillis(),
 ) {
+    companion object {
+        fun unavailable(agentId: String, message: String = "agent unavailable"): BuildAgentHealth =
+            BuildAgentHealth(agentId = agentId, online = false, toolchainAvailable = false, message = message)
+    }
+
     val ready: Boolean get() = online && toolchainAvailable && protocolVersion == CURRENT_PROTOCOL_VERSION
     val errorCode: String? get() = when {
         protocolVersion != CURRENT_PROTOCOL_VERSION -> BuildAgentErrorCode.UNSUPPORTED_PROTOCOL
