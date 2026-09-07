@@ -91,9 +91,13 @@ data class BuildAgentArtifact(
     }
 
     fun matches(content: ByteArray): Boolean {
-        val digest = java.security.MessageDigest.getInstance("SHA-256").digest(content)
-            .joinToString("") { "%02x".format(it) }
+        val digest = sha256Of(content)
         return digest.equals(sha256, ignoreCase = true) && content.size.toLong() == sizeBytes
+    }
+
+    companion object {
+        fun sha256Of(content: ByteArray): String = java.security.MessageDigest.getInstance("SHA-256")
+            .digest(content).joinToString("") { "%02x".format(it) }
     }
 }
 
