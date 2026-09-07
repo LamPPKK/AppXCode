@@ -59,6 +59,7 @@ import dev.appxcode.ide.test.XcodeTestService
 import dev.appxcode.ide.test.XcodeTestResult
 import java.time.Duration
 import dev.appxcode.ide.project.XcodeTarget
+import dev.appxcode.ide.device.DeviceRegistry
 import dev.appxcode.ide.project.XcodeProjectModel
 @Service(Service.Level.PROJECT)
 class AppXCodeProjectService(private val project: Project) : Disposable {
@@ -72,6 +73,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     private val debugSessions = DebugSessionRegistry()
     private val flutter = FlutterToolService()
     private val runConfigurations = RunConfigurationRegistry()
+    private val devices = DeviceRegistry()
     private val xcodeBuildService = XcodeBuildService(AppleToolchainDetector.detect())
     private val xcodeArchiveService = XcodeArchiveService(xcodeBuildService)
     private val xcodeExportService = XcodeExportService()
@@ -97,6 +99,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun discoverXcodeContainers(root: Path): List<XcodeContainer> = XcodeProjectModel.discover(root)
     fun xcodeSchemes(container: XcodeContainer): List<XcodeScheme> = XcodeProjectModel.readSchemes(container)
     fun appleToolchain(): AppleToolchain = AppleToolchainDetector.detect()
+    fun deviceRegistry(): DeviceRegistry = devices
     fun dependencies(root: Path): List<DependencyPin> = DependencyModel.read(root)
     fun resolveSwiftPackages(root: Path, timeoutMillis: Long = 600_000): ResolveResult = dependencyResolver.resolveSwift(root, timeoutMillis)
     fun installCocoaPods(root: Path, timeoutMillis: Long = 600_000): ResolveResult = dependencyResolver.installPods(root, timeoutMillis)
