@@ -15,6 +15,10 @@ data class XcodeBuildRequest(
     val environment: Map<String, String> = emptyMap(),
 ) {
     init {
+        require(container.fileName != null) { "Build container must point to a project or workspace" }
+        require(container.fileName.toString().endsWith(".xcodeproj") || container.fileName.toString().endsWith(".xcworkspace")) {
+            "Build container must be an .xcodeproj or .xcworkspace"
+        }
         require(scheme.isNotBlank()) { "Build scheme must not be blank" }
         require(destination.isNotBlank()) { "Build destination must not be blank" }
         require(configuration.isNotBlank()) { "Build configuration must not be blank" }
