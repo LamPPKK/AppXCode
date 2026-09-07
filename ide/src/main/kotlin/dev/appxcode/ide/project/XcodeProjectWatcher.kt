@@ -15,10 +15,23 @@ class XcodeProjectWatcher(private val root: Path) : AutoCloseable {
     private val worker = thread(isDaemon = true, name = "appxcode-project-watcher") { loop() }
 
     init {
-        require(java.nio.file.Files.isDirectory(root)) { "Project watcher root must be a directory" }
-        java.nio.file.Files.walk(root).use { paths -> paths.filter(java.nio.file.Files::isDirectory).forEach { it.register(service, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY) } }
+        if (!java.nio.file.Files.isDirectory(root)) {
+            service.close()
+            throw IllegalArgumentException("Project watcher root must be a directory")
+        }
+        runCatching {
+            java.nio.file.Files.walk(root).use { paths ->
+                paths.filter(java.nio.file.Files::isDirectory).forEach { directory ->
+                    runCatching { registerDirectory(directory) }
+                }
+            }
+        }.onFailure { service.close(); throw it }
     }
-    fun onChange(listener: (Path) -> Unit) { listeners += listener }
+    fun onChange(listener: (Path) -> Unit) {
+        if (running) listeners += listener
+    }
+
+    fun removeListener(listener: (Path) -> Unit) { listeners -= listener }
 
     private fun loop() {
         while (running) {
@@ -40,7 +53,9 @@ class XcodeProjectWatcher(private val root: Path) : AutoCloseable {
     }
 
     private fun registerDirectory(directory: Path) {
-        directory.register(service, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY)
+        if (java.nio.file.Files.isDirectory(directory) && java.nio.file.Files.isReadable(directory)) {
+            directory.register(service, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY)
+        }
     }
 
     override fun close() { running = false; service.close(); worker.interrupt(); listeners.clear() }
