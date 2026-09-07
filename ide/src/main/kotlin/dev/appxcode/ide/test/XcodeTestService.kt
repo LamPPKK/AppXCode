@@ -11,6 +11,7 @@ data class TestCaseResult(val identifier: String, val status: TestStatus, val du
 
 data class XcodeTestResult(val cases: List<TestCaseResult>, val rawOutput: String) {
     val passed: Boolean get() = cases.none { it.status == TestStatus.FAILED }
+    val tree: TestResultTree get() = TestResultTree.from(cases)
 }
 
 class XcodeTestService(private val builder: XcodeBuildService) {
