@@ -21,6 +21,7 @@ data class XcodeBuildResult(
     val timedOut: Boolean,
 ) {
     val succeeded: Boolean get() = exitCode == 0 && !timedOut
+    val diagnostics: List<BuildDiagnostic> get() = XcodeDiagnosticParser.parse(output)
 }
 
 class XcodeBuildService(
