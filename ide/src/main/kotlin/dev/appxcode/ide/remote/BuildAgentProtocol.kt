@@ -25,6 +25,7 @@ data class BuildAgentResponse(
     val message: String = "",
     val errorCode: String? = null,
     val artifacts: List<String> = emptyList(),
+    val artifactMetadata: List<BuildAgentArtifact> = emptyList(),
 ) {
     val status: BuildAgentResponseStatus get() = if (accepted) BuildAgentResponseStatus.ACCEPTED else BuildAgentResponseStatus.REJECTED
     val isError: Boolean get() = !accepted
@@ -33,6 +34,7 @@ data class BuildAgentResponse(
         require(requestId.isNotBlank()) { "Build agent response id must not be blank" }
         require(accepted || !errorCode.isNullOrBlank()) { "Rejected responses must include an error code" }
         require(artifacts.all { it.isNotBlank() }) { "Artifact references must not be blank" }
+        require(artifactMetadata.map { it.reference }.distinct().size == artifactMetadata.size) { "Artifact metadata references must be unique" }
     }
 
     companion object {
@@ -58,6 +60,18 @@ data class BuildAgentLogEvent(
         require(requestId.isNotBlank()) { "Build agent log request id must not be blank" }
         require(sequence >= 0) { "Build agent log sequence must not be negative" }
         require(message.isNotEmpty()) { "Build agent log message must not be empty" }
+    }
+}
+
+data class BuildAgentArtifact(
+    val reference: String,
+    val sizeBytes: Long,
+    val sha256: String,
+) {
+    init {
+        require(reference.isNotBlank()) { "Artifact reference must not be blank" }
+        require(sizeBytes >= 0) { "Artifact size must not be negative" }
+        require(sha256.matches(Regex("[0-9a-fA-F]{64}"))) { "Artifact sha256 must be 64 hexadecimal characters" }
     }
 }
 
