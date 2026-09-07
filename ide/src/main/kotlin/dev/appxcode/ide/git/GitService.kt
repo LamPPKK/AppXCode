@@ -77,7 +77,7 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
             val fetch = entries.firstOrNull { it.pushUrl == null }
             val push = entries.firstOrNull { it.pushUrl != null }
             (fetch ?: push)?.let { GitRemote(name, fetch?.url ?: it.url, push?.url) }
-        }
+        }.sortedBy(GitRemote::name)
     }
 
     fun tags(root: Path): List<GitTag> {
