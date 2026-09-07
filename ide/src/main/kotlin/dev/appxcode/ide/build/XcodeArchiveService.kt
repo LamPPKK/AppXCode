@@ -3,7 +3,15 @@ package dev.appxcode.ide.build
 import java.nio.file.Path
 import java.time.Duration
 
-data class ArchiveRequest(val container: Path, val scheme: String, val destination: String, val archivePath: Path, val configuration: String = "Release")
+data class ArchiveRequest(val container: Path, val scheme: String, val destination: String, val archivePath: Path, val configuration: String = "Release") {
+    init {
+        require(scheme.isNotBlank()) { "Archive scheme must not be blank" }
+        require(destination.isNotBlank()) { "Archive destination must not be blank" }
+        require(configuration.isNotBlank()) { "Archive configuration must not be blank" }
+        require(container.fileName != null) { "Archive container must point to a file" }
+        require(archivePath.fileName != null) { "Archive path must point to a file" }
+    }
+}
 data class ArchiveResult(val build: XcodeBuildResult, val archivePath: Path?)
 
 class XcodeArchiveService(private val builder: XcodeBuildService) {
