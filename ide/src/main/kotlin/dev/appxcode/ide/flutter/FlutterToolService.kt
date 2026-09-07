@@ -14,13 +14,19 @@ class FlutterToolService(
     },
 ) {
     private var session: Process? = null
+    private val sessionOutput = StringBuffer()
 
     fun startSession(root: Path, deviceId: String? = null): Boolean {
         if (session?.isAlive == true) return true
         val args = buildList { add(flutter); add("run"); if (deviceId != null) { add("-d"); add(deviceId) } }
-        return runCatching { session = ProcessBuilder(args).directory(root.toFile()).redirectErrorStream(true).start(); true }.getOrDefault(false)
+        return runCatching {
+            session = ProcessBuilder(args).directory(root.toFile()).redirectErrorStream(true).start()
+            Thread { session?.inputStream?.bufferedReader()?.use { sessionOutput.append(it.readText()) } }.apply { isDaemon = true; start() }
+            true
+        }.getOrDefault(false)
     }
     fun stopSession() { session?.destroy(); session = null }
+    fun sessionOutput(): String = sessionOutput.toString()
     fun run(root: Path, deviceId: String? = null): FlutterCommandResult = execute(root, "run", deviceId)
     fun test(root: Path): FlutterCommandResult = execute(root, "test", null)
     fun hotReload(root: Path): FlutterCommandResult = sendSignal(root, "r")
