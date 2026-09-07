@@ -5,6 +5,8 @@ import java.nio.file.Path
 import java.security.MessageDigest
 
 object BuildArtifactScanner {
+    fun verify(transfer: BuildTransfer): Boolean = transfer.artifacts.all(::verify)
+
     fun verify(artifact: BuildArtifact): Boolean =
         Files.isRegularFile(artifact.path) && Files.size(artifact.path) == artifact.sizeBytes && sha256(artifact.path) == artifact.sha256
 
