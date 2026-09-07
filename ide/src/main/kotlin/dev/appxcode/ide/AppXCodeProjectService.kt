@@ -27,12 +27,15 @@ import dev.appxcode.ide.flutter.FlutterProject
 import dev.appxcode.ide.flutter.FlutterProjectDetector
 import dev.appxcode.ide.language.SwiftSymbol
 import dev.appxcode.ide.language.SwiftSymbolIndex
+import dev.appxcode.ide.language.ObjCSymbol
+import dev.appxcode.ide.language.ObjCSymbolIndex
 import dev.appxcode.ide.project.XcodeTarget
 import dev.appxcode.ide.project.XcodeProjectModel
 @Service(Service.Level.PROJECT)
 class AppXCodeProjectService(private val project: Project) : Disposable {
     private val initialized = AtomicBoolean(false)
     private val swiftSymbols = SwiftSymbolIndex()
+    private val objcSymbols = ObjCSymbolIndex()
     private val git = GitService()
     private val debugSessions = DebugSessionRegistry()
     private val flutter = FlutterToolService()
@@ -60,6 +63,9 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun indexSwift(files: Iterable<Path>) { swiftSymbols.index(files) }
     fun findSwiftSymbols(name: String): List<SwiftSymbol> = swiftSymbols.find(name)
     fun completeSwift(prefix: String): List<SwiftSymbol> = swiftSymbols.complete(prefix)
+    fun indexObjectiveC(files: Iterable<Path>) { objcSymbols.index(files) }
+    fun findObjectiveCSymbols(name: String): List<ObjCSymbol> = objcSymbols.find(name)
+    fun completeObjectiveC(prefix: String): List<ObjCSymbol> = objcSymbols.complete(prefix)
     fun xcodeTargets(projectFile: Path): List<XcodeTarget> = XcodeProjectModel.readTargets(projectFile)
     fun testFrameworks(root: Path): Set<TestFramework> = TestFrameworkRegistry.detect(root)
     fun discoverXCTest(root: Path): List<DiscoveredTest> = TestFrameworkRegistry.discoverXCTest(root)
