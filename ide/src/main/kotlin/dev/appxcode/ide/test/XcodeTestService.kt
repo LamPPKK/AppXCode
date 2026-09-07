@@ -14,6 +14,7 @@ data class XcodeTestResult(val cases: List<TestCaseResult>, val rawOutput: Strin
     val isComplete: Boolean get() = cases.isNotEmpty() && cases.none { it.status == TestStatus.UNKNOWN }
     val failedCases: List<TestCaseResult> get() = cases.filter { it.status == TestStatus.FAILED }
     val skippedCases: List<TestCaseResult> get() = cases.filter { it.status == TestStatus.SKIPPED }
+    val failedIdentifiers: List<String> get() = failedCases.map(TestCaseResult::identifier).distinct()
     val tree: TestResultTree get() = TestResultTree.from(cases)
 }
 
