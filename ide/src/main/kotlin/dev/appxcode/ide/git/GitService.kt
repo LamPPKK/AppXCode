@@ -5,6 +5,7 @@ import java.nio.file.Path
 data class GitStatus(val branch: String?, val changedFiles: List<String>, val available: Boolean) {
     val isClean: Boolean get() = available && changedFiles.isEmpty()
 }
+data class GitSyncStatus(val ahead: Int, val behind: Int)
 data class GitBranch(val name: String, val remote: Boolean)
 data class GitCommit(val hash: String, val subject: String, val author: String, val timestamp: Long?)
 data class GitStash(val index: Int, val name: String, val message: String)
@@ -24,6 +25,12 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
         val branch = lines.firstOrNull()?.removePrefix("## ")?.substringBefore("...")
         val changed = lines.drop(1).mapNotNull { it.trim().takeIf(String::isNotBlank) }
         return GitStatus(branch, changed, true)
+    }
+
+    fun syncStatus(root: Path): GitSyncStatus? {
+        val output = run(root, listOf("git", "rev-list", "--left-right", "--count", "@{upstream}...HEAD")) ?: return null
+        val parts = output.trim().split(Regex("\\s+"))
+        return if (parts.size == 2) GitSyncStatus(parts[1].toIntOrNull() ?: return null, parts[0].toIntOrNull() ?: return null) else null
     }
 
     fun diff(root: Path, staged: Boolean = false): String =
