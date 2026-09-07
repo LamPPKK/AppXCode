@@ -22,9 +22,22 @@ object PluginCompatibility {
     }
 
     private fun inRange(since: String?, until: String?, build: String): Boolean {
-        val number = build.takeWhile(Char::isDigit).toIntOrNull() ?: return false
-        val min = since?.takeWhile(Char::isDigit)?.toIntOrNull()
-        val max = until?.takeWhile(Char::isDigit)?.toIntOrNull()
-        return (min == null || number >= min) && (max == null || number <= max)
+        val number = parseBuild(build) ?: return false
+        val min = since?.let(::parseBuild)
+        val max = until?.let(::parseBuild)
+        return (min == null || compareBuild(number, min) >= 0) && (max == null || compareBuild(number, max) <= 0)
     }
+
+    private fun compareBuild(left: List<Int>, right: List<Int>): Int {
+        val size = maxOf(left.size, right.size)
+        for (index in 0 until size) {
+            val result = (left.getOrElse(index) { 0 }).compareTo(right.getOrElse(index) { 0 })
+            if (result != 0) return result
+        }
+        return 0
+    }
+
+    private fun parseBuild(value: String): List<Int>? = value.trim().split('.').takeIf { it.isNotEmpty() }
+        ?.map { it.toIntOrNull() ?: return null }
+        ?.dropLastWhile { it == 0 }
 }
