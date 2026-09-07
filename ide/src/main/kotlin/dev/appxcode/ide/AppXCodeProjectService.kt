@@ -129,6 +129,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun flutterHotReload(root: Path): FlutterCommandResult = flutter.hotReload(root)
     fun flutterHotRestart(root: Path): FlutterCommandResult = flutter.hotRestart(root)
     fun flutterSessionAlive(): Boolean = flutter.sessionAlive()
+    fun flutterSessionExitCode(): Int? = flutter.sessionExitCode()
     fun clearFlutterSessionOutput() = flutter.clearSessionOutput()
     override fun dispose() {
         projectWatcher?.close()

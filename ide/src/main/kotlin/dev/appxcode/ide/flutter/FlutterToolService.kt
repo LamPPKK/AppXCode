@@ -48,6 +48,7 @@ class FlutterToolService(
     fun sessionOutput(): String = synchronized(sessionOutput) { sessionOutput.toString() }
     fun clearSessionOutput() = synchronized(sessionOutput) { sessionOutput.setLength(0) }
     @Synchronized fun sessionAlive(): Boolean = session?.isAlive == true
+    @Synchronized fun sessionExitCode(): Int? = session?.takeIf { !it.isAlive }?.let { runCatching { it.exitValue() }.getOrNull() }
     fun run(root: Path, deviceId: String? = null): FlutterCommandResult = execute(root, "run", deviceId)
     fun test(root: Path): FlutterCommandResult = execute(root, "test", null)
     fun pubGet(root: Path): FlutterCommandResult = when {
