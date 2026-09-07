@@ -197,6 +197,12 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
         }
         return flutter.run(root, selected?.id)
     }
+    fun startFlutterSession(root: Path, deviceId: String? = null): Boolean {
+        val selected = devices.select(deviceId)
+        if (deviceId != null && selected == null) return false
+        return flutter.startSession(root, selected?.id)
+    }
+    fun stopFlutterSession() = flutter.stopSession()
     fun flutterTest(root: Path): FlutterCommandResult = flutter.test(root)
     fun flutterHotReload(root: Path): FlutterCommandResult = flutter.hotReload(root)
     fun flutterHotRestart(root: Path): FlutterCommandResult = flutter.hotRestart(root)
