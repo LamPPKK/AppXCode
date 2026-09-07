@@ -20,6 +20,7 @@ object ProjectSnapshotLoader {
         val schemes = containers.flatMap(XcodeProjectModel::readSchemes)
             .distinctBy(XcodeScheme::name)
             .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, XcodeScheme::name))
-        return ProjectSnapshot(root, containers, schemes, project?.let(XcodeProjectModel::readTargets) ?: emptyList(), DependencyModel.read(root))
+        val dependencies = runCatching { DependencyModel.read(root) }.getOrDefault(emptyList())
+        return ProjectSnapshot(root, containers, schemes, project?.let(XcodeProjectModel::readTargets) ?: emptyList(), dependencies)
     }
 }
