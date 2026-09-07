@@ -296,6 +296,7 @@ data class BuildAgentHealth(
     }
 
     val ready: Boolean get() = online && toolchainAvailable && protocolVersion == CURRENT_PROTOCOL_VERSION
+    val protocolCompatible: Boolean get() = protocolVersion == CURRENT_PROTOCOL_VERSION
     val errorCode: String? get() = when {
         protocolVersion != CURRENT_PROTOCOL_VERSION -> BuildAgentErrorCode.UNSUPPORTED_PROTOCOL
         !online -> BuildAgentErrorCode.AGENT_OFFLINE
