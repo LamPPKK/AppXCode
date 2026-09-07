@@ -293,6 +293,8 @@ data class BuildAgentHealth(
     }
     fun isUsable(maxAgeMillis: Long, nowEpochMillis: Long = System.currentTimeMillis()): Boolean =
         ready && !isStale(maxAgeMillis, nowEpochMillis)
+    fun canAcceptRequests(maxAgeMillis: Long, nowEpochMillis: Long = System.currentTimeMillis()): Boolean =
+        isUsable(maxAgeMillis, nowEpochMillis)
 
     init {
         require(protocolVersion == CURRENT_PROTOCOL_VERSION) { "Unsupported build agent protocol: $protocolVersion" }
