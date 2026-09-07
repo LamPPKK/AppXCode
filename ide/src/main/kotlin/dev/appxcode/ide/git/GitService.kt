@@ -31,5 +31,10 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
         return run(root, listOf("git", "switch", "-c", name)) != null
     }
 
+    fun checkout(root: Path, name: String): Boolean {
+        require(name.isNotBlank() && !name.contains(' ')) { "invalid branch name" }
+        return run(root, listOf("git", "switch", name)) != null
+    }
+
     private fun run(root: Path, args: List<String>): String = runCatching { command(args, root) }.getOrNull()
 }
