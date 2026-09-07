@@ -244,7 +244,10 @@ data class BuildAgentPairing(
 fun BuildAgentEndpoint.isPairedWith(pairing: BuildAgentPairing, nowEpochMillis: Long = System.currentTimeMillis()): Boolean =
     pairingId != null && pairingId == pairing.pairingId && !pairing.isExpired(nowEpochMillis)
 
-fun BuildAgentEndpoint.withPairing(pairing: BuildAgentPairing): BuildAgentEndpoint = copy(pairingId = pairing.pairingId)
+fun BuildAgentEndpoint.withPairing(pairing: BuildAgentPairing): BuildAgentEndpoint {
+    require(pairing.isValid) { "Cannot attach an expired pairing" }
+    return copy(pairingId = pairing.pairingId)
+}
 fun BuildAgentEndpoint.withCredentialFingerprint(fingerprint: String): BuildAgentEndpoint = copy(credentialFingerprint = fingerprint)
 fun BuildAgentEndpoint.withCredential(secret: ByteArray): BuildAgentEndpoint =
     withCredentialFingerprint(BuildAgentArtifact.sha256Of(secret))
