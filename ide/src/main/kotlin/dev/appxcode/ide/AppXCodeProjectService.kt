@@ -265,6 +265,11 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
         val kind = if (device.kind == dev.appxcode.ide.device.DeviceKind.PHYSICAL) platform else "$platform Simulator"
         return xcodeTestService.run(container, scheme, "platform=$kind,name=${device.name},id=${device.id}", configuration, timeout)
     }
+    fun xcodeTestOnSelectedDevice(container: Path, scheme: String, deviceId: String? = null, configuration: String = "Debug", timeout: Duration = Duration.ofMinutes(20)): XcodeTestResult {
+        val device = devices.select(deviceId)
+            ?: return XcodeTestResult(emptyList(), "No available device matched selection")
+        return xcodeTestOnDevice(container, scheme, device, configuration, timeout)
+    }
     fun xcodeRerunFailed(container: Path, scheme: String, destination: String, previous: XcodeTestResult, configuration: String = "Debug", timeout: Duration = Duration.ofMinutes(20)): XcodeTestResult =
         xcodeTestService.rerunFailed(container, scheme, destination, previous, configuration, timeout)
     fun xcodeRerunFailedOnDevice(container: Path, scheme: String, device: AppleDevice, previous: XcodeTestResult, configuration: String = "Debug", timeout: Duration = Duration.ofMinutes(20)): XcodeTestResult {
