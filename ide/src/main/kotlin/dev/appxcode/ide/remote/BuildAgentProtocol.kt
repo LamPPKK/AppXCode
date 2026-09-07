@@ -291,6 +291,8 @@ data class BuildAgentHealth(
             BuildAgentHealth(agentId = agentId, online = false, toolchainAvailable = false, message = message)
         fun ready(agentId: String, message: String = "agent ready"): BuildAgentHealth =
             BuildAgentHealth(agentId = agentId, online = true, toolchainAvailable = true, message = message)
+        fun toolchainUnavailable(agentId: String, message: String = "toolchain unavailable"): BuildAgentHealth =
+            BuildAgentHealth(agentId = agentId, online = true, toolchainAvailable = false, message = message)
     }
 
     val ready: Boolean get() = online && toolchainAvailable && protocolVersion == CURRENT_PROTOCOL_VERSION
