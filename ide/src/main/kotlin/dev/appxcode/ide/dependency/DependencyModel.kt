@@ -10,9 +10,9 @@ object DependencyModel {
     fun read(root: Path): List<DependencyPin> = buildList {
         if (!Files.isDirectory(root)) return@buildList
         val resolved = root.resolve("Package.resolved")
-        if (Files.isRegularFile(resolved)) addAll(readSwiftPins(resolved))
+        if (Files.isRegularFile(resolved)) addAll(runCatching { readSwiftPins(resolved) }.getOrDefault(emptyList()))
         val lock = root.resolve("Podfile.lock")
-        if (Files.isRegularFile(lock)) addAll(readPodPins(lock))
+        if (Files.isRegularFile(lock)) addAll(runCatching { readPodPins(lock) }.getOrDefault(emptyList()))
     }.distinctBy { it.manager to it.name }
 
     private fun readSwiftPins(path: Path): List<DependencyPin> {
