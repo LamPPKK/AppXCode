@@ -9,6 +9,8 @@ import dev.appxcode.ide.toolchain.AppleToolchain
 import dev.appxcode.ide.toolchain.AppleToolchainDetector
 import dev.appxcode.ide.dependency.DependencyModel
 import dev.appxcode.ide.dependency.DependencyPin
+import dev.appxcode.ide.flutter.FlutterProject
+import dev.appxcode.ide.flutter.FlutterProjectDetector
 @Service(Service.Level.PROJECT)
 class AppXCodeProjectService(private val project: Project) {
     private val initialized = AtomicBoolean(false)
@@ -18,4 +20,5 @@ class AppXCodeProjectService(private val project: Project) {
     fun discoverXcodeContainers(root: Path): List<XcodeContainer> = XcodeProjectModel.discover(root)
     fun appleToolchain(): AppleToolchain = AppleToolchainDetector.detect()
     fun dependencies(root: Path): List<DependencyPin> = DependencyModel.read(root)
+    fun flutterProject(root: Path): FlutterProject? = FlutterProjectDetector.detect(root)
 }
