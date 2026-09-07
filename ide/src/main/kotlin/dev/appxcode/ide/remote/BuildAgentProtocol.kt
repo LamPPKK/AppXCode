@@ -181,6 +181,10 @@ data class BuildAgentTransportPolicy(
     val requirePairing: Boolean = true,
     val allowInsecureRemote: Boolean = false,
 ) {
+    init {
+        require(!requireTls || !allowInsecureRemote) { "A TLS-required policy cannot allow insecure remote transport" }
+    }
+
     companion object {
         val SECURE_DEFAULT: BuildAgentTransportPolicy = BuildAgentTransportPolicy(requireTls = true, requirePairing = true)
         val LOCAL_DEVELOPMENT: BuildAgentTransportPolicy = BuildAgentTransportPolicy(requireTls = false, requirePairing = false)
