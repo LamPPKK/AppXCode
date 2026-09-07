@@ -28,6 +28,7 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
 class DeviceRegistryService {
     private val registry = DeviceRegistry()
     fun register(provider: DeviceProvider) = registry.register(provider)
+    fun unregister(providerId: String) = registry.unregister(providerId)
     fun discover(): List<AppleDevice> = registry.discover()
     fun refresh() = registry.refresh()
     fun onDevicesChanged(listener: (List<AppleDevice>) -> Unit): AutoCloseable = registry.onDevicesChanged(listener)
