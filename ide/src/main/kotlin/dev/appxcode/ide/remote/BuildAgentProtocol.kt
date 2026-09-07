@@ -8,6 +8,9 @@ data class BuildAgentRequest(
     val timeoutMillis: Long = 900_000,
     val cancellationRequested: Boolean = false,
 ) {
+    constructor(requestId: String, operation: BuildAgentOperation, projectPath: String, timeoutMillis: Long = 900_000) :
+        this(CURRENT_PROTOCOL_VERSION, requestId, operation.wireName, projectPath, timeoutMillis, false)
+
     init {
         require(protocolVersion == CURRENT_PROTOCOL_VERSION) { "Unsupported build agent protocol: $protocolVersion" }
         require(requestId.isNotBlank()) { "Build agent request id must not be blank" }
