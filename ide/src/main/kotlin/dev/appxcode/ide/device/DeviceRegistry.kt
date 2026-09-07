@@ -53,6 +53,7 @@ class DeviceRegistry {
         return discover().firstOrNull { it.id == deviceId }
     }
     fun preferred(): AppleDevice? = snapshot().preferredDevice()
+    fun select(deviceId: String? = null): AppleDevice? = snapshot().select(deviceId)
     private fun notifyListeners() { val devices = discover(); listeners.forEach { runCatching { it(devices) } } }
 }
 
@@ -99,6 +100,11 @@ data class DeviceRegistrySnapshot(val devices: List<AppleDevice>, val providerEr
         .sortedWith(compareBy<AppleDevice> { kindPriority(it.kind) }
             .thenComparator(compareBy(String.CASE_INSENSITIVE_ORDER, AppleDevice::platform, AppleDevice::name)))
         .firstOrNull()
+
+    fun select(deviceId: String? = null): AppleDevice? {
+        if (deviceId != null) require(deviceId.isNotBlank()) { "Device id must not be blank" }
+        return if (deviceId == null) preferredDevice() else find(deviceId)?.takeIf { it.state == DeviceState.AVAILABLE }
+    }
 
     private fun kindPriority(kind: DeviceKind): Int = when (kind) {
         DeviceKind.PHYSICAL -> 0
