@@ -285,6 +285,12 @@ data class BuildAgentHealth(
     val observedAtEpochMillis: Long = System.currentTimeMillis(),
 ) {
     val ready: Boolean get() = online && toolchainAvailable && protocolVersion == CURRENT_PROTOCOL_VERSION
+    val errorCode: String? get() = when {
+        protocolVersion != CURRENT_PROTOCOL_VERSION -> BuildAgentErrorCode.UNSUPPORTED_PROTOCOL
+        !online -> BuildAgentErrorCode.INVALID_REQUEST
+        !toolchainAvailable -> BuildAgentErrorCode.TOOLCHAIN_UNAVAILABLE
+        else -> null
+    }
     fun ageMillis(nowEpochMillis: Long = System.currentTimeMillis()): Long =
         (nowEpochMillis - observedAtEpochMillis).coerceAtLeast(0)
     fun isStale(maxAgeMillis: Long, nowEpochMillis: Long = System.currentTimeMillis()): Boolean {
