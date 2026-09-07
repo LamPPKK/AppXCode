@@ -220,6 +220,20 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     }
     fun xcodeTest(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.test(configuration, container, timeout)
     fun xcodeClean(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.clean(configuration, container, timeout)
+    fun xcodeCleanOnDevice(configuration: RunConfiguration, container: Path, device: AppleDevice, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult {
+        require(device.state == dev.appxcode.ide.device.DeviceState.AVAILABLE) { "Device is not available: ${device.id}" }
+        val platform = when (device.platform.lowercase()) {
+            "ios" -> dev.appxcode.ide.build.ApplePlatform.IOS
+            "ipados", "ipad os" -> dev.appxcode.ide.build.ApplePlatform.IPADOS
+            "watchos", "watch os" -> dev.appxcode.ide.build.ApplePlatform.WATCHOS
+            "tvos", "tv os" -> dev.appxcode.ide.build.ApplePlatform.TVOS
+            "macos", "mac os" -> dev.appxcode.ide.build.ApplePlatform.MACOS
+            else -> configuration.destination.platform
+        }
+        val kind = if (device.kind == dev.appxcode.ide.device.DeviceKind.PHYSICAL) dev.appxcode.ide.build.DestinationKind.DEVICE else dev.appxcode.ide.build.DestinationKind.SIMULATOR
+        val destination = dev.appxcode.ide.build.AppleDestination(platform, kind, device.name, device.id)
+        return xcodeBuildService.clean(configuration.copy(destination = destination), container, timeout)
+    }
     fun xcodeArchive(request: ArchiveRequest, timeout: Duration = Duration.ofMinutes(30)): ArchiveResult = xcodeArchiveService.archive(request, timeout)
     fun xcodeArchiveOnDevice(request: ArchiveRequest, device: AppleDevice, timeout: Duration = Duration.ofMinutes(30)): ArchiveResult {
         require(device.state == dev.appxcode.ide.device.DeviceState.AVAILABLE) { "Device is not available: ${device.id}" }
