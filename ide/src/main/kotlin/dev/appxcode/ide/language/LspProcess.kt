@@ -15,8 +15,8 @@ class LspProcessManager(private val config: LspServerConfig) : AutoCloseable {
         state = LspState.STARTING
         return runCatching {
             process = ProcessBuilder(listOf(config.executable.toString()) + config.arguments).directory(config.workspace.toFile()).start()
-            state = LspState.RUNNING
-            true
+            if (process?.isAlive != true) { state = LspState.FAILED; false }
+            else { state = LspState.RUNNING; true }
         }.getOrElse { state = LspState.FAILED; false }
     }
 
