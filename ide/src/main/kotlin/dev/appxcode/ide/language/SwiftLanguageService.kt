@@ -56,7 +56,7 @@ class UnavailableSwiftLanguageService(private val toolchain: AppleToolchain) : S
     override fun complete(file: Path, line: Int, column: Int): List<SwiftCompletion> = emptyList()
     override fun diagnostics(files: List<Path>): List<SwiftDiagnostic> = files.flatMap { file ->
         if (!java.nio.file.Files.isRegularFile(file)) return@flatMap emptyList()
-        val lines = java.nio.file.Files.readAllLines(file)
+        val lines = runCatching { java.nio.file.Files.readAllLines(file) }.getOrNull() ?: return@flatMap emptyList()
         buildList {
             if (toolchain.swiftPath == null) add(SwiftDiagnostic(file, 1, 1, "Swift toolchain is unavailable", Severity.INFO))
             lines.forEachIndexed { index, line ->
