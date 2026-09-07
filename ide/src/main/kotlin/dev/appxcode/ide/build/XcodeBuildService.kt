@@ -29,6 +29,7 @@ class XcodeBuildService(
     private val processFactory: (List<String>, Path) -> Process = { command, directory ->
         ProcessBuilder(command).directory(directory.toFile()).redirectErrorStream(true).start()
     },
+    private val processFactoryWithEnvironment: ((List<String>, Path, Map<String, String>) -> Process)? = null,
 ) {
     fun execute(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult =
         execute(XcodeBuildRequest(container, configuration.scheme, configuration.destination.xcodebuildSpecifier(), configuration.configuration, "build", configuration.arguments, configuration.environment), timeout)
@@ -38,8 +39,12 @@ class XcodeBuildService(
         val executable = toolchain.xcodebuildPath ?: return XcodeBuildResult(null, "xcodebuild is unavailable", false)
         val containerFlag = if (request.container.fileName.toString().endsWith(".xcworkspace")) "-workspace" else "-project"
         val command = listOf(executable.toString(), "-scheme", request.scheme, "-destination", request.destination, "-configuration", request.configuration, request.action, containerFlag, request.container.toString()) + request.arguments
-        val process = processFactory(command, request.container.parent)
-        request.environment.forEach { (key, value) -> process.environment()[key] = value }
+        val process = processFactoryWithEnvironment?.let { it(command, request.container.parent, request.environment) }
+            ?: if (request.environment.isEmpty()) processFactory(command, request.container.parent)
+            else ProcessBuilder(command).directory(request.container.parent.toFile()).apply {
+                environment().putAll(request.environment)
+                redirectErrorStream(true)
+            }.start()
         val outputBuffer = StringBuffer()
         val reader = Thread { process.inputStream.bufferedReader().use { outputBuffer.append(it.readText()) } }
         reader.isDaemon = true
