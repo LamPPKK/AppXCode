@@ -10,8 +10,8 @@ data class AppleDestination(
     val identifier: String? = null,
 ) {
     init {
-        require(name.isNotBlank()) { "Destination name must not be blank" }
-        require(identifier == null || identifier.isNotBlank()) { "Destination identifier must not be blank" }
+        require(name.isNotBlank() && name == name.trim()) { "Destination name must not be blank or padded" }
+        require(identifier == null || (identifier.isNotBlank() && identifier == identifier.trim() && !identifier.any(Char::isWhitespace))) { "Destination identifier must be a compact value" }
     }
 
     fun xcodebuildSpecifier(): String = buildString {
