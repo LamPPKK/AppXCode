@@ -14,10 +14,15 @@ interface DeviceProvider {
 
 class DeviceRegistry {
     private val providers = CopyOnWriteArrayList<DeviceProvider>()
+    private val listeners = CopyOnWriteArrayList<(List<AppleDevice>) -> Unit>()
 
-    fun register(provider: DeviceProvider) { if (providers.none { it.id == provider.id }) providers += provider }
-    fun unregister(providerId: String) { providers.removeIf { it.id == providerId } }
+    fun register(provider: DeviceProvider) {
+        if (providers.none { it.id == provider.id }) { providers += provider; notifyListeners() }
+    }
+    fun unregister(providerId: String) { if (providers.removeIf { it.id == providerId }) notifyListeners() }
+    fun onDevicesChanged(listener: (List<AppleDevice>) -> Unit) { listeners += listener; listener(discover()) }
     fun discover(): List<AppleDevice> = providers.flatMap { runCatching { it.list() }.getOrDefault(emptyList()) }
         .distinctBy(AppleDevice::id)
         .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, AppleDevice::platform, AppleDevice::name))
+    private fun notifyListeners() { val devices = discover(); listeners.forEach { runCatching { it(devices) } } }
 }
