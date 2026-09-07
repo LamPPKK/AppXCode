@@ -9,6 +9,7 @@ data class BuildAgentRequest(
     val cancellationRequested: Boolean = false,
 ) {
     val isStrict: Boolean get() = requireTls && requirePairing && !allowInsecureRemote
+    val isDevelopment: Boolean get() = !requireTls && !requirePairing
 
     val requiresPairing: Boolean get() = pairingId == null
 
