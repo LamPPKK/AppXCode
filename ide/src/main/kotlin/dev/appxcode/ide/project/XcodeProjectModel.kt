@@ -39,7 +39,7 @@ object XcodeProjectModel {
             val product = Regex("productName = ([^;]+);").find(block)?.groupValues?.get(1)?.trim()
             val type = Regex("productType = ([^;]+);").find(block)?.groupValues?.get(1)?.trim()
             XcodeTarget(name, product, type)
-        }.distinctBy(XcodeTarget::name).sortedBy(XcodeTarget::name)
+        }.distinctBy(XcodeTarget::name).sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, XcodeTarget::name))
     }
 
     fun readScheme(path: Path): XcodeScheme? {
