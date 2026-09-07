@@ -25,10 +25,21 @@ class XcodeProjectWatcher(private val root: Path) : AutoCloseable {
             key.pollEvents().forEach { event ->
                 val watched = key.watchable() as Path
                 val path = watched.resolve(event.context() as Path)
+                if (event.kind() == ENTRY_CREATE && java.nio.file.Files.isDirectory(path)) {
+                    runCatching {
+                        java.nio.file.Files.walk(path).use { paths ->
+                            paths.filter(java.nio.file.Files::isDirectory).forEach { registerDirectory(it) }
+                        }
+                    }
+                }
                 if (path.fileName.toString().let { it.endsWith(".xcodeproj") || it.endsWith(".xcworkspace") || it == "Package.resolved" || it == "Podfile.lock" }) listeners.forEach { it(path) }
             }
             if (!key.reset()) break
         }
+    }
+
+    private fun registerDirectory(directory: Path) {
+        directory.register(service, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY)
     }
 
     override fun close() { running = false; service.close(); worker.interrupt(); listeners.clear() }
