@@ -5,6 +5,8 @@ import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.components.JBList
 import com.intellij.ui.content.ContentFactory
+import com.intellij.openapi.util.Disposer
+import javax.swing.SwingUtilities
 import java.awt.BorderLayout
 import javax.swing.JButton
 import javax.swing.JPanel
@@ -13,14 +15,18 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val registry = project.getService(DeviceRegistryService::class.java)
         val list = JBList<String>()
-        fun refresh() { list.setListData(registry.discover().map { "${it.name} · ${it.platform} · ${it.kind} · ${it.state}" }.toTypedArray()) }
+        fun render(devices: List<AppleDevice>) { list.setListData(devices.map { "${it.name} · ${it.platform} · ${it.kind} · ${it.state}" }.toTypedArray()) }
+        fun refresh() { render(registry.discover()) }
         val panel = JPanel(BorderLayout())
         val actions = JPanel(BorderLayout())
         actions.add(JButton("Refresh").also { it.addActionListener { refresh() } }, BorderLayout.WEST)
         panel.add(actions, BorderLayout.NORTH)
         panel.add(list, BorderLayout.CENTER)
         refresh()
-        toolWindow.contentManager.addContent(ContentFactory.getInstance().createContent(panel, "Devices", false))
+        val content = ContentFactory.getInstance().createContent(panel, "Devices", false)
+        val subscription = registry.onDevicesChanged { devices -> SwingUtilities.invokeLater { render(devices) } }
+        Disposer.register(content) { subscription.close() }
+        toolWindow.contentManager.addContent(content)
     }
 }
 
