@@ -6,6 +6,8 @@ import java.util.concurrent.TimeUnit
 data class ResolveResult(val success: Boolean, val exitCode: Int?, val output: String, val timedOut: Boolean)
 
 class DependencyResolver(private val runner: (List<String>, Path) -> Process = { args, root -> ProcessBuilder(args).directory(root.toFile()).redirectErrorStream(true).start() }) {
+    fun resolve(manager: DependencyManager, root: Path, update: Boolean = false, timeoutMillis: Long = 600_000): ResolveResult =
+        run(manager.command(update), root, timeoutMillis)
     fun resolveSwift(root: Path, timeoutMillis: Long = 600_000): ResolveResult = run(listOf("swift", "package", "resolve"), root, timeoutMillis)
     fun installPods(root: Path, timeoutMillis: Long = 600_000): ResolveResult = run(listOf("pod", "install"), root, timeoutMillis)
 
@@ -20,4 +22,9 @@ class DependencyResolver(private val runner: (List<String>, Path) -> Process = {
         val exitCode = if (timedOut) null else process.exitValue()
         return ResolveResult(!timedOut && exitCode == 0, exitCode, output, timedOut)
     }
+}
+
+private fun DependencyManager.command(update: Boolean): List<String> = when (this) {
+    DependencyManager.SWIFT_PACKAGE_MANAGER -> listOf("swift", "package", "resolve")
+    DependencyManager.COCOAPODS -> listOf("pod", if (update) "update" else "install")
 }
