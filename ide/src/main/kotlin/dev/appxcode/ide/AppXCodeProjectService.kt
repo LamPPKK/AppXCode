@@ -49,6 +49,11 @@ import dev.appxcode.ide.build.RunConfiguration
 import dev.appxcode.ide.build.RunConfigurationRegistry
 import dev.appxcode.ide.build.XcodeBuildService
 import dev.appxcode.ide.build.XcodeBuildResult
+import dev.appxcode.ide.build.XcodeArchiveService
+import dev.appxcode.ide.build.ArchiveRequest
+import dev.appxcode.ide.build.ArchiveResult
+import dev.appxcode.ide.build.XcodeExportService
+import dev.appxcode.ide.build.ExportOptions
 import java.time.Duration
 import dev.appxcode.ide.project.XcodeTarget
 import dev.appxcode.ide.project.XcodeProjectModel
@@ -65,6 +70,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     private val flutter = FlutterToolService()
     private val runConfigurations = RunConfigurationRegistry()
     private val xcodeBuildService = XcodeBuildService(AppleToolchainDetector.detect())
+    private val xcodeArchiveService = XcodeArchiveService(xcodeBuildService)
+    private val xcodeExportService = XcodeExportService()
     @Volatile private var projectWatcher: XcodeProjectWatcher? = null
     private val changeListeners = CopyOnWriteArrayList<(Path) -> Unit>()
     fun initialize() {
@@ -139,6 +146,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun xcodeRun(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.run(configuration, container, timeout)
     fun xcodeTest(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.test(configuration, container, timeout)
     fun xcodeClean(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.clean(configuration, container, timeout)
+    fun xcodeArchive(request: ArchiveRequest, timeout: Duration = Duration.ofMinutes(30)): ArchiveResult = xcodeArchiveService.archive(request, timeout)
+    fun xcodeExport(options: ExportOptions): XcodeBuildResult = xcodeExportService.export(options)
     fun flutterPubGet(root: Path): FlutterCommandResult = flutter.pubGet(root)
     fun flutterDoctor(root: Path): FlutterCommandResult = flutter.doctor(root)
     fun flutterRun(root: Path, deviceId: String? = null): FlutterCommandResult = flutter.run(root, deviceId)
