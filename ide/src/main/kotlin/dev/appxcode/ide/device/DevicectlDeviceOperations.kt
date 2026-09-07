@@ -11,6 +11,9 @@ class DevicectlDeviceOperations(
         DeviceOperationResult(process.waitFor() == 0, "devicectl completed", output)
     },
 ) : DeviceOperations {
+    fun pair(deviceId: String): DeviceOperationResult = execute("device", "pair", "--device", deviceId)
+    fun unpair(deviceId: String): DeviceOperationResult = execute("device", "unpair", "--device", deviceId)
+
     override fun install(deviceId: String, app: Path): DeviceOperationResult =
         if (!Files.exists(app)) DeviceOperationResult(false, "App bundle not found: $app") else execute("device", "install", "app", "--device", deviceId, app.toString())
 
