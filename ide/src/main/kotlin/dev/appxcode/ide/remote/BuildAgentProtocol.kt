@@ -190,6 +190,7 @@ data class BuildAgentPairing(
     }
 
     fun isExpired(nowEpochMillis: Long = System.currentTimeMillis()): Boolean = nowEpochMillis >= expiresAtEpochMillis
+    fun isActive(nowEpochMillis: Long = System.currentTimeMillis()): Boolean = !isExpired(nowEpochMillis)
     fun remainingMillis(nowEpochMillis: Long = System.currentTimeMillis()): Long =
         (expiresAtEpochMillis - nowEpochMillis).coerceAtLeast(0)
     fun renewed(additionalMillis: Long, nowEpochMillis: Long = System.currentTimeMillis()): BuildAgentPairing {
