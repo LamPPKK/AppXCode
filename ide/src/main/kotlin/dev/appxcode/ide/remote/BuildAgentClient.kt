@@ -41,7 +41,9 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
     }
 
     fun cancel(requestId: String): BuildAgentResponse {
-        if (!states.containsKey(requestId)) return BuildAgentResponse(requestId = requestId, accepted = false, errorCode = BuildAgentErrorCode.INVALID_REQUEST, message = "unknown requestId")
+        val current = states[requestId]
+        if (current == null) return BuildAgentResponse(requestId = requestId, accepted = false, errorCode = BuildAgentErrorCode.INVALID_REQUEST, message = "unknown requestId")
+        if (current.isSuccessful || current.errorCode == BuildAgentErrorCode.CANCELLED) return current
         return runCatching { transport.cancel(requestId) }.getOrElse { BuildAgentResponse(requestId = requestId, accepted = false, errorCode = BuildAgentErrorCode.TRANSPORT_UNAVAILABLE, message = it.message ?: "transport failure") }
             .also { states[requestId] = it }
     }
