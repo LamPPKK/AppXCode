@@ -10,6 +10,7 @@ class SimctlDeviceOperations(
         val output = process.inputStream.bufferedReader().readText()
         DeviceOperationResult(process.waitFor() == 0, "simctl completed", output)
     },
+    private val logProcess: ((List<String>) -> Process)? = null,
 ) : DeviceOperations {
     fun boot(deviceId: String): DeviceOperationResult = execute("boot", deviceId)
     fun shutdown(deviceId: String): DeviceOperationResult = execute("shutdown", deviceId)
@@ -21,7 +22,16 @@ class SimctlDeviceOperations(
     override fun launch(deviceId: String, bundleId: String): DeviceOperationResult = execute("launch", deviceId, bundleId)
 
     override fun logs(deviceId: String, bundleId: String?): Sequence<String> =
-        execute("spawn", deviceId, "log", "stream", "--style", "compact").output.lineSequence()
+        if (!Files.isExecutable(xcrun)) emptySequence() else sequence {
+            val process = logProcess?.invoke(listOf(xcrun.toString(), "simctl", "spawn", deviceId, "log", "stream", "--style", "compact"))
+                ?: ProcessBuilder(xcrun.toString(), "simctl", "spawn", deviceId, "log", "stream", "--style", "compact").redirectErrorStream(true).start()
+            process.inputStream.bufferedReader().use { reader ->
+                while (true) {
+                    val line = reader.readLine() ?: break
+                    if (bundleId == null || line.contains(bundleId)) yield(line)
+                }
+            }
+        }
 
     override fun screenshot(deviceId: String, destination: Path): DeviceOperationResult = execute("io", deviceId, "screenshot", destination.toString())
 
