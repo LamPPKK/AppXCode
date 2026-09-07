@@ -63,6 +63,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun xcodeTargets(projectFile: Path): List<XcodeTarget> = XcodeProjectModel.readTargets(projectFile)
     fun testFrameworks(root: Path): Set<TestFramework> = TestFrameworkRegistry.detect(root)
     fun discoverXCTest(root: Path): List<DiscoveredTest> = TestFrameworkRegistry.discoverXCTest(root)
+    fun discoverTests(root: Path): List<DiscoveredTest> = TestFrameworkRegistry.discover(root)
     fun snapshot(root: Path): ProjectSnapshot = ProjectSnapshotLoader.load(root)
     fun gitStatus(root: Path): GitStatus = git.status(root)
     fun gitBranches(root: Path): List<GitBranch> = git.branches(root)

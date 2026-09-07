@@ -8,6 +8,9 @@ enum class TestFramework { XCTEST, QUICK, KIWI, CATCH }
 data class DiscoveredTest(val name: String, val file: Path, val line: Int, val framework: TestFramework)
 
 object TestFrameworkRegistry {
+    fun discover(root: Path): List<DiscoveredTest> =
+        discoverXCTest(root) + discoverQuick(root) + discoverKiwi(root) + discoverCatch(root)
+
     fun discoverXCTest(root: Path): List<DiscoveredTest> {
         if (!Files.isDirectory(root)) return emptyList()
         val result = mutableListOf<DiscoveredTest>()
@@ -15,6 +18,31 @@ object TestFrameworkRegistry {
             Files.readAllLines(file).forEachIndexed { index, line -> Regex("\\bfunc\\s+(test[A-Za-z0-9_]*)\\s*\\(").find(line)?.let { result += DiscoveredTest(it.groupValues[1], file, index + 1, TestFramework.XCTEST) } }
         } }
         return result
+    }
+
+    fun discoverQuick(root: Path): List<DiscoveredTest> = discoverLines(root, TestFramework.QUICK) {
+        Regex("\\b(?:it|fit|context|describe)\\s*\\(\\s*[\\\"']([^\\\"']+)")
+    }
+
+    fun discoverKiwi(root: Path): List<DiscoveredTest> = discoverLines(root, TestFramework.KIWI) {
+        Regex("\\b(?:it|specify|context|describe)\\s*\\(\\s*[\\\"']([^\\\"']+)")
+    }
+
+    fun discoverCatch(root: Path): List<DiscoveredTest> = discoverLines(root, TestFramework.CATCH) {
+        Regex("\\bTEST_CASE\\s*\\(\\s*[\\\"']([^\\\"']+)")
+    }
+
+    private fun discoverLines(root: Path, framework: TestFramework, pattern: () -> Regex): List<DiscoveredTest> {
+        if (!Files.isDirectory(root)) return emptyList()
+        val regex = pattern()
+        return buildList {
+            Files.walk(root).use { files -> files.filter(Files::isRegularFile).forEach { file ->
+                if (file.toString().endsWith(".swift") || file.toString().endsWith(".m") || file.toString().endsWith(".mm") || file.toString().endsWith(".cpp"))
+                    runCatching { Files.readAllLines(file) }.getOrDefault(emptyList()).forEachIndexed { index, line ->
+                        regex.find(line)?.let { add(DiscoveredTest(it.groupValues[1], file, index + 1, framework)) }
+                    }
+            } }
+        }
     }
 
     fun detect(root: Path): Set<TestFramework> {
