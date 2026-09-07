@@ -6,6 +6,8 @@ import dev.appxcode.ide.project.XcodeContainer
 import dev.appxcode.ide.project.XcodeProjectModel
 import dev.appxcode.ide.test.TestFramework
 import dev.appxcode.ide.test.TestFrameworkRegistry
+import dev.appxcode.ide.project.ProjectSnapshot
+import dev.appxcode.ide.project.ProjectSnapshotLoader
 import java.nio.file.Path
 import dev.appxcode.ide.toolchain.AppleToolchain
 import dev.appxcode.ide.toolchain.AppleToolchainDetector
@@ -33,4 +35,5 @@ class AppXCodeProjectService(private val project: Project) {
     fun completeSwift(prefix: String): List<SwiftSymbol> = swiftSymbols.complete(prefix)
     fun xcodeTargets(projectFile: Path): List<XcodeTarget> = XcodeProjectModel.readTargets(projectFile)
     fun testFrameworks(root: Path): Set<TestFramework> = TestFrameworkRegistry.detect(root)
+    fun snapshot(root: Path): ProjectSnapshot = ProjectSnapshotLoader.load(root)
 }
