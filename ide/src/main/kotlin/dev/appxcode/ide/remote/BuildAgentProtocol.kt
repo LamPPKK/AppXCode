@@ -130,6 +130,7 @@ object BuildAgentErrorCode {
     const val INVALID_REQUEST = "invalid_request"
     const val UNAUTHORIZED = "unauthorized"
     const val TOOLCHAIN_UNAVAILABLE = "toolchain_unavailable"
+    const val AGENT_OFFLINE = "agent_offline"
     const val BUILD_FAILED = "build_failed"
     const val CANCELLED = "cancelled"
 }
@@ -287,7 +288,7 @@ data class BuildAgentHealth(
     val ready: Boolean get() = online && toolchainAvailable && protocolVersion == CURRENT_PROTOCOL_VERSION
     val errorCode: String? get() = when {
         protocolVersion != CURRENT_PROTOCOL_VERSION -> BuildAgentErrorCode.UNSUPPORTED_PROTOCOL
-        !online -> BuildAgentErrorCode.INVALID_REQUEST
+        !online -> BuildAgentErrorCode.AGENT_OFFLINE
         !toolchainAvailable -> BuildAgentErrorCode.TOOLCHAIN_UNAVAILABLE
         else -> null
     }
