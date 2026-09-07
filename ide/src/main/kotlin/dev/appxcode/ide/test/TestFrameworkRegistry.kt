@@ -23,12 +23,12 @@ object TestFrameworkRegistry {
     fun discoverXCTest(root: Path): List<DiscoveredTest> {
         if (!Files.isDirectory(root)) return emptyList()
         val result = mutableListOf<DiscoveredTest>()
-        Files.walk(root).use { files -> files.filter { it.toString().endsWith(".swift") || it.toString().endsWith(".m") || it.toString().endsWith(".mm") }.forEach { file ->
-            Files.readAllLines(file).forEachIndexed { index, line ->
+        runCatching { Files.walk(root).use { files -> files.filter { it.toString().endsWith(".swift") || it.toString().endsWith(".m") || it.toString().endsWith(".mm") }.forEach { file ->
+            runCatching { Files.readAllLines(file) }.getOrDefault(emptyList()).forEachIndexed { index, line ->
                 Regex("\\bfunc\\s+(test[A-Za-z0-9_]*)\\s*\\(").find(line)?.let { result += DiscoveredTest(it.groupValues[1], file, index + 1, TestFramework.XCTEST) }
                 Regex("[-+]\\s*\\(void\\)\\s*(test[A-Za-z0-9_]*)\\s*\\{").find(line)?.let { result += DiscoveredTest(it.groupValues[1], file, index + 1, TestFramework.XCTEST) }
             }
-        } }
+        } } }
         return result
     }
 
