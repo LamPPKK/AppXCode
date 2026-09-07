@@ -121,6 +121,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun debugSessionState(sessionId: String): DebugSessionState? = debugSessions.state(sessionId)
     fun flutterService(): FlutterToolService = flutter
     fun flutterPubGet(root: Path): FlutterCommandResult = flutter.pubGet(root)
+    fun flutterDoctor(root: Path): FlutterCommandResult = flutter.doctor(root)
     fun flutterRun(root: Path, deviceId: String? = null): FlutterCommandResult = flutter.run(root, deviceId)
     fun flutterTest(root: Path): FlutterCommandResult = flutter.test(root)
     fun flutterHotReload(root: Path): FlutterCommandResult = flutter.hotReload(root)
