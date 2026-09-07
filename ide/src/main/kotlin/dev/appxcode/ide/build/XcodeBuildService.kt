@@ -41,6 +41,7 @@ data class XcodeBuildResult(
     val notes: List<BuildDiagnostic> get() = diagnostics.filter { it.severity == DiagnosticSeverity.NOTE }
     val hasErrors: Boolean get() = errors.isNotEmpty()
     val hasWarnings: Boolean get() = warnings.isNotEmpty()
+    val hasNotes: Boolean get() = notes.isNotEmpty()
 }
 
 class XcodeBuildService(
