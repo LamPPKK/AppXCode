@@ -98,6 +98,16 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
         return run(root, listOf("git", "switch", name)) != null
     }
 
+    fun commit(root: Path, message: String): String? {
+        require(message.isNotBlank()) { "Commit message must not be blank" }
+        return run(root, listOf("git", "commit", "-m", message))?.trim()?.takeIf { it.isNotBlank() }
+    }
+
+    fun merge(root: Path, branch: String): Boolean {
+        require(branch.isNotBlank() && !branch.contains(' ')) { "invalid branch name" }
+        return run(root, listOf("git", "merge", "--", branch)) != null
+    }
+
     fun blame(root: Path, file: Path): List<GitBlameLine> {
         val resolved = root.resolve(file).normalize()
         require(resolved.startsWith(root.normalize())) { "file must stay within repository" }
