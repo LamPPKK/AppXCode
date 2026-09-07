@@ -6,6 +6,7 @@ on:
   pull_request:
 jobs:
   verify:
+    timeout-minutes: 15
     concurrency:
       group: appxcode-ci-${{ github.workflow }}-${{ github.ref }}
       cancel-in-progress: true
