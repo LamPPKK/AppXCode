@@ -16,7 +16,8 @@ object SwiftLanguageServiceFactory {
     fun create(toolchain: AppleToolchain, workspace: Path): SwiftLanguageService {
         val executable = workspace.resolve(".appxcode/sourcekit-lsp")
             .takeIf { java.nio.file.Files.isExecutable(it) }
-            ?: Path.of("sourcekit-lsp").takeIf { runCatching { ProcessBuilder(it.toString(), "--help").start().destroy(); true }.getOrDefault(false) }
+            ?: System.getenv("PATH").orEmpty().split(java.io.File.pathSeparator).asSequence()
+                .map { Path.of(it, "sourcekit-lsp") }.firstOrNull { java.nio.file.Files.isExecutable(it) }
         return if (executable != null) {
             LspSwiftLanguageService(toolchain, workspace, LspProcessManager(LspServerConfig(executable, workspace)))
         } else UnavailableSwiftLanguageService(toolchain)
