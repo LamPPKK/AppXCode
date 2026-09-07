@@ -13,6 +13,14 @@ data class ExportOptions(
     val teamId: String? = null,
     val signingStyle: String? = null,
 ) {
+    init {
+        require(archivePath.fileName != null) { "Archive path must point to a file" }
+        require(outputDirectory.fileName != null) { "Export directory must have a name" }
+        require(optionsPlist.fileName != null) { "Options plist path must point to a file" }
+        require(teamId == null || teamId.isNotBlank()) { "Team ID must not be blank" }
+        require(signingStyle == null || signingStyle.isNotBlank()) { "Signing style must not be blank" }
+    }
+
     fun writePlist(): Path {
         val body = buildString {
             append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<plist version=\"1.0\"><dict>")
