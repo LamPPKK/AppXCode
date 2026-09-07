@@ -102,3 +102,13 @@ object BuildAgentErrorCode {
     const val BUILD_FAILED = "build_failed"
     const val CANCELLED = "cancelled"
 }
+
+data class BuildAgentCancelRequest(
+    val requestId: String,
+    val reason: String = "cancelled by client",
+) {
+    init {
+        require(requestId.isNotBlank()) { "Cancel request id must not be blank" }
+        require(reason.isNotBlank()) { "Cancel reason must not be blank" }
+    }
+}
