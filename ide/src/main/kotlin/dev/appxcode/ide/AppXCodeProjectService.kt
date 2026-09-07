@@ -109,6 +109,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun snapshot(root: Path): ProjectSnapshot = ProjectSnapshotLoader.load(root)
     fun gitStatus(root: Path): GitStatus = git.status(root)
     fun isGitRepository(root: Path): Boolean = git.isRepository(root)
+    fun gitCurrentRevision(root: Path): String? = git.currentRevision(root)
     fun gitBranches(root: Path): List<GitBranch> = git.branches(root)
     fun gitLog(root: Path, limit: Int = 50): List<GitCommit> = git.log(root, limit)
     fun gitStashes(root: Path): List<GitStash> = git.stashes(root)

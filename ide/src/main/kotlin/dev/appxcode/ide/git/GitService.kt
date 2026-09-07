@@ -18,6 +18,7 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
     if (process.waitFor() == 0) output else null
 }) {
     fun isRepository(root: Path): Boolean = run(root, listOf("git", "rev-parse", "--is-inside-work-tree"))?.trim() == "true"
+    fun currentRevision(root: Path): String? = run(root, listOf("git", "rev-parse", "HEAD"))?.trim()?.takeIf { it.matches(Regex("[0-9a-fA-F]{40}")) }
 
     fun status(root: Path): GitStatus {
         val output = run(root, listOf("git", "status", "--short", "--branch")) ?: return GitStatus(null, emptyList(), false)
