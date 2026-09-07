@@ -176,6 +176,8 @@ data class BuildAgentHealth(
         require(maxAgeMillis >= 0) { "Health max age must not be negative" }
         return ageMillis(nowEpochMillis) > maxAgeMillis
     }
+    fun isUsable(maxAgeMillis: Long, nowEpochMillis: Long = System.currentTimeMillis()): Boolean =
+        ready && !isStale(maxAgeMillis, nowEpochMillis)
 
     init {
         require(protocolVersion == CURRENT_PROTOCOL_VERSION) { "Unsupported build agent protocol: $protocolVersion" }
