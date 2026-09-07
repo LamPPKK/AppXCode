@@ -9,6 +9,7 @@ data class BuildAgentRequest(
     val cancellationRequested: Boolean = false,
 ) {
     val isCancelled: Boolean get() = cancellationRequested
+    fun cancelledCopy(): BuildAgentRequest = copy(cancellationRequested = true)
 
     constructor(requestId: String, operation: BuildAgentOperation, projectPath: String, timeoutMillis: Long = 900_000) :
         this(CURRENT_PROTOCOL_VERSION, requestId, operation.wireName, projectPath, timeoutMillis, false)
