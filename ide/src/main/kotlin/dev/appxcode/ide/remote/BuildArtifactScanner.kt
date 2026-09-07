@@ -14,7 +14,7 @@ object BuildArtifactScanner {
     fun scan(requestId: String, files: Map<ArtifactKind, Path>): BuildTransfer =
         BuildTransfer(requestId, files.mapNotNull { (kind, path) ->
             if (!Files.isRegularFile(path)) return@mapNotNull null
-            BuildArtifact(kind, path, sha256(path), Files.size(path))
+            runCatching { BuildArtifact(kind, path, sha256(path), Files.size(path)) }.getOrNull()
         })
 
     private fun sha256(path: Path): String {
