@@ -32,7 +32,7 @@ object XcodeProjectModel {
     fun readTargets(project: Path): List<XcodeTarget> {
         val pbx = if (project.fileName.toString().endsWith(".xcodeproj")) project.resolve("project.pbxproj") else project
         if (!Files.isRegularFile(pbx)) return emptyList()
-        val text = Files.readString(pbx)
+        val text = runCatching { Files.readString(pbx) }.getOrNull() ?: return emptyList()
         val blocks = text.split("PBXNativeTarget = {").drop(1)
         return blocks.mapNotNull { block ->
             val name = Regex("name = ([^;]+);").find(block)?.groupValues?.get(1)?.trim() ?: return@mapNotNull null
@@ -44,7 +44,7 @@ object XcodeProjectModel {
 
     fun readScheme(path: Path): XcodeScheme? {
         if (!Files.isRegularFile(path) || !path.fileName.toString().endsWith(".xcscheme")) return null
-        val text = Files.readString(path)
+        val text = runCatching { Files.readString(path) }.getOrNull() ?: return null
         val buildables = Regex("BuildableName=\\\"([^\\\"]+)\\\"").findAll(text).map { it.groupValues[1] }.distinct().toList()
         val testables = Regex("BlueprintName=\\\"([^\\\"]+)\\\"").findAll(text).map { it.groupValues[1] }.distinct().toList()
         return XcodeScheme(path.fileName.toString().removeSuffix(".xcscheme"), buildables, testables)
