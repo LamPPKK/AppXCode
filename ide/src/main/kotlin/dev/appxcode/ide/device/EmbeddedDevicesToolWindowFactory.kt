@@ -34,6 +34,7 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
 @com.intellij.openapi.components.Service(com.intellij.openapi.components.Service.Level.PROJECT)
 class DeviceRegistryService : Disposable {
     private val registry = DeviceRegistry()
+    internal fun sharedRegistry(): DeviceRegistry = registry
     fun register(provider: DeviceProvider) = registry.register(provider)
     fun unregister(providerId: String) = registry.unregister(providerId)
     fun discover(): List<AppleDevice> = registry.discover()

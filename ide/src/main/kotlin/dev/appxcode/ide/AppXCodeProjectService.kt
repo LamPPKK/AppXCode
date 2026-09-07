@@ -80,7 +80,9 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     private val debugSessions = DebugSessionRegistry()
     private val flutter = FlutterToolService()
     private val runConfigurations = RunConfigurationRegistry()
-    private val devices = DeviceRegistry()
+    private val devices: DeviceRegistry by lazy {
+        project.getService(dev.appxcode.ide.device.DeviceRegistryService::class.java).sharedRegistry()
+    }
     private val xcodeBuildService = XcodeBuildService(AppleToolchainDetector.detect())
     private val xcodeArchiveService = XcodeArchiveService(xcodeBuildService)
     private val xcodeExportService = XcodeExportService()
