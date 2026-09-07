@@ -11,6 +11,8 @@ enum class TestStatus { PASSED, FAILED, SKIPPED, UNKNOWN }
 data class TestCaseResult(val identifier: String, val status: TestStatus, val durationSeconds: Double? = null)
 
 data class XcodeTestResult(val cases: List<TestCaseResult>, val rawOutput: String) {
+    val total: Int get() = cases.size
+    val durationSeconds: Double get() = cases.mapNotNull { it.durationSeconds }.sum()
     val passed: Boolean get() = cases.isNotEmpty() && cases.all { it.status == TestStatus.PASSED }
     val isComplete: Boolean get() = cases.isNotEmpty() && cases.none { it.status == TestStatus.UNKNOWN }
     val failedCases: List<TestCaseResult> get() = cases.filter { it.status == TestStatus.FAILED }
