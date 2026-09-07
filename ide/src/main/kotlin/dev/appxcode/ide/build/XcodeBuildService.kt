@@ -56,7 +56,7 @@ class XcodeBuildService(
     private fun execute(configuration: RunConfiguration, container: Path, action: String, timeout: Duration): XcodeBuildResult =
         execute(XcodeBuildRequest(container, configuration.scheme, configuration.destination.xcodebuildSpecifier(), configuration.configuration, action, configuration.arguments, configuration.environment), timeout)
 
-    fun execute(request: XcodeBuildRequest, timeout: Duration = Duration.ofMinutes(15), cancellation: BuildCancellation? = null): XcodeBuildResult {
+    fun execute(request: XcodeBuildRequest, timeout: Duration = Duration.ofMinutes(15), cancellation: BuildCancellation? = null, onOutput: (String) -> Unit = {}): XcodeBuildResult {
         require(!timeout.isNegative && !timeout.isZero) { "timeout must be positive" }
         val executable = toolchain.xcodebuildPath?.takeIf { java.nio.file.Files.isExecutable(it) }
             ?: return XcodeBuildResult(null, "xcodebuild is unavailable", false)
@@ -82,7 +82,11 @@ class XcodeBuildService(
             }.start()
         }.getOrElse { return XcodeBuildResult(null, "Unable to start xcodebuild: ${it.message ?: "unknown error"}", false) }
         val outputBuffer = StringBuffer()
-        val reader = Thread { process.inputStream.bufferedReader().use { outputBuffer.append(it.readText()) } }
+        val reader = Thread {
+            process.inputStream.bufferedReader().useLines { lines ->
+                lines.forEach { line -> outputBuffer.appendLine(line); runCatching { onOutput(line) } }
+            }
+        }
         reader.isDaemon = true
         reader.start()
         val timeoutNanos = runCatching { timeout.toNanos() }.getOrElse { Long.MAX_VALUE }
