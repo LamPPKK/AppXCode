@@ -17,6 +17,7 @@ import dev.appxcode.ide.flutter.FlutterToolService
 import dev.appxcode.ide.git.GitBranch
 import dev.appxcode.ide.git.GitService
 import dev.appxcode.ide.git.GitStatus
+import dev.appxcode.ide.git.GitCommit
 import java.nio.file.Path
 import java.util.concurrent.CopyOnWriteArrayList
 import dev.appxcode.ide.toolchain.AppleToolchain
@@ -73,6 +74,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun snapshot(root: Path): ProjectSnapshot = ProjectSnapshotLoader.load(root)
     fun gitStatus(root: Path): GitStatus = git.status(root)
     fun gitBranches(root: Path): List<GitBranch> = git.branches(root)
+    fun gitLog(root: Path, limit: Int = 50): List<GitCommit> = git.log(root, limit)
     fun createDebugSession(sessionId: String) = debugSessions.create(sessionId)
     fun updateDebugSession(sessionId: String, state: DebugSessionState) = debugSessions.update(sessionId, state)
     fun debugSessionState(sessionId: String): DebugSessionState? = debugSessions.state(sessionId)

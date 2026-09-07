@@ -4,6 +4,7 @@ import java.nio.file.Path
 
 data class GitStatus(val branch: String?, val changedFiles: List<String>, val available: Boolean)
 data class GitBranch(val name: String, val remote: Boolean)
+data class GitCommit(val hash: String, val subject: String, val author: String, val timestamp: Long?)
 
 class GitService(private val command: (List<String>, Path) -> String? = { args, root ->
     val process = ProcessBuilder(args).directory(root.toFile()).redirectErrorStream(true).start()
@@ -20,6 +21,15 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
 
     fun diff(root: Path, staged: Boolean = false): String =
         run(root, if (staged) listOf("git", "diff", "--cached") else listOf("git", "diff")) ?: ""
+
+    fun log(root: Path, limit: Int = 50): List<GitCommit> {
+        require(limit in 1..500) { "limit must be between 1 and 500" }
+        val output = run(root, listOf("git", "log", "-n", limit.toString(), "--format=%H%x1f%s%x1f%an%x1f%ct")) ?: return emptyList()
+        return output.lineSequence().mapNotNull { line ->
+            val parts = line.split('\u001f')
+            if (parts.size < 4) null else GitCommit(parts[0], parts[1], parts[2], parts[3].toLongOrNull())
+        }.toList()
+    }
 
     fun branches(root: Path): List<GitBranch> = run(root, listOf("git", "branch", "--all"))?.lineSequence()?.mapNotNull { line ->
         val name = line.trim().removePrefix("*").trim().takeIf(String::isNotBlank) ?: return@mapNotNull null
