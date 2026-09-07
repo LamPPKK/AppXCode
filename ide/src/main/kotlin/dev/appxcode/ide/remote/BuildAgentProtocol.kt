@@ -122,4 +122,6 @@ data class BuildAgentEndpoint(
         require(host.isNotBlank()) { "Build agent host must not be blank" }
         require(port in 1..65535) { "Build agent port must be between 1 and 65535" }
     }
+
+    fun baseUri(): java.net.URI = java.net.URI("${if (tlsEnabled) "https" else "http"}://$host:$port")
 }
