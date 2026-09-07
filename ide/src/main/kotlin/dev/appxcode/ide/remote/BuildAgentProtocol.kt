@@ -46,6 +46,21 @@ data class BuildAgentResponse(
 
 enum class BuildAgentResponseStatus { ACCEPTED, REJECTED }
 
+enum class BuildAgentLogLevel { DEBUG, INFO, WARN, ERROR }
+
+data class BuildAgentLogEvent(
+    val requestId: String,
+    val sequence: Long,
+    val level: BuildAgentLogLevel = BuildAgentLogLevel.INFO,
+    val message: String,
+) {
+    init {
+        require(requestId.isNotBlank()) { "Build agent log request id must not be blank" }
+        require(sequence >= 0) { "Build agent log sequence must not be negative" }
+        require(message.isNotEmpty()) { "Build agent log message must not be empty" }
+    }
+}
+
 const val CURRENT_PROTOCOL_VERSION: Int = 1
 
 enum class BuildAgentOperation {
