@@ -13,8 +13,17 @@ data class XcodeContainer(
     val displayName: String get() = path.fileName.toString().substringBeforeLast('.')
 }
 
+data class XcodeScheme(val name: String, val buildables: List<String>, val testables: List<String>)
+
 /** Discovers Xcode containers without converting or rewriting their native files. */
 object XcodeProjectModel {
+    fun readScheme(path: Path): XcodeScheme? {
+        if (!Files.isRegularFile(path) || !path.fileName.toString().endsWith(".xcscheme")) return null
+        val text = Files.readString(path)
+        val buildables = Regex("BuildableName=\\\"([^\\\"]+)\\\"").findAll(text).map { it.groupValues[1] }.distinct().toList()
+        val testables = Regex("BlueprintName=\\\"([^\\\"]+)\\\"").findAll(text).map { it.groupValues[1] }.distinct().toList()
+        return XcodeScheme(path.fileName.toString().removeSuffix(".xcscheme"), buildables, testables)
+    }
     fun discover(root: Path): List<XcodeContainer> {
         if (!Files.isDirectory(root)) return emptyList()
         return Files.list(root).use { stream ->
