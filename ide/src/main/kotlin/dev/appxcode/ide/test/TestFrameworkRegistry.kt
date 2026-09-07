@@ -48,12 +48,12 @@ object TestFrameworkRegistry {
         if (!Files.isDirectory(root)) return emptyList()
         val regex = pattern()
         return buildList {
-            Files.walk(root).use { files -> files.filter(Files::isRegularFile).forEach { file ->
+            runCatching { Files.walk(root).use { files -> files.filter(Files::isRegularFile).forEach { file ->
                 if (file.toString().endsWith(".swift") || file.toString().endsWith(".m") || file.toString().endsWith(".mm") || file.toString().endsWith(".cpp"))
                     runCatching { Files.readAllLines(file) }.getOrDefault(emptyList()).forEachIndexed { index, line ->
                         regex.find(line)?.let { add(DiscoveredTest(it.groupValues[1], file, index + 1, framework)) }
                     }
-            } }
+            } } }
         }
     }
 
