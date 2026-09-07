@@ -221,6 +221,19 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun xcodeTest(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.test(configuration, container, timeout)
     fun xcodeClean(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.clean(configuration, container, timeout)
     fun xcodeArchive(request: ArchiveRequest, timeout: Duration = Duration.ofMinutes(30)): ArchiveResult = xcodeArchiveService.archive(request, timeout)
+    fun xcodeArchiveOnDevice(request: ArchiveRequest, device: AppleDevice, timeout: Duration = Duration.ofMinutes(30)): ArchiveResult {
+        require(device.state == dev.appxcode.ide.device.DeviceState.AVAILABLE) { "Device is not available: ${device.id}" }
+        val platform = when (device.platform.lowercase()) {
+            "ios" -> "iOS"
+            "ipados", "ipad os" -> "iPadOS"
+            "watchos", "watch os" -> "watchOS"
+            "tvos", "tv os" -> "tvOS"
+            "macos", "mac os" -> "macOS"
+            else -> device.platform
+        }
+        val kind = if (device.kind == dev.appxcode.ide.device.DeviceKind.PHYSICAL) platform else "$platform Simulator"
+        return xcodeArchiveService.archive(request.copy(destination = "platform=$kind,name=${device.name},id=${device.id}"), timeout)
+    }
     fun xcodeExport(options: ExportOptions): XcodeBuildResult = xcodeExportService.export(options)
     fun checkSigning(configuration: SigningConfiguration): SigningCheck = signingService.check(configuration)
     fun xcodeTest(container: Path, scheme: String, destination: String, configuration: String = "Debug", timeout: Duration = Duration.ofMinutes(20)): XcodeTestResult =
