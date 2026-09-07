@@ -14,14 +14,17 @@ class LldbDebuggerAdapter(private val command: (List<String>) -> String = { args
         return UUID.randomUUID().toString().also { processes[it] = process }
     }
     fun setBreakpoint(sessionId: String, breakpoint: Breakpoint): Boolean {
+        require(breakpoint.line > 0) { "Breakpoint line must be positive" }
         if (!processes.containsKey(sessionId)) return false
         breakpoints.getOrPut(sessionId) { linkedSetOf() }.add(breakpoint)
         return true
     }
     fun clearBreakpoint(sessionId: String, breakpoint: Breakpoint) { breakpoints[sessionId]?.remove(breakpoint) }
+    fun listBreakpoints(sessionId: String): List<Breakpoint> = breakpoints[sessionId]?.toList()?.sortedWith(compareBy({ it.file.toString() }, { it.line })) ?: emptyList()
+    fun clearBreakpoints(sessionId: String) { breakpoints.remove(sessionId) }
     override fun pause(sessionId: String) { processes[sessionId]?.let { command(listOf("kill", "-STOP", it.pid().toString())) } }
     override fun resume(sessionId: String) { processes[sessionId]?.let { command(listOf("kill", "-CONT", it.pid().toString())) } }
-    override fun terminate(sessionId: String) { processes.remove(sessionId)?.destroy() }
+    override fun terminate(sessionId: String) { processes.remove(sessionId)?.destroy(); breakpoints.remove(sessionId) }
     override fun stack(sessionId: String): List<String> = processes[sessionId]?.let { command(listOf("lldb", "-p", it.pid().toString(), "-o", "bt", "-o", "detach", "-o", "quit")).lineSequence().toList() } ?: emptyList()
     override fun variables(sessionId: String): List<DebugVariable> = processes[sessionId]?.let {
         command(listOf("lldb", "-p", it.pid().toString(), "-o", "frame variable", "-o", "detach", "-o", "quit")).lineSequence().mapNotNull { line ->
