@@ -54,9 +54,15 @@ class XcodeBuildService(
         val deadline = System.nanoTime() + timeout.toNanos()
         var finished = false
         while (!finished && System.nanoTime() < deadline && cancellation?.isCancelled() != true) finished = process.waitFor(250, TimeUnit.MILLISECONDS)
-        if (!finished || cancellation?.isCancelled() == true) process.destroyForcibly()
+        val cancelled = cancellation?.isCancelled() == true
+        if (!finished || cancelled) {
+            process.destroyForcibly()
+            runCatching { process.waitFor(2, TimeUnit.SECONDS) }
+        }
         reader.join(2_000)
-        val timedOut = !finished && cancellation?.isCancelled() != true
-        return XcodeBuildResult(if (timedOut) null else process.exitValue(), outputBuffer.toString(), timedOut)
+        val timedOut = !finished && !cancelled
+        return XcodeBuildResult(if (timedOut || cancelled || !process.isAlive) process.exitValueOrNull() else process.exitValue(), outputBuffer.toString(), timedOut)
     }
+
+    private fun Process.exitValueOrNull(): Int? = runCatching { exitValue() }.getOrNull()
 }
