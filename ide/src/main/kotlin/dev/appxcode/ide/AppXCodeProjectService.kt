@@ -179,6 +179,23 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun clearRunConfigurations() = runConfigurations.clear()
     fun xcodeBuild(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.execute(configuration, container, timeout)
     fun xcodeRun(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.run(configuration, container, timeout)
+    fun xcodeRunOnDevice(configuration: RunConfiguration, container: Path, device: AppleDevice, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult {
+        require(device.state == dev.appxcode.ide.device.DeviceState.AVAILABLE) { "Device is not available: ${device.id}" }
+        val destination = configuration.destination.copy(
+            platform = when (device.platform.lowercase()) {
+                "ios" -> dev.appxcode.ide.build.ApplePlatform.IOS
+                "ipados", "ipad os" -> dev.appxcode.ide.build.ApplePlatform.IPADOS
+                "watchos", "watch os" -> dev.appxcode.ide.build.ApplePlatform.WATCHOS
+                "tvos", "tv os" -> dev.appxcode.ide.build.ApplePlatform.TVOS
+                "macos", "mac os" -> dev.appxcode.ide.build.ApplePlatform.MACOS
+                else -> configuration.destination.platform
+            },
+            kind = if (device.kind == dev.appxcode.ide.device.DeviceKind.PHYSICAL) dev.appxcode.ide.build.DestinationKind.DEVICE else dev.appxcode.ide.build.DestinationKind.SIMULATOR,
+            name = device.name,
+            identifier = device.id
+        )
+        return xcodeBuildService.run(configuration.copy(destination = destination), container, timeout)
+    }
     fun xcodeTest(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.test(configuration, container, timeout)
     fun xcodeClean(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.clean(configuration, container, timeout)
     fun xcodeArchive(request: ArchiveRequest, timeout: Duration = Duration.ofMinutes(30)): ArchiveResult = xcodeArchiveService.archive(request, timeout)
