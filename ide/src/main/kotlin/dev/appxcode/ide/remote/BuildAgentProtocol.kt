@@ -139,6 +139,18 @@ data class BuildAgentEndpoint(
     }
 }
 
+data class BuildAgentArtifactRequest(
+    val requestId: String,
+    val references: List<String>,
+) {
+    init {
+        require(requestId.isNotBlank()) { "Artifact request id must not be blank" }
+        require(references.isNotEmpty()) { "Artifact request must include at least one reference" }
+        require(references.all { it.isNotBlank() }) { "Artifact references must not be blank" }
+        require(references.distinct().size == references.size) { "Artifact references must be unique" }
+    }
+}
+
 data class BuildAgentHealth(
     val protocolVersion: Int = CURRENT_PROTOCOL_VERSION,
     val agentId: String,
