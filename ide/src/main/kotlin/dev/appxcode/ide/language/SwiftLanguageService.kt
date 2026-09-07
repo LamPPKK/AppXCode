@@ -29,13 +29,27 @@ class LspSwiftLanguageService(
     private val workspace: Path,
     private val processManager: LspProcessManager
 ) : SwiftLanguageService, AutoCloseable {
+    private val fallbackIndex = SwiftSymbolIndex()
     init { processManager.start() }
     fun isAlive(): Boolean = processManager.isAlive()
     fun restart(): Boolean = processManager.restart()
-    override fun complete(file: Path, line: Int, column: Int): List<SwiftCompletion> = emptyList()
+    override fun complete(file: Path, line: Int, column: Int): List<SwiftCompletion> {
+        if (!java.nio.file.Files.isRegularFile(file) || line < 1 || column < 0) return emptyList()
+        val sourceLine = runCatching { java.nio.file.Files.readAllLines(file).getOrNull(line - 1) }.getOrNull() ?: return emptyList()
+        val safeColumn = column.coerceAtMost(sourceLine.length)
+        val prefix = TOKEN.find(sourceLine.substring(0, safeColumn))?.value.orEmpty()
+        if (prefix.isEmpty()) return emptyList()
+        val files = runCatching {
+            java.nio.file.Files.walk(workspace).use { stream -> stream.filter { java.nio.file.Files.isRegularFile(it) && it.toString().endsWith(".swift") }.toList() }
+        }.getOrDefault(listOf(file))
+        fallbackIndex.index(files)
+        return fallbackIndex.complete(prefix).map { SwiftCompletion(it.name, it.kind, it.name) }
+    }
     override fun diagnostics(files: List<Path>): List<SwiftDiagnostic> =
         UnavailableSwiftLanguageService(toolchain).diagnostics(files)
     override fun close() = processManager.close()
+
+    private companion object { val TOKEN = Regex("[A-Za-z_][A-Za-z0-9_]*$") }
 }
 
 class UnavailableSwiftLanguageService(private val toolchain: AppleToolchain) : SwiftLanguageService {
