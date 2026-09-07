@@ -248,6 +248,10 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
         val kind = if (device.kind == dev.appxcode.ide.device.DeviceKind.PHYSICAL) platform else "$platform Simulator"
         return xcodeArchiveService.archive(request.copy(destination = "platform=$kind,name=${device.name},id=${device.id}"), timeout)
     }
+    fun xcodeArchiveOnSelectedDevice(request: ArchiveRequest, deviceId: String? = null, timeout: Duration = Duration.ofMinutes(30)): ArchiveResult? {
+        val device = devices.select(deviceId) ?: return null
+        return xcodeArchiveOnDevice(request, device, timeout)
+    }
     fun xcodeExport(options: ExportOptions): XcodeBuildResult = xcodeExportService.export(options)
     fun checkSigning(configuration: SigningConfiguration): SigningCheck = signingService.check(configuration)
     fun xcodeTest(container: Path, scheme: String, destination: String, configuration: String = "Debug", timeout: Duration = Duration.ofMinutes(20)): XcodeTestResult =
