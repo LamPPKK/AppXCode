@@ -12,6 +12,12 @@ interface SwiftLanguageService {
     fun diagnostics(files: List<Path>): List<SwiftDiagnostic>
 }
 
+object SwiftLanguageServiceFactory {
+    fun create(toolchain: AppleToolchain, workspace: Path): SwiftLanguageService {
+        return UnavailableSwiftLanguageService(toolchain)
+    }
+}
+
 class UnavailableSwiftLanguageService(private val toolchain: AppleToolchain) : SwiftLanguageService {
     override fun complete(file: Path, line: Int, column: Int): List<SwiftCompletion> = emptyList()
     override fun diagnostics(files: List<Path>): List<SwiftDiagnostic> = files.flatMap { file ->
