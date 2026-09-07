@@ -1,0 +1,23 @@
+name: AppXCode CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  verify:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Verify source layout
+        shell: bash
+        run: |
+          test -f settings.gradle.kts
+          test -f ide/src/main/resources/META-INF/plugin.xml
+          grep -q 'dev.appxcode.ide' ide/src/main/resources/META-INF/plugin.xml
