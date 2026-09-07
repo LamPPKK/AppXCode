@@ -131,6 +131,7 @@ object BuildAgentErrorCode {
     const val UNAUTHORIZED = "unauthorized"
     const val TOOLCHAIN_UNAVAILABLE = "toolchain_unavailable"
     const val AGENT_OFFLINE = "agent_offline"
+    const val HEALTH_STALE = "health_stale"
     const val BUILD_FAILED = "build_failed"
     const val CANCELLED = "cancelled"
 }
