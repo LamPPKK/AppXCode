@@ -43,6 +43,11 @@ enum class BuildAgentOperation {
     BUILD, TEST, ARCHIVE, EXPORT, INSTALL, LOGS;
 
     val wireName: String get() = name.lowercase()
+
+    companion object {
+        fun fromWireName(value: String): BuildAgentOperation? =
+            entries.firstOrNull { it.wireName == value.trim().lowercase() }
+    }
 }
 
 object BuildAgentErrorCode {
