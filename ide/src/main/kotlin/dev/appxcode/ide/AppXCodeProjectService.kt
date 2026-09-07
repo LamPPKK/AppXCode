@@ -190,7 +190,13 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
         xcodeTestService.rerunFailed(container, scheme, destination, previous, configuration, timeout)
     fun flutterPubGet(root: Path): FlutterCommandResult = flutter.pubGet(root)
     fun flutterDoctor(root: Path): FlutterCommandResult = flutter.doctor(root)
-    fun flutterRun(root: Path, deviceId: String? = null): FlutterCommandResult = flutter.run(root, deviceId)
+    fun flutterRun(root: Path, deviceId: String? = null): FlutterCommandResult {
+        val selected = devices.select(deviceId)
+        if (deviceId != null && selected == null) {
+            return FlutterCommandResult(false, "Flutter device is not available: $deviceId", null)
+        }
+        return flutter.run(root, selected?.id)
+    }
     fun flutterTest(root: Path): FlutterCommandResult = flutter.test(root)
     fun flutterHotReload(root: Path): FlutterCommandResult = flutter.hotReload(root)
     fun flutterHotRestart(root: Path): FlutterCommandResult = flutter.hotRestart(root)
