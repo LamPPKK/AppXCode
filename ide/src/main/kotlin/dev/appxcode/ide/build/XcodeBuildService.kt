@@ -39,11 +39,14 @@ class XcodeBuildService(
         val executable = toolchain.xcodebuildPath?.takeIf { java.nio.file.Files.isExecutable(it) }
             ?: return XcodeBuildResult(null, "xcodebuild is unavailable", false)
         if (!java.nio.file.Files.exists(request.container)) return XcodeBuildResult(null, "Xcode container not found: ${request.container}", false)
+        val workingDirectory = request.container.parent
+            ?: return XcodeBuildResult(null, "Xcode container has no working directory", false)
+        if (!java.nio.file.Files.isDirectory(workingDirectory)) return XcodeBuildResult(null, "Working directory not found: $workingDirectory", false)
         val containerFlag = if (request.container.fileName.toString().endsWith(".xcworkspace")) "-workspace" else "-project"
         val command = listOf(executable.toString(), "-scheme", request.scheme, "-destination", request.destination, "-configuration", request.configuration, request.action, containerFlag, request.container.toString()) + request.arguments
-        val process = processFactoryWithEnvironment?.let { it(command, request.container.parent, request.environment) }
-            ?: if (request.environment.isEmpty()) processFactory(command, request.container.parent)
-            else ProcessBuilder(command).directory(request.container.parent.toFile()).apply {
+        val process = processFactoryWithEnvironment?.let { it(command, workingDirectory, request.environment) }
+            ?: if (request.environment.isEmpty()) processFactory(command, workingDirectory)
+            else ProcessBuilder(command).directory(workingDirectory.toFile()).apply {
                 environment().putAll(request.environment)
                 redirectErrorStream(true)
             }.start()
