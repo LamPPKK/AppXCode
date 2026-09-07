@@ -130,3 +130,16 @@ data class BuildAgentEndpoint(
         return baseUri().resolve(path)
     }
 }
+
+data class BuildAgentHealth(
+    val protocolVersion: Int = CURRENT_PROTOCOL_VERSION,
+    val agentId: String,
+    val online: Boolean,
+    val toolchainAvailable: Boolean,
+    val message: String = "",
+) {
+    init {
+        require(protocolVersion == CURRENT_PROTOCOL_VERSION) { "Unsupported build agent protocol: $protocolVersion" }
+        require(agentId.isNotBlank()) { "Build agent id must not be blank" }
+    }
+}
