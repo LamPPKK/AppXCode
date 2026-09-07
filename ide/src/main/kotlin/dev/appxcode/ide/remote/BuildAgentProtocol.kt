@@ -8,6 +8,8 @@ data class BuildAgentRequest(
     val timeoutMillis: Long = 900_000,
     val cancellationRequested: Boolean = false,
 ) {
+    val isStrict: Boolean get() = requireTls && requirePairing && !allowInsecureRemote
+
     val requiresPairing: Boolean get() = pairingId == null
 
     val isCancelled: Boolean get() = cancellationRequested
