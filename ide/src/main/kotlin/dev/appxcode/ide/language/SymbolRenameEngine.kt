@@ -19,5 +19,17 @@ object SymbolRenameEngine {
         return RenamePreview(symbol, replacement, edits)
     }
 
+    fun apply(preview: RenamePreview): Set<Path> {
+        preview.edits.groupBy { it.file }.forEach { (file, edits) ->
+            var text = Files.readString(file)
+            edits.sortedByDescending { it.startOffset }.forEach { edit ->
+                require(edit.endOffset <= text.length && edit.startOffset >= 0) { "stale rename preview for $file" }
+                text = text.substring(0, edit.startOffset) + edit.replacement + text.substring(edit.endOffset)
+            }
+            Files.writeString(file, text)
+        }
+        return preview.edits.map { it.file }.toSet()
+    }
+
     private val IDENTIFIER = Regex("[A-Za-z_][A-Za-z0-9_]*")
 }
