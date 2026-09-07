@@ -30,7 +30,7 @@ object XcodeProjectModel {
     }
 
     fun readTargets(project: Path): List<XcodeTarget> {
-        val pbx = if (project.fileName.toString().endsWith(".xcodeproj")) project.resolve("project.pbxproj") else project
+        val pbx = if (project.fileName?.toString()?.endsWith(".xcodeproj") == true) project.resolve("project.pbxproj") else project
         if (!Files.isRegularFile(pbx)) return emptyList()
         val text = runCatching { Files.readString(pbx) }.getOrNull() ?: return emptyList()
         val blocks = text.split("PBXNativeTarget = {").drop(1)
