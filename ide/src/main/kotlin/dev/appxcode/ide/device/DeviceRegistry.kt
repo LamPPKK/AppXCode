@@ -18,6 +18,7 @@ class DeviceRegistry {
     @Volatile private var providerErrors: Map<String, String> = emptyMap()
 
     fun register(provider: DeviceProvider) {
+        require(provider.id.isNotBlank()) { "Device provider id must not be blank" }
         val existing = providers.indexOfFirst { it.id == provider.id }
         if (existing < 0) providers += provider else providers[existing] = provider
         notifyListeners()
