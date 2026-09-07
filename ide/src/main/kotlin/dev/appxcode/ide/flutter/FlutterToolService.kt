@@ -49,7 +49,11 @@ class FlutterToolService(
     fun sessionAlive(): Boolean = session?.isAlive == true
     fun run(root: Path, deviceId: String? = null): FlutterCommandResult = execute(root, "run", deviceId)
     fun test(root: Path): FlutterCommandResult = execute(root, "test", null)
-    fun pubGet(root: Path): FlutterCommandResult = if (!java.nio.file.Files.isDirectory(root)) FlutterCommandResult(false, "Flutter project root does not exist", null) else runner(listOf(flutter, "pub", "get"), root)
+    fun pubGet(root: Path): FlutterCommandResult = when {
+        !java.nio.file.Files.isDirectory(root) -> FlutterCommandResult(false, "Flutter project root does not exist", null)
+        !java.nio.file.Files.isRegularFile(root.resolve("pubspec.yaml")) -> FlutterCommandResult(false, "pubspec.yaml not found", null)
+        else -> runner(listOf(flutter, "pub", "get"), root)
+    }
     fun doctor(root: Path): FlutterCommandResult = if (!java.nio.file.Files.isDirectory(root)) FlutterCommandResult(false, "Flutter project root does not exist", null) else runner(listOf(flutter, "doctor"), root)
     fun hotReload(root: Path): FlutterCommandResult = sendSignal(root, "r")
     fun hotRestart(root: Path): FlutterCommandResult = sendSignal(root, "R")
