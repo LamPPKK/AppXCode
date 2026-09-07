@@ -13,7 +13,14 @@ data class XcodeBuildRequest(
     val action: String = "build",
     val arguments: List<String> = emptyList(),
     val environment: Map<String, String> = emptyMap(),
-)
+) {
+    init {
+        require(scheme.isNotBlank()) { "Build scheme must not be blank" }
+        require(destination.isNotBlank()) { "Build destination must not be blank" }
+        require(configuration.isNotBlank()) { "Build configuration must not be blank" }
+        require(action.isNotBlank()) { "Build action must not be blank" }
+    }
+}
 
 data class XcodeBuildResult(
     val exitCode: Int?,
