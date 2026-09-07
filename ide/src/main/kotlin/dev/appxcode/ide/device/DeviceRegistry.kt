@@ -15,6 +15,7 @@ interface DeviceProvider {
 class DeviceRegistry {
     private val providers = CopyOnWriteArrayList<DeviceProvider>()
     private val listeners = CopyOnWriteArrayList<(List<AppleDevice>) -> Unit>()
+    @Volatile private var providerErrors: Map<String, String> = emptyMap()
 
     fun register(provider: DeviceProvider) {
         val existing = providers.indexOfFirst { it.id == provider.id }
@@ -29,9 +30,13 @@ class DeviceRegistry {
         listener(discover())
         return AutoCloseable { listeners.remove(listener) }
     }
-    fun discover(): List<AppleDevice> = providers.flatMap { runCatching { it.list() }.getOrDefault(emptyList()) }
-        .distinctBy(AppleDevice::id)
-        .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, AppleDevice::platform, AppleDevice::name))
+    fun discover(): List<AppleDevice> {
+        val errors = linkedMapOf<String, String>()
+        val devices = providers.flatMap { provider -> runCatching { provider.list() }.getOrElse { error -> errors[provider.id] = error.message ?: error.javaClass.simpleName; emptyList() } }
+        providerErrors = errors.toMap()
+        return devices.distinctBy(AppleDevice::id).sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, AppleDevice::platform, AppleDevice::name))
+    }
+    fun providerErrors(): Map<String, String> = providerErrors
     fun providerIds(): List<String> = providers.map(DeviceProvider::id).sorted()
     fun hasProvider(providerId: String): Boolean = providers.any { it.id == providerId }
     private fun notifyListeners() { val devices = discover(); listeners.forEach { runCatching { it(devices) } } }
