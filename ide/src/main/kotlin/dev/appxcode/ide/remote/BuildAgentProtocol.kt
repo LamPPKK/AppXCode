@@ -165,6 +165,9 @@ data class BuildAgentPairing(
     fun isExpired(nowEpochMillis: Long = System.currentTimeMillis()): Boolean = nowEpochMillis >= expiresAtEpochMillis
 }
 
+fun BuildAgentEndpoint.isPairedWith(pairing: BuildAgentPairing, nowEpochMillis: Long = System.currentTimeMillis()): Boolean =
+    pairingId != null && pairingId == pairing.pairingId && !pairing.isExpired(nowEpochMillis)
+
 data class BuildAgentArtifactRequest(
     val requestId: String,
     val references: List<String>,
