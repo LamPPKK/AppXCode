@@ -8,6 +8,8 @@ data class BuildAgentRequest(
     val timeoutMillis: Long = 900_000,
     val cancellationRequested: Boolean = false,
 ) {
+    val requiresPairing: Boolean get() = pairingId == null
+
     val isCancelled: Boolean get() = cancellationRequested
     val typedOperation: BuildAgentOperation? get() = BuildAgentOperation.fromWireName(operation)
     val isKnownOperation: Boolean get() = typedOperation != null
