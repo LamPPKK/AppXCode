@@ -25,7 +25,13 @@ class FlutterToolService(
             true
         }.getOrDefault(false)
     }
-    fun stopSession() { session?.destroy(); session = null }
+    fun stopSession() {
+        session?.let { process ->
+            process.destroy()
+            runCatching { if (!process.waitFor(2, java.util.concurrent.TimeUnit.SECONDS)) process.destroyForcibly() }
+        }
+        session = null
+    }
     fun sessionOutput(): String = sessionOutput.toString()
     fun run(root: Path, deviceId: String? = null): FlutterCommandResult = execute(root, "run", deviceId)
     fun test(root: Path): FlutterCommandResult = execute(root, "test", null)
