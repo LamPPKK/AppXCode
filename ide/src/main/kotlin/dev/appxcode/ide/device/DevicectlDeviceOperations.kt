@@ -19,7 +19,9 @@ class DevicectlDeviceOperations(
 
     override fun launch(deviceId: String, bundleId: String): DeviceOperationResult = execute("device", "process", "launch", "--device", deviceId, bundleId)
 
-    override fun logs(deviceId: String, bundleId: String?): Sequence<String> = execute("device", "log", "collect", "--device", deviceId).output.lineSequence()
+    override fun logs(deviceId: String, bundleId: String?): Sequence<String> =
+        execute("device", "log", "collect", "--device", deviceId).output.lineSequence()
+            .filter { bundleId == null || it.contains(bundleId) }
 
     override fun screenshot(deviceId: String, destination: Path): DeviceOperationResult = execute("device", "screenshot", "--device", deviceId, destination.toString())
 
