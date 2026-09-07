@@ -108,6 +108,23 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
         return run(root, listOf("git", "merge", "--", branch)) != null
     }
 
+    fun fetch(root: Path, remote: String = "origin"): Boolean {
+        require(remote.isNotBlank() && !remote.contains(' ')) { "invalid remote name" }
+        return run(root, listOf("git", "fetch", "--", remote)) != null
+    }
+
+    fun pull(root: Path, remote: String = "origin", branch: String? = null): Boolean {
+        require(remote.isNotBlank() && !remote.contains(' ')) { "invalid remote name" }
+        branch?.let { require(it.isNotBlank() && !it.contains(' ')) { "invalid branch name" } }
+        return run(root, buildList { addAll(listOf("git", "pull", "--ff-only", "--", remote)); branch?.let { add(it) } }) != null
+    }
+
+    fun push(root: Path, remote: String = "origin", branch: String? = null): Boolean {
+        require(remote.isNotBlank() && !remote.contains(' ')) { "invalid remote name" }
+        branch?.let { require(it.isNotBlank() && !it.contains(' ')) { "invalid branch name" } }
+        return run(root, buildList { addAll(listOf("git", "push", "--", remote)); branch?.let { add(it) } }) != null
+    }
+
     fun blame(root: Path, file: Path): List<GitBlameLine> {
         val resolved = root.resolve(file).normalize()
         require(resolved.startsWith(root.normalize())) { "file must stay within repository" }
