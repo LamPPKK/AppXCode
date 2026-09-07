@@ -102,6 +102,8 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
         require(message.isNotBlank()) { "Commit message must not be blank" }
         return run(root, listOf("git", "commit", "-m", message))?.trim()?.takeIf { it.isNotBlank() }
     }
+    fun stage(root: Path, files: Collection<Path>): Boolean = updateIndex(root, files, true)
+    fun unstage(root: Path, files: Collection<Path>): Boolean = updateIndex(root, files, false)
 
     fun merge(root: Path, branch: String): Boolean {
         require(validRef(branch)) { "invalid branch name" }
@@ -147,5 +149,15 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
         ?.lineSequence()?.map { it.substringAfterLast(' ').trim() }?.filter(String::isNotBlank)?.toList() ?: emptyList()
 
     private fun run(root: Path, args: List<String>): String = runCatching { command(args, root) }.getOrNull()
+    private fun updateIndex(root: Path, files: Collection<Path>, add: Boolean): Boolean {
+        require(files.isNotEmpty()) { "At least one file is required" }
+        val relative = files.map { file ->
+            val resolved = root.resolve(file).normalize()
+            require(resolved.startsWith(root.normalize())) { "file must stay within repository" }
+            root.normalize().relativize(resolved).toString()
+        }
+        val command = if (add) listOf("git", "add", "--") + relative else listOf("git", "restore", "--staged", "--") + relative
+        return run(root, command) != null
+    }
     private fun validRef(value: String): Boolean = value.isNotBlank() && !value.startsWith('-') && !value.contains(' ') && !value.contains("..")
 }
