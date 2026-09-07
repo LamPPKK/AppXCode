@@ -11,13 +11,13 @@ class DevicectlDeviceOperations(
         DeviceOperationResult(process.waitFor() == 0, "devicectl completed", output)
     },
 ) : DeviceOperations {
-    fun pair(deviceId: String): DeviceOperationResult = execute("device", "pair", "--device", deviceId)
-    fun unpair(deviceId: String): DeviceOperationResult = execute("device", "unpair", "--device", deviceId)
+    fun pair(deviceId: String): DeviceOperationResult = if (deviceId.isBlank()) invalidDevice() else execute("device", "pair", "--device", deviceId)
+    fun unpair(deviceId: String): DeviceOperationResult = if (deviceId.isBlank()) invalidDevice() else execute("device", "unpair", "--device", deviceId)
 
     override fun install(deviceId: String, app: Path): DeviceOperationResult =
-        if (!Files.exists(app)) DeviceOperationResult(false, "App bundle not found: $app") else execute("device", "install", "app", "--device", deviceId, app.toString())
+        when { deviceId.isBlank() -> invalidDevice(); !Files.exists(app) -> DeviceOperationResult(false, "App bundle not found: $app"); else -> execute("device", "install", "app", "--device", deviceId, app.toString()) }
 
-    override fun launch(deviceId: String, bundleId: String): DeviceOperationResult = execute("device", "process", "launch", "--device", deviceId, bundleId)
+    override fun launch(deviceId: String, bundleId: String): DeviceOperationResult = if (deviceId.isBlank() || bundleId.isBlank()) invalidDevice() else execute("device", "process", "launch", "--device", deviceId, bundleId)
 
     override fun logs(deviceId: String, bundleId: String?): Sequence<String> =
         execute("device", "log", "collect", "--device", deviceId).output.lineSequence()
@@ -29,4 +29,5 @@ class DevicectlDeviceOperations(
         if (!Files.isExecutable(xcrun)) return DeviceOperationResult(false, "xcrun is unavailable")
         return runCatching { runner(listOf(xcrun.toString(), "devicectl", *args)) }.getOrElse { DeviceOperationResult(false, it.message ?: "devicectl failed") }
     }
+    private fun invalidDevice() = DeviceOperationResult(false, "Device id is required")
 }
