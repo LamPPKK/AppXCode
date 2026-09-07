@@ -80,6 +80,9 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
         return submit(original.copy(requestId = java.util.UUID.randomUUID().toString()))
     }
 
+    fun retryFailed(): List<BuildAgentResponse> = failedRequests()
+        .mapNotNull { retry(it.requestId) }
+
     fun downloadArtifact(request: BuildAgentArtifactRequest, destination: java.nio.file.Path): BuildAgentResponse {
         if (!request.isValid || !destination.isAbsolute) {
             return BuildAgentResponse(requestId = request.requestId, accepted = false, errorCode = BuildAgentErrorCode.INVALID_REQUEST, message = "invalid artifact download request")
