@@ -11,4 +11,7 @@
     <toolWindow id="Embedded Devices" anchor="right" factoryClass="dev.appxcode.ide.device.EmbeddedDevicesToolWindowFactory" />
   </extensions>
   <projectService serviceImplementation="dev.appxcode.ide.device.DeviceRegistryService" />
+  <actions>
+    <action id="AppXCode.RefreshEmbeddedDevices" class="dev.appxcode.ide.device.RefreshDevicesAction" />
+  </actions>
 </idea-plugin>
