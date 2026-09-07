@@ -20,6 +20,7 @@ class DeviceRegistry {
     fun register(provider: DeviceProvider) {
         require(provider.id.isNotBlank()) { "Device provider id must not be blank" }
         val existing = providers.indexOfFirst { it.id == provider.id }
+        if (existing >= 0 && providers[existing] === provider) return
         if (existing < 0) providers += provider else providers[existing] = provider
         notifyListeners()
     }
