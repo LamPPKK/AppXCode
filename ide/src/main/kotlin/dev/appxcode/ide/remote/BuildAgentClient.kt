@@ -7,7 +7,7 @@ interface BuildAgentTransport {
     fun cancel(requestId: String): AgentResponse
 }
 
-class BuildAgentClient(private val transport: BuildAgentTransport) {
+class BuildAgentClient(private val transport: BuildAgentTransport, private val retryPolicy: RetryPolicy = RetryPolicy()) {
     private val states = ConcurrentHashMap<String, AgentStatus>()
 
     fun submit(request: AgentRequest): AgentResponse {
@@ -16,10 +16,20 @@ class BuildAgentClient(private val transport: BuildAgentTransport) {
         if (states.putIfAbsent(request.requestId, AgentStatus.ACCEPTED) != null) {
             return AgentResponse(request.requestId, AgentStatus.FAILED, "requestId already exists")
         }
-        return runCatching { transport.submit(request) }.getOrElse {
+        return runCatching { submitWithRetry(request) }.getOrElse {
             states[request.requestId] = AgentStatus.FAILED
             return AgentResponse(request.requestId, AgentStatus.FAILED, it.message ?: "transport failure")
         }.also { states[request.requestId] = it.status }
+    }
+
+    private fun submitWithRetry(request: AgentRequest): AgentResponse {
+        var attempt = 1
+        while (true) {
+            val response = runCatching { transport.submit(request) }.getOrElse { throw it }
+            val retryable = response.message?.contains("network", true) == true || response.message?.contains("timeout", true) == true
+            if (response.status != AgentStatus.FAILED || !retryable || attempt >= retryPolicy.maxAttempts) return response
+            Thread.sleep(retryPolicy.delayFor(attempt++))
+        }
     }
 
     fun cancel(requestId: String): AgentResponse {
