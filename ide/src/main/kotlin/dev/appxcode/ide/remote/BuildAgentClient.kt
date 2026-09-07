@@ -7,6 +7,10 @@ interface BuildAgentTransport {
     fun cancel(requestId: String): BuildAgentResponse
 }
 
+interface BuildArtifactTransport {
+    fun download(request: BuildAgentArtifactRequest, destination: java.nio.file.Path): BuildAgentResponse
+}
+
 class BuildAgentClient(private val transport: BuildAgentTransport, private val retryPolicy: RetryPolicy = RetryPolicy()) {
     private val states = ConcurrentHashMap<String, BuildAgentResponse>()
 
