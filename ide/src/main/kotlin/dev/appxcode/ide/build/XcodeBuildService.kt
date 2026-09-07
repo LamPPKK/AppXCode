@@ -32,6 +32,9 @@ data class XcodeBuildResult(
     val failed: Boolean get() = !succeeded && !timedOut && !cancelled
     val status: String get() = when { succeeded -> "succeeded"; cancelled -> "cancelled"; timedOut -> "timed_out"; else -> "failed" }
     val diagnostics: List<BuildDiagnostic> get() = XcodeDiagnosticParser.parse(output)
+    val errors: List<BuildDiagnostic> get() = diagnostics.filter { it.severity == DiagnosticSeverity.ERROR }
+    val warnings: List<BuildDiagnostic> get() = diagnostics.filter { it.severity == DiagnosticSeverity.WARNING }
+    val hasErrors: Boolean get() = errors.isNotEmpty()
 }
 
 class XcodeBuildService(
