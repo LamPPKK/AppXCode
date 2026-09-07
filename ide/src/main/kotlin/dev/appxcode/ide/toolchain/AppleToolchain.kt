@@ -12,7 +12,7 @@ data class AppleToolchain(
 ) {
     val simctlPath: Path? get() = xcrunPath?.takeIf { Files.isExecutable(it) }
     val devicectlPath: Path? get() = simctlPath
-    private val xcrunPath: Path? get() = developerDirectory?.resolve("usr/bin/xcrun") ?: existingPath(Path.of("/usr/bin/xcrun"))
+    private val xcrunPath: Path? get() = developerDirectory?.resolve("usr/bin/xcrun")?.takeIf { Files.exists(it) } ?: existingPath(Path.of("/usr/bin/xcrun"))
     val available: Boolean get() = xcodebuildPath != null && developerDirectory != null
     val capabilities: Set<String> get() = buildSet {
         if (available) add("xcodebuild")
