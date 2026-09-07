@@ -10,7 +10,8 @@ enum class TestStatus { PASSED, FAILED, SKIPPED, UNKNOWN }
 data class TestCaseResult(val identifier: String, val status: TestStatus, val durationSeconds: Double? = null)
 
 data class XcodeTestResult(val cases: List<TestCaseResult>, val rawOutput: String) {
-    val passed: Boolean get() = cases.none { it.status == TestStatus.FAILED }
+    val passed: Boolean get() = cases.isNotEmpty() && cases.all { it.status == TestStatus.PASSED }
+    val isComplete: Boolean get() = cases.isNotEmpty() && cases.none { it.status == TestStatus.UNKNOWN }
     val tree: TestResultTree get() = TestResultTree.from(cases)
 }
 
