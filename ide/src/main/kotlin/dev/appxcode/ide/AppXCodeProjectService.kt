@@ -11,9 +11,12 @@ import dev.appxcode.ide.dependency.DependencyModel
 import dev.appxcode.ide.dependency.DependencyPin
 import dev.appxcode.ide.flutter.FlutterProject
 import dev.appxcode.ide.flutter.FlutterProjectDetector
+import dev.appxcode.ide.language.SwiftSymbol
+import dev.appxcode.ide.language.SwiftSymbolIndex
 @Service(Service.Level.PROJECT)
 class AppXCodeProjectService(private val project: Project) {
     private val initialized = AtomicBoolean(false)
+    private val swiftSymbols = SwiftSymbolIndex()
     fun initialize() { initialized.compareAndSet(false, true) }
     fun isInitialized(): Boolean = initialized.get()
     fun projectName(): String = project.name
@@ -21,4 +24,7 @@ class AppXCodeProjectService(private val project: Project) {
     fun appleToolchain(): AppleToolchain = AppleToolchainDetector.detect()
     fun dependencies(root: Path): List<DependencyPin> = DependencyModel.read(root)
     fun flutterProject(root: Path): FlutterProject? = FlutterProjectDetector.detect(root)
+    fun indexSwift(files: Iterable<Path>) { swiftSymbols.index(files) }
+    fun findSwiftSymbols(name: String): List<SwiftSymbol> = swiftSymbols.find(name)
+    fun completeSwift(prefix: String): List<SwiftSymbol> = swiftSymbols.complete(prefix)
 }
