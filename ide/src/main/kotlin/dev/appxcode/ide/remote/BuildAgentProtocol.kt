@@ -313,3 +313,14 @@ data class BuildAgentHealth(
 
 fun BuildAgentHealth.asResponse(requestId: String): BuildAgentResponse =
     BuildAgentResponse(requestId = requestId, accepted = ready, message = message.ifBlank { if (ready) "agent ready" else "agent unavailable" }, errorCode = if (ready) null else BuildAgentErrorCode.TOOLCHAIN_UNAVAILABLE)
+
+fun BuildAgentHealth.asResponse(requestId: String, maxAgeMillis: Long, nowEpochMillis: Long = System.currentTimeMillis()): BuildAgentResponse {
+    require(maxAgeMillis >= 0) { "Health max age must not be negative" }
+    val stale = isStale(maxAgeMillis, nowEpochMillis)
+    return BuildAgentResponse(
+        requestId = requestId,
+        accepted = ready && !stale,
+        message = message.ifBlank { if (ready && !stale) "agent ready" else "agent unavailable" },
+        errorCode = when { stale -> BuildAgentErrorCode.HEALTH_STALE; errorCode != null -> errorCode; else -> null },
+    )
+}
