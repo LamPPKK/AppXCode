@@ -133,6 +133,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun removeRunConfiguration(name: String) = runConfigurations.remove(name)
     fun runConfiguration(name: String): RunConfiguration? = runConfigurations.get(name)
     fun runConfigurations(): List<RunConfiguration> = runConfigurations.all()
+    fun hasRunConfiguration(name: String): Boolean = runConfigurations.contains(name)
+    fun clearRunConfigurations() = runConfigurations.clear()
     fun xcodeBuild(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.execute(configuration, container, timeout)
     fun xcodeRun(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.run(configuration, container, timeout)
     fun xcodeTest(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.test(configuration, container, timeout)
@@ -152,6 +154,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
         (swiftLanguage as? AutoCloseable)?.close()
         swiftLanguage = null
         flutter.stopSession()
+        runConfigurations.clear()
         changeListeners.clear()
     }
 }

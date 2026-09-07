@@ -27,5 +27,11 @@ class RunConfigurationRegistry {
     fun get(name: String): RunConfiguration? = configurations[name]
 
     @Synchronized
+    fun contains(name: String): Boolean = configurations.containsKey(name)
+
+    @Synchronized
+    fun clear() { configurations.clear() }
+
+    @Synchronized
     fun all(): List<RunConfiguration> = configurations.values.toList()
 }
