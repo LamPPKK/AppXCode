@@ -25,8 +25,8 @@ object TestFrameworkRegistry {
         val result = mutableListOf<DiscoveredTest>()
         runCatching { Files.walk(root).use { files -> files.filter { it.toString().endsWith(".swift") || it.toString().endsWith(".m") || it.toString().endsWith(".mm") }.forEach { file ->
             runCatching { Files.readAllLines(file) }.getOrDefault(emptyList()).forEachIndexed { index, line ->
-                Regex("\\bfunc\\s+(test[A-Za-z0-9_]*)\\s*\\(").find(line)?.let { result += DiscoveredTest(it.groupValues[1], file, index + 1, TestFramework.XCTEST) }
-                Regex("[-+]\\s*\\(void\\)\\s*(test[A-Za-z0-9_]*)\\s*\\{").find(line)?.let { result += DiscoveredTest(it.groupValues[1], file, index + 1, TestFramework.XCTEST) }
+                SWIFT_TEST.find(line)?.let { result += DiscoveredTest(it.groupValues[1], file, index + 1, TestFramework.XCTEST) }
+                OBJC_TEST.find(line)?.let { result += DiscoveredTest(it.groupValues[1], file, index + 1, TestFramework.XCTEST) }
             }
         } } }
         return result
@@ -56,6 +56,9 @@ object TestFrameworkRegistry {
             } }
         }
     }
+
+    private val SWIFT_TEST = Regex("\\bfunc\\s+(test[A-Za-z0-9_]*)\\s*\\(")
+    private val OBJC_TEST = Regex("[-+]\\s*\\(void\\)\\s*(test[A-Za-z0-9_]*)\\s*\\{")
 
     fun detect(root: Path): Set<TestFramework> {
         val files = if (!Files.isDirectory(root)) emptySequence() else runCatching { Files.walk(root).use { it.filter(Files::isRegularFile).toList().asSequence() } }.getOrDefault(emptySequence())
