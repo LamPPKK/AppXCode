@@ -164,6 +164,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun createDebugSession(sessionId: String) = debugSessions.create(sessionId)
     fun updateDebugSession(sessionId: String, state: DebugSessionState) = debugSessions.update(sessionId, state)
     fun debugSessionState(sessionId: String): DebugSessionState? = debugSessions.state(sessionId)
+    fun debugSessions(): Map<String, DebugSessionState> = debugSessions.all()
     fun flutterService(): FlutterToolService = flutter
     fun putRunConfiguration(configuration: RunConfiguration) = runConfigurations.put(configuration)
     fun removeRunConfiguration(name: String) = runConfigurations.remove(name)
