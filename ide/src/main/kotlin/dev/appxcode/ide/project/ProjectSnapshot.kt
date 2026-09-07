@@ -7,6 +7,7 @@ import java.nio.file.Path
 data class ProjectSnapshot(
     val root: Path,
     val containers: List<XcodeContainer>,
+    val schemes: List<XcodeScheme>,
     val targets: List<XcodeTarget>,
     val dependencies: List<DependencyPin>,
 )
@@ -15,6 +16,10 @@ object ProjectSnapshotLoader {
     fun load(root: Path): ProjectSnapshot {
         val containers = XcodeProjectModel.discover(root)
         val project = containers.firstOrNull { it.kind == XcodeContainerKind.PROJECT }
-        return ProjectSnapshot(root, containers, project?.let(XcodeProjectModel::readTargets) ?: emptyList(), DependencyModel.read(root))
+        val schemes = containers.flatMap { container ->
+            val directory = container.path.resolve("xcshareddata/xcschemes")
+            if (!java.nio.file.Files.isDirectory(directory)) emptyList() else java.nio.file.Files.list(directory).use { stream -> stream.mapNotNull(XcodeProjectModel::readScheme).toList() }
+        }
+        return ProjectSnapshot(root, containers, schemes, project?.let(XcodeProjectModel::readTargets) ?: emptyList(), DependencyModel.read(root))
     }
 }
