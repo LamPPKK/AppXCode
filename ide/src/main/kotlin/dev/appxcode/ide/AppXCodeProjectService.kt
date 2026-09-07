@@ -45,6 +45,8 @@ import dev.appxcode.ide.language.LspSwiftLanguageService
 import dev.appxcode.ide.language.SwiftFormatterService
 import dev.appxcode.ide.language.FormatResult
 import dev.appxcode.ide.language.BatchFormatResult
+import dev.appxcode.ide.build.RunConfiguration
+import dev.appxcode.ide.build.RunConfigurationRegistry
 import dev.appxcode.ide.project.XcodeTarget
 import dev.appxcode.ide.project.XcodeProjectModel
 @Service(Service.Level.PROJECT)
@@ -58,6 +60,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     private val dependencyResolver = DependencyResolver()
     private val debugSessions = DebugSessionRegistry()
     private val flutter = FlutterToolService()
+    private val runConfigurations = RunConfigurationRegistry()
     @Volatile private var projectWatcher: XcodeProjectWatcher? = null
     private val changeListeners = CopyOnWriteArrayList<(Path) -> Unit>()
     fun initialize() {
@@ -122,6 +125,10 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun updateDebugSession(sessionId: String, state: DebugSessionState) = debugSessions.update(sessionId, state)
     fun debugSessionState(sessionId: String): DebugSessionState? = debugSessions.state(sessionId)
     fun flutterService(): FlutterToolService = flutter
+    fun putRunConfiguration(configuration: RunConfiguration) = runConfigurations.put(configuration)
+    fun removeRunConfiguration(name: String) = runConfigurations.remove(name)
+    fun runConfiguration(name: String): RunConfiguration? = runConfigurations.get(name)
+    fun runConfigurations(): List<RunConfiguration> = runConfigurations.all()
     fun flutterPubGet(root: Path): FlutterCommandResult = flutter.pubGet(root)
     fun flutterDoctor(root: Path): FlutterCommandResult = flutter.doctor(root)
     fun flutterRun(root: Path, deviceId: String? = null): FlutterCommandResult = flutter.run(root, deviceId)
