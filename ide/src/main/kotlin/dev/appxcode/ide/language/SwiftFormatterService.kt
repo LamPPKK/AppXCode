@@ -5,7 +5,7 @@ import java.nio.file.Path
 
 data class FormatResult(val success: Boolean, val output: String, val exitCode: Int?)
 data class BatchFormatResult(val results: List<FormatResult>) {
-    val success: Boolean get() = results.isNotEmpty() && results.all { it.success }
+    val success: Boolean get() = results.all { it.success }
 }
 
 class SwiftFormatterService(
