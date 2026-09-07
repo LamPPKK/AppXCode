@@ -289,6 +289,16 @@ data class BuildAgentArtifactRequest(
     }
 }
 
+object BuildArtifactResponseValidator {
+    fun validate(request: BuildAgentArtifactRequest, response: BuildAgentResponse): List<String> = buildList {
+        if (response.requestId != request.requestId) add("artifact response request id mismatch")
+        if (!response.accepted) { add(response.errorCode ?: "artifact request rejected"); return@buildList }
+        val metadata = response.artifactMetadata.associateBy { it.reference }
+        request.references.filter { it !in metadata }.forEach { add("missing artifact metadata: $it") }
+    }
+    fun isValid(request: BuildAgentArtifactRequest, response: BuildAgentResponse): Boolean = validate(request, response).isEmpty()
+}
+
 fun BuildAgentArtifactRequest.accepted(artifacts: List<BuildAgentArtifact>, message: String = "artifacts ready"): BuildAgentResponse =
     BuildAgentResponse(requestId = requestId, accepted = true, message = message, artifacts = artifacts.map { it.reference }, artifactMetadata = artifacts)
 
