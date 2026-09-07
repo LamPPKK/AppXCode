@@ -11,6 +11,7 @@ data class TestResultTree(val suites: List<TestSuiteResult>) {
     val passed: Int get() = suites.sumOf(TestSuiteResult::passed)
     val failed: Int get() = suites.sumOf(TestSuiteResult::failed)
     val skipped: Int get() = suites.sumOf(TestSuiteResult::skipped)
+    fun failedCases(): List<TestCaseResult> = suites.flatMap { suite -> suite.cases.filter { it.status == TestStatus.FAILED } }
 
     companion object {
         fun from(cases: List<TestCaseResult>): TestResultTree = TestResultTree(
