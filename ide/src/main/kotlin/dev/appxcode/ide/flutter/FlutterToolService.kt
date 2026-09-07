@@ -33,6 +33,7 @@ class FlutterToolService(
         session = null
     }
     fun sessionOutput(): String = sessionOutput.toString()
+    fun sessionAlive(): Boolean = session?.isAlive == true
     fun run(root: Path, deviceId: String? = null): FlutterCommandResult = execute(root, "run", deviceId)
     fun test(root: Path): FlutterCommandResult = execute(root, "test", null)
     fun pubGet(root: Path): FlutterCommandResult = if (!java.nio.file.Files.isDirectory(root)) FlutterCommandResult(false, "Flutter project root does not exist", null) else runner(listOf(flutter, "pub", "get"), root)
