@@ -32,5 +32,6 @@ class DeviceRegistry {
     fun discover(): List<AppleDevice> = providers.flatMap { runCatching { it.list() }.getOrDefault(emptyList()) }
         .distinctBy(AppleDevice::id)
         .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, AppleDevice::platform, AppleDevice::name))
+    fun providerIds(): List<String> = providers.map(DeviceProvider::id).sorted()
     private fun notifyListeners() { val devices = discover(); listeners.forEach { runCatching { it(devices) } } }
 }

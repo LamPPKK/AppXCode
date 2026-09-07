@@ -37,6 +37,7 @@ class DeviceRegistryService : Disposable {
     fun register(provider: DeviceProvider) = registry.register(provider)
     fun unregister(providerId: String) = registry.unregister(providerId)
     fun discover(): List<AppleDevice> = registry.discover()
+    fun providerIds(): List<String> = registry.providerIds()
     fun refresh() = registry.refresh()
     fun onDevicesChanged(listener: (List<AppleDevice>) -> Unit): AutoCloseable = registry.onDevicesChanged(listener)
     fun clear() = registry.clear()
