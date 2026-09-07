@@ -2,7 +2,9 @@ package dev.appxcode.ide.git
 
 import java.nio.file.Path
 
-data class GitStatus(val branch: String?, val changedFiles: List<String>, val available: Boolean)
+data class GitStatus(val branch: String?, val changedFiles: List<String>, val available: Boolean) {
+    val isClean: Boolean get() = available && changedFiles.isEmpty()
+}
 data class GitBranch(val name: String, val remote: Boolean)
 data class GitCommit(val hash: String, val subject: String, val author: String, val timestamp: Long?)
 data class GitStash(val index: Int, val name: String, val message: String)
