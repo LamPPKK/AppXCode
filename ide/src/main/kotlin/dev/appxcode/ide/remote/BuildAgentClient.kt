@@ -12,6 +12,7 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
 
     fun submit(request: BuildAgentRequest): BuildAgentResponse {
         if (!request.isValid()) return BuildAgentResponse.rejected(request, BuildAgentErrorCode.INVALID_REQUEST, "invalid build agent request")
+        if (request.isCancelled) return BuildAgentResponse.cancelled(request)
         if (states.putIfAbsent(request.requestId, BuildAgentResponse.accepted(request)) != null) {
             return BuildAgentResponse.rejected(request, BuildAgentErrorCode.INVALID_REQUEST, "requestId already exists")
         }
