@@ -12,14 +12,15 @@ class FlutterToolService(
         val code = process.waitFor()
         FlutterCommandResult(code == 0, output, code)
     },
-) {
+) : AutoCloseable {
     private var session: Process? = null
     private var sessionRoot: Path? = null
     private val sessionOutput = StringBuffer()
 
     @Synchronized fun startSession(root: Path, deviceId: String? = null): Boolean {
         if (!java.nio.file.Files.isDirectory(root)) return false
-        if (session?.isAlive == true) return true
+        val normalizedRoot = root.toAbsolutePath().normalize()
+        if (session?.isAlive == true) return sessionRoot == normalizedRoot
         session = null
         sessionRoot = null
         sessionOutput.setLength(0)
@@ -27,7 +28,7 @@ class FlutterToolService(
         return runCatching {
             session = ProcessBuilder(args).directory(root.toFile()).redirectErrorStream(true).start()
             if (session?.isAlive != true) { session = null; return@runCatching false }
-            sessionRoot = root.toAbsolutePath().normalize()
+            sessionRoot = normalizedRoot
             Thread {
                 session?.inputStream?.bufferedReader()?.useLines { lines ->
                     lines.forEach { line ->
@@ -49,6 +50,7 @@ class FlutterToolService(
         session = null
         sessionRoot = null
     }
+    override fun close() = stopSession()
     fun sessionOutput(): String = synchronized(sessionOutput) { sessionOutput.toString() }
     fun clearSessionOutput() = synchronized(sessionOutput) { sessionOutput.setLength(0) }
     @Synchronized fun sessionAlive(): Boolean = session?.isAlive == true
