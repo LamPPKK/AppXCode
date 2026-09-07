@@ -165,6 +165,7 @@ data class BuildAgentTransportPolicy(
 ) {
     companion object {
         val SECURE_DEFAULT: BuildAgentTransportPolicy = BuildAgentTransportPolicy(requireTls = true, requirePairing = true)
+        val LOCAL_DEVELOPMENT: BuildAgentTransportPolicy = BuildAgentTransportPolicy(requireTls = false, requirePairing = false)
     }
 
     fun permits(endpoint: BuildAgentEndpoint): Boolean =
