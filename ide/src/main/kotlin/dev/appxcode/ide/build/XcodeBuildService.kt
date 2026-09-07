@@ -71,17 +71,21 @@ class XcodeBuildService(
             "-configuration", request.configuration,
             request.action,
         ) + request.arguments
-        val process = processFactoryWithEnvironment?.let { it(command, workingDirectory, request.environment) }
+        val process = runCatching {
+            processFactoryWithEnvironment?.let { it(command, workingDirectory, request.environment) }
             ?: if (request.environment.isEmpty()) processFactory(command, workingDirectory)
             else ProcessBuilder(command).directory(workingDirectory.toFile()).apply {
                 environment().putAll(request.environment)
                 redirectErrorStream(true)
             }.start()
+        }.getOrElse { return XcodeBuildResult(null, "Unable to start xcodebuild: ${it.message ?: "unknown error"}", false) }
         val outputBuffer = StringBuffer()
         val reader = Thread { process.inputStream.bufferedReader().use { outputBuffer.append(it.readText()) } }
         reader.isDaemon = true
         reader.start()
-        val deadline = System.nanoTime() + timeout.toNanos()
+        val timeoutNanos = runCatching { timeout.toNanos() }.getOrElse { Long.MAX_VALUE }
+        val start = System.nanoTime()
+        val deadline = if (timeoutNanos >= Long.MAX_VALUE - start) Long.MAX_VALUE else start + timeoutNanos
         var finished = false
         while (!finished && System.nanoTime() < deadline && cancellation?.isCancelled() != true) finished = process.waitFor(250, TimeUnit.MILLISECONDS)
         val cancelled = cancellation?.isCancelled() == true
