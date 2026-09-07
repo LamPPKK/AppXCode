@@ -203,6 +203,19 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun checkSigning(configuration: SigningConfiguration): SigningCheck = signingService.check(configuration)
     fun xcodeTest(container: Path, scheme: String, destination: String, configuration: String = "Debug", timeout: Duration = Duration.ofMinutes(20)): XcodeTestResult =
         xcodeTestService.run(container, scheme, destination, configuration, timeout)
+    fun xcodeTestOnDevice(container: Path, scheme: String, device: AppleDevice, configuration: String = "Debug", timeout: Duration = Duration.ofMinutes(20)): XcodeTestResult {
+        require(device.state == dev.appxcode.ide.device.DeviceState.AVAILABLE) { "Device is not available: ${device.id}" }
+        val platform = when (device.platform.lowercase()) {
+            "ios" -> "iOS"
+            "ipados", "ipad os" -> "iPadOS"
+            "watchos", "watch os" -> "watchOS"
+            "tvos", "tv os" -> "tvOS"
+            "macos", "mac os" -> "macOS"
+            else -> device.platform
+        }
+        val kind = if (device.kind == dev.appxcode.ide.device.DeviceKind.PHYSICAL) platform else "$platform Simulator"
+        return xcodeTestService.run(container, scheme, "platform=$kind,name=${device.name},id=${device.id}", configuration, timeout)
+    }
     fun xcodeRerunFailed(container: Path, scheme: String, destination: String, previous: XcodeTestResult, configuration: String = "Debug", timeout: Duration = Duration.ofMinutes(20)): XcodeTestResult =
         xcodeTestService.rerunFailed(container, scheme, destination, previous, configuration, timeout)
     fun flutterPubGet(root: Path): FlutterCommandResult = flutter.pubGet(root)
