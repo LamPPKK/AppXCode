@@ -73,7 +73,11 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
         return output.lineSequence().mapNotNull { line ->
             val parts = line.trim().split(Regex("\\s+"))
             if (parts.size < 3) null else GitRemote(parts[0], parts[1], parts.getOrNull(2)?.takeIf { it == "(push)" }?.let { parts[1] })
-        }.groupBy { it.name }.map { (name, entries) -> GitRemote(name, entries.first { it.pushUrl == null }.url, entries.firstOrNull { it.pushUrl != null }?.url) }
+        }.groupBy { it.name }.mapNotNull { (name, entries) ->
+            val fetch = entries.firstOrNull { it.pushUrl == null }
+            val push = entries.firstOrNull { it.pushUrl != null }
+            (fetch ?: push)?.let { GitRemote(name, fetch?.url ?: it.url, push?.url) }
+        }
     }
 
     fun tags(root: Path): List<GitTag> {
