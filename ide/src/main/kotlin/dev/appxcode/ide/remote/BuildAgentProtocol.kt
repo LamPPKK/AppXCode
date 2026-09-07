@@ -338,7 +338,7 @@ data class BuildAgentHealth(
         isUsable(maxAgeMillis, nowEpochMillis)
 
     init {
-        require(protocolVersion == CURRENT_PROTOCOL_VERSION) { "Unsupported build agent protocol: $protocolVersion" }
+        require(protocolVersion > 0) { "Build agent protocol version must be positive" }
         require(agentId.isNotBlank()) { "Build agent id must not be blank" }
         require(observedAtEpochMillis >= 0) { "Health observation timestamp must not be negative" }
     }
