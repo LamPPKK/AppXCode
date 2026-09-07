@@ -25,6 +25,8 @@ import dev.appxcode.ide.toolchain.AppleToolchain
 import dev.appxcode.ide.toolchain.AppleToolchainDetector
 import dev.appxcode.ide.dependency.DependencyModel
 import dev.appxcode.ide.dependency.DependencyPin
+import dev.appxcode.ide.dependency.DependencyResolver
+import dev.appxcode.ide.dependency.ResolveResult
 import dev.appxcode.ide.flutter.FlutterProject
 import dev.appxcode.ide.flutter.FlutterProjectDetector
 import dev.appxcode.ide.language.SwiftSymbol
@@ -39,6 +41,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     private val swiftSymbols = SwiftSymbolIndex()
     private val objcSymbols = ObjCSymbolIndex()
     private val git = GitService()
+    private val dependencyResolver = DependencyResolver()
     private val debugSessions = DebugSessionRegistry()
     private val flutter = FlutterToolService()
     @Volatile private var projectWatcher: XcodeProjectWatcher? = null
@@ -61,6 +64,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun discoverXcodeContainers(root: Path): List<XcodeContainer> = XcodeProjectModel.discover(root)
     fun appleToolchain(): AppleToolchain = AppleToolchainDetector.detect()
     fun dependencies(root: Path): List<DependencyPin> = DependencyModel.read(root)
+    fun resolveSwiftPackages(root: Path, timeoutMillis: Long = 600_000): ResolveResult = dependencyResolver.resolveSwift(root, timeoutMillis)
+    fun installCocoaPods(root: Path, timeoutMillis: Long = 600_000): ResolveResult = dependencyResolver.installPods(root, timeoutMillis)
     fun flutterProject(root: Path): FlutterProject? = FlutterProjectDetector.detect(root)
     fun indexSwift(files: Iterable<Path>) { swiftSymbols.index(files) }
     fun findSwiftSymbols(name: String): List<SwiftSymbol> = swiftSymbols.find(name)
