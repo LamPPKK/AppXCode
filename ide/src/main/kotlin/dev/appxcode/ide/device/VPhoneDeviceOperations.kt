@@ -10,9 +10,12 @@ class VPhoneDeviceOperations(
         DeviceOperationResult(process.waitFor() == 0, "vphone-cli completed", output)
     },
 ) : DeviceOperations {
-    override fun install(deviceId: String, app: Path) = execute("install", deviceId, app.toString())
+    override fun install(deviceId: String, app: Path) =
+        if (!java.nio.file.Files.exists(app)) DeviceOperationResult(false, "App bundle not found: $app")
+        else execute("install", deviceId, app.toString())
     override fun launch(deviceId: String, bundleId: String) = execute("launch", deviceId, bundleId)
     override fun logs(deviceId: String, bundleId: String?) = execute("logs", deviceId).output.lineSequence()
+        .filter { bundleId == null || it.contains(bundleId) }
     override fun screenshot(deviceId: String, destination: Path) = execute("screenshot", deviceId, destination.toString())
     private fun execute(vararg args: String): DeviceOperationResult = runCatching { runner(listOf(executable, *args)) }.getOrElse { DeviceOperationResult(false, it.message ?: "vphone-cli failed") }
 }
