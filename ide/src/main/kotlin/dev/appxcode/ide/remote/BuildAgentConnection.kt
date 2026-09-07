@@ -5,6 +5,9 @@ enum class ConnectionState { DISCONNECTED, CONNECTING, CONNECTED, FAILED }
 class BuildAgentConnection(val endpoint: BuildAgentEndpoint? = null) {
     @Volatile var state: ConnectionState = ConnectionState.DISCONNECTED
         private set
+    val isConnected: Boolean get() = state == ConnectionState.CONNECTED
+    val isConnecting: Boolean get() = state == ConnectionState.CONNECTING
+    val hasFailed: Boolean get() = state == ConnectionState.FAILED
     fun connecting() { state = ConnectionState.CONNECTING }
     fun connected() { state = ConnectionState.CONNECTED }
     fun failed() { state = ConnectionState.FAILED }
