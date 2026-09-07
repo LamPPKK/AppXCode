@@ -265,6 +265,7 @@ data class BuildAgentArtifactRequest(
     val requestId: String,
     val references: List<String>,
 ) {
+    fun normalized(): BuildAgentArtifactRequest = copy(references = references.distinct().sorted())
     val isValid: Boolean get() = requestId.isNotBlank() && references.isNotEmpty() && references.all { it.isNotBlank() }
 
     init {
