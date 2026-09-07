@@ -170,6 +170,8 @@ data class BuildAgentHealth(
     val observedAtEpochMillis: Long = System.currentTimeMillis(),
 ) {
     val ready: Boolean get() = online && toolchainAvailable && protocolVersion == CURRENT_PROTOCOL_VERSION
+    fun ageMillis(nowEpochMillis: Long = System.currentTimeMillis()): Long =
+        (nowEpochMillis - observedAtEpochMillis).coerceAtLeast(0)
 
     init {
         require(protocolVersion == CURRENT_PROTOCOL_VERSION) { "Unsupported build agent protocol: $protocolVersion" }
