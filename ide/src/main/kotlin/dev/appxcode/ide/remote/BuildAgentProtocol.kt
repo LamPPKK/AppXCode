@@ -334,7 +334,7 @@ data class BuildAgentHealth(
 }
 
 fun BuildAgentHealth.asResponse(requestId: String): BuildAgentResponse =
-    BuildAgentResponse(requestId = requestId, accepted = ready, message = message.ifBlank { if (ready) "agent ready" else "agent unavailable" }, errorCode = if (ready) null else BuildAgentErrorCode.TOOLCHAIN_UNAVAILABLE)
+    BuildAgentResponse(requestId = requestId, accepted = ready, message = message.ifBlank { if (ready) "agent ready" else "agent unavailable" }, errorCode = errorCode)
 
 fun BuildAgentHealth.asResponse(requestId: String, maxAgeMillis: Long, nowEpochMillis: Long = System.currentTimeMillis()): BuildAgentResponse {
     require(maxAgeMillis >= 0) { "Health max age must not be negative" }
