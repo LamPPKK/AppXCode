@@ -17,6 +17,7 @@ data class BuildAgentRequest(
     val isCancelled: Boolean get() = cancellationRequested
     val typedOperation: BuildAgentOperation? get() = BuildAgentOperation.fromWireName(operation)
     val isKnownOperation: Boolean get() = typedOperation != null
+    fun isValid(): Boolean = isKnownOperation && !isCancelled
     fun cancelledCopy(): BuildAgentRequest = copy(cancellationRequested = true)
 
     constructor(requestId: String, operation: BuildAgentOperation, projectPath: String, timeoutMillis: Long = 900_000) :
@@ -139,6 +140,8 @@ object BuildAgentErrorCode {
     const val UNAUTHORIZED = "unauthorized"
     const val TOOLCHAIN_UNAVAILABLE = "toolchain_unavailable"
     const val AGENT_OFFLINE = "agent_offline"
+    const val TRANSPORT_UNAVAILABLE = "transport_unavailable"
+    const val TIMEOUT = "timeout"
     const val HEALTH_STALE = "health_stale"
     const val BUILD_FAILED = "build_failed"
     const val CANCELLED = "cancelled"
