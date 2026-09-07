@@ -21,6 +21,7 @@ import dev.appxcode.ide.git.GitStash
 import dev.appxcode.ide.git.GitRemote
 import dev.appxcode.ide.git.GitTag
 import dev.appxcode.ide.git.GitSyncStatus
+import dev.appxcode.ide.git.GitBlameLine
 import java.nio.file.Path
 import java.util.concurrent.CopyOnWriteArrayList
 import dev.appxcode.ide.toolchain.AppleToolchain
@@ -134,6 +135,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun gitRemotes(root: Path): List<GitRemote> = git.remotes(root)
     fun gitTags(root: Path): List<GitTag> = git.tags(root)
     fun gitSyncStatus(root: Path): GitSyncStatus? = git.syncStatus(root)
+    fun gitBlame(root: Path, file: Path): List<GitBlameLine> = git.blame(root, file)
+    fun gitHooks(root: Path): List<String> = git.hooks(root)
     fun gitCommit(root: Path, message: String): String? = git.commit(root, message)
     fun gitMerge(root: Path, branch: String): Boolean = git.merge(root, branch)
     fun gitFetch(root: Path, remote: String = "origin"): Boolean = git.fetch(root, remote)
