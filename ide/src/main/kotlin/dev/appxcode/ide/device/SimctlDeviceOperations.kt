@@ -17,9 +17,12 @@ class SimctlDeviceOperations(
     fun erase(deviceId: String): DeviceOperationResult = execute("erase", deviceId)
 
     override fun install(deviceId: String, app: Path): DeviceOperationResult =
-        if (!Files.exists(app)) DeviceOperationResult(false, "App bundle not found: $app") else execute("install", deviceId, app.toString())
+        if (!validId(deviceId)) DeviceOperationResult(false, "Simulator id must not be blank")
+        else if (!Files.isDirectory(app)) DeviceOperationResult(false, "App bundle not found: $app") else execute("install", deviceId, app.toString())
 
-    override fun launch(deviceId: String, bundleId: String): DeviceOperationResult = execute("launch", deviceId, bundleId)
+    override fun launch(deviceId: String, bundleId: String): DeviceOperationResult =
+        if (!validId(deviceId) || bundleId.isBlank()) DeviceOperationResult(false, "Simulator id and bundle id are required")
+        else execute("launch", deviceId, bundleId)
 
     override fun logs(deviceId: String, bundleId: String?): Sequence<String> =
         if (!Files.isExecutable(xcrun)) emptySequence() else sequence {
@@ -33,7 +36,14 @@ class SimctlDeviceOperations(
             }
         }
 
-    override fun screenshot(deviceId: String, destination: Path): DeviceOperationResult = execute("io", deviceId, "screenshot", destination.toString())
+    override fun screenshot(deviceId: String, destination: Path): DeviceOperationResult {
+        if (!validId(deviceId)) return DeviceOperationResult(false, "Simulator id must not be blank")
+        runCatching { destination.parent?.let { Files.createDirectories(it) } }
+            .onFailure { return DeviceOperationResult(false, "Unable to prepare screenshot destination: ${it.message ?: "I/O failure"}") }
+        return execute("io", deviceId, "screenshot", destination.toString())
+    }
+
+    private fun validId(value: String): Boolean = value.isNotBlank() && value == value.trim() && !value.any(Char::isWhitespace)
 
     private fun execute(vararg args: String): DeviceOperationResult {
         if (!Files.isExecutable(xcrun)) return DeviceOperationResult(false, "xcrun is unavailable")
