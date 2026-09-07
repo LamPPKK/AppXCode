@@ -38,7 +38,10 @@ class DeviceRegistry {
         return devices.distinctBy(AppleDevice::id).sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, AppleDevice::platform, AppleDevice::name))
     }
     fun providerErrors(): Map<String, String> = providerErrors
+    fun snapshot(): DeviceRegistrySnapshot = DeviceRegistrySnapshot(discover(), providerErrors())
     fun providerIds(): List<String> = providers.map(DeviceProvider::id).sorted()
     fun hasProvider(providerId: String): Boolean = providers.any { it.id == providerId }
     private fun notifyListeners() { val devices = discover(); listeners.forEach { runCatching { it(devices) } } }
 }
+
+data class DeviceRegistrySnapshot(val devices: List<AppleDevice>, val providerErrors: Map<String, String>)
