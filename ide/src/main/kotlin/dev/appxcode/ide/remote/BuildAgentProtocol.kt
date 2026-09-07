@@ -10,6 +10,7 @@ data class BuildAgentRequest(
 ) {
     val isStrict: Boolean get() = requireTls && requirePairing && !allowInsecureRemote
     val isDevelopment: Boolean get() = !requireTls && !requirePairing
+    fun describe(): String = "tls=$requireTls,pairing=$requirePairing,allowInsecureRemote=$allowInsecureRemote"
 
     val requiresPairing: Boolean get() = pairingId == null
 
