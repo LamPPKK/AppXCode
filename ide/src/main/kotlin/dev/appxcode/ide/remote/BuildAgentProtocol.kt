@@ -124,4 +124,9 @@ data class BuildAgentEndpoint(
     }
 
     fun baseUri(): java.net.URI = java.net.URI("${if (tlsEnabled) "https" else "http"}://$host:$port")
+
+    fun uri(path: String): java.net.URI {
+        require(path.startsWith("/")) { "Build agent API path must start with /" }
+        return baseUri().resolve(path)
+    }
 }
