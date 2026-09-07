@@ -29,12 +29,14 @@ class XcodeTestService(private val builder: XcodeBuildService) {
     private fun parseCases(output: String): List<TestCaseResult> = output.lineSequence().mapNotNull { line ->
         val passed = PASSED.matchEntire(line)
         val failed = FAILED.matchEntire(line)
-        val match = passed ?: failed ?: return@mapNotNull null
-        TestCaseResult(match.groupValues[1], if (passed != null) TestStatus.PASSED else TestStatus.FAILED, match.groupValues[2].toDoubleOrNull())
+        val skipped = SKIPPED.matchEntire(line)
+        val match = passed ?: failed ?: skipped ?: return@mapNotNull null
+        TestCaseResult(match.groupValues[1], when { passed != null -> TestStatus.PASSED; failed != null -> TestStatus.FAILED; else -> TestStatus.SKIPPED }, match.groupValues[2].toDoubleOrNull())
     }.toList()
 
     private companion object {
-        val PASSED = Regex("^Test Case '-\\[(.+)\\]' passed \\(([^ ]+) seconds\\)$")
-        val FAILED = Regex("^Test Case '-\\[(.+)\\]' failed \\(([^ ]+) seconds\\)$")
+        val PASSED = Regex("^Test Case '-\\[(.+)\\]' passed \\(([^ ]+) (?:seconds|s)\\)$")
+        val FAILED = Regex("^Test Case '-\\[(.+)\\]' failed \\(([^ ]+) (?:seconds|s)\\)$")
+        val SKIPPED = Regex("^Test Case '-\\[(.+)\\]' skipped \\(([^ ]+) (?:seconds|s)\\)$")
     }
 }
