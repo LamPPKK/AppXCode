@@ -5,6 +5,8 @@ data class BuildAgentRequest(
     val requestId: String,
     val operation: String,
     val projectPath: String,
+    val timeoutMillis: Long = 900_000,
+    val cancellationRequested: Boolean = false,
 ) {
     init {
         require(protocolVersion == CURRENT_PROTOCOL_VERSION) { "Unsupported build agent protocol: $protocolVersion" }
@@ -12,6 +14,7 @@ data class BuildAgentRequest(
         require(operation.isNotBlank()) { "Build agent operation must not be blank" }
         require(operation == operation.trim()) { "Build agent operation must not contain surrounding whitespace" }
         require(projectPath.isNotBlank()) { "Build agent project path must not be blank" }
+        require(timeoutMillis > 0) { "Build agent timeout must be positive" }
     }
 }
 
