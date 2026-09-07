@@ -40,6 +40,13 @@ The project now contains the first executable IntelliJ Platform base: a Gradle
 plugin project, AppXCode plugin descriptor, and project-scoped startup service.
 Feature implementation follows the staged roadmap below.
 
+Implemented slices currently include native Xcode container/scheme discovery,
+Swift symbol indexing and fallback diagnostics, SwiftPM/CocoaPods parsing and
+resolve actions, Xcode build/test/archive/signing services, Git status/diff,
+Apple Simulator and physical-device adapters, opt-in vphone support, Flutter
+project/run detection, Embedded Devices UI, and versioned remote build-agent
+contracts. Each slice is committed independently on `main`.
+
 The current development plan is:
 
 - [AppXCode development roadmap](plans/20260825012548-appxcode-development-roadmap/plan.md)
