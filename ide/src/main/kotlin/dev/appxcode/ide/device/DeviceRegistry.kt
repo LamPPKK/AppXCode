@@ -17,7 +17,9 @@ class DeviceRegistry {
     private val listeners = CopyOnWriteArrayList<(List<AppleDevice>) -> Unit>()
 
     fun register(provider: DeviceProvider) {
-        if (providers.none { it.id == provider.id }) { providers += provider; notifyListeners() }
+        val existing = providers.indexOfFirst { it.id == provider.id }
+        if (existing < 0) providers += provider else providers[existing] = provider
+        notifyListeners()
     }
     fun unregister(providerId: String) { if (providers.removeIf { it.id == providerId }) notifyListeners() }
     fun refresh() { notifyListeners() }
