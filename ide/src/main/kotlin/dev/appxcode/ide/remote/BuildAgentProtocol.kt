@@ -194,6 +194,7 @@ data class BuildAgentTransportPolicy(
         requireTls && !endpoint.tlsEnabled -> "TLS is required"
         !endpoint.tlsEnabled && !endpoint.isLoopback && !allowInsecureRemote -> "Insecure remote transport is disabled"
         requirePairing && endpoint.requiresPairing -> "Pairing is required"
+        requireTls && endpoint.credentialFingerprint == null -> "Credential fingerprint is required"
         else -> null
     }
 }
