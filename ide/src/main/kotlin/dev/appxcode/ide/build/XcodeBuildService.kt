@@ -40,7 +40,16 @@ class XcodeBuildService(
     private val processFactoryWithEnvironment: ((List<String>, Path, Map<String, String>) -> Process)? = null,
 ) {
     fun execute(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult =
-        execute(XcodeBuildRequest(container, configuration.scheme, configuration.destination.xcodebuildSpecifier(), configuration.configuration, "build", configuration.arguments, configuration.environment), timeout)
+        execute(configuration, container, "build", timeout)
+
+    fun run(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult =
+        execute(configuration, container, "run", timeout)
+
+    fun test(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult =
+        execute(configuration, container, "test", timeout)
+
+    private fun execute(configuration: RunConfiguration, container: Path, action: String, timeout: Duration): XcodeBuildResult =
+        execute(XcodeBuildRequest(container, configuration.scheme, configuration.destination.xcodebuildSpecifier(), configuration.configuration, action, configuration.arguments, configuration.environment), timeout)
 
     fun execute(request: XcodeBuildRequest, timeout: Duration = Duration.ofMinutes(15), cancellation: BuildCancellation? = null): XcodeBuildResult {
         require(!timeout.isNegative && !timeout.isZero) { "timeout must be positive" }
