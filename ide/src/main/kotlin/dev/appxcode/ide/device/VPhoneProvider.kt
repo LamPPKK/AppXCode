@@ -9,9 +9,11 @@ class VPhoneProvider(
     },
 ) : DeviceProvider {
     override val id: String = "vphone-cli"
+    val isEnabled: Boolean get() = enabled
+    val isConfigured: Boolean get() = enabled && executable.isNotBlank() && executable == executable.trim()
 
     override fun list(): List<AppleDevice> {
-        if (!enabled) return emptyList()
+        if (!isConfigured) return emptyList()
         val output = runCatching { runner(listOf(executable, "list")) }.getOrNull() ?: return emptyList()
         return output.lineSequence().mapNotNull { line ->
             val fields = line.split('|').map(String::trim)
