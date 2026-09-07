@@ -62,4 +62,5 @@ data class DeviceRegistrySnapshot(val devices: List<AppleDevice>, val providerEr
     val countsByKind: Map<DeviceKind, Int> get() = devices.groupingBy(AppleDevice::kind).eachCount()
     val availableByKind: Map<DeviceKind, Int> get() = devices.filter { it.state == DeviceState.AVAILABLE }.groupingBy(AppleDevice::kind).eachCount()
     val hasProviderErrors: Boolean get() = providerErrors.isNotEmpty()
+    val errorCount: Int get() = providerErrors.size
 }
