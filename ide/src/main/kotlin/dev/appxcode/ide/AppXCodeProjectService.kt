@@ -32,6 +32,7 @@ import dev.appxcode.ide.dependency.DependencyResolver
 import dev.appxcode.ide.dependency.ResolveResult
 import dev.appxcode.ide.flutter.FlutterProject
 import dev.appxcode.ide.flutter.FlutterProjectDetector
+import dev.appxcode.ide.flutter.FlutterCommandResult
 import dev.appxcode.ide.language.SwiftSymbol
 import dev.appxcode.ide.language.SwiftSymbolIndex
 import dev.appxcode.ide.language.ObjCSymbol
@@ -109,6 +110,11 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun updateDebugSession(sessionId: String, state: DebugSessionState) = debugSessions.update(sessionId, state)
     fun debugSessionState(sessionId: String): DebugSessionState? = debugSessions.state(sessionId)
     fun flutterService(): FlutterToolService = flutter
+    fun flutterPubGet(root: Path): FlutterCommandResult = flutter.pubGet(root)
+    fun flutterRun(root: Path, deviceId: String? = null): FlutterCommandResult = flutter.run(root, deviceId)
+    fun flutterTest(root: Path): FlutterCommandResult = flutter.test(root)
+    fun flutterHotReload(root: Path): FlutterCommandResult = flutter.hotReload(root)
+    fun flutterHotRestart(root: Path): FlutterCommandResult = flutter.hotRestart(root)
     override fun dispose() {
         projectWatcher?.close()
         projectWatcher = null
