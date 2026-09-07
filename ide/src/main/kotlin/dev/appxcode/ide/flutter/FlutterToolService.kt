@@ -16,7 +16,7 @@ class FlutterToolService(
     private var session: Process? = null
     private val sessionOutput = StringBuffer()
 
-    fun startSession(root: Path, deviceId: String? = null): Boolean {
+    @Synchronized fun startSession(root: Path, deviceId: String? = null): Boolean {
         if (!java.nio.file.Files.isDirectory(root)) return false
         if (session?.isAlive == true) return true
         session = null
@@ -38,7 +38,7 @@ class FlutterToolService(
             true
         }.getOrDefault(false)
     }
-    fun stopSession() {
+    @Synchronized fun stopSession() {
         session?.let { process ->
             process.destroy()
             runCatching { if (!process.waitFor(2, java.util.concurrent.TimeUnit.SECONDS)) process.destroyForcibly() }
