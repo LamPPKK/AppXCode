@@ -58,7 +58,7 @@ object TestFrameworkRegistry {
     }
 
     fun detect(root: Path): Set<TestFramework> {
-        val files = if (!Files.isDirectory(root)) emptySequence() else Files.walk(root).use { it.filter(Files::isRegularFile).toList().asSequence() }
+        val files = if (!Files.isDirectory(root)) emptySequence() else runCatching { Files.walk(root).use { it.filter(Files::isRegularFile).toList().asSequence() } }.getOrDefault(emptySequence())
         val text = files.filter { it.toString().endsWith(".swift") || it.toString().endsWith(".m") || it.toString().endsWith(".mm") || it.toString().endsWith(".c") || it.toString().endsWith(".cc") || it.toString().endsWith(".cpp") || it.toString().endsWith(".h") || it.toString().endsWith(".hpp") }
             .map { runCatching { Files.readString(it) }.getOrDefault("") }.joinToString("\n")
         return buildSet {
