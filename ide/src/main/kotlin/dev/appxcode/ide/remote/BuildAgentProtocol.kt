@@ -140,6 +140,10 @@ data class BuildAgentEndpoint(
     val pairingId: String? = null,
     val credentialFingerprint: String? = null,
 ) {
+    companion object {
+        fun localDevelopment(port: Int): BuildAgentEndpoint = BuildAgentEndpoint("127.0.0.1", port, tlsEnabled = false)
+    }
+
     init {
         require(host.isNotBlank()) { "Build agent host must not be blank" }
         require(port in 1..65535) { "Build agent port must be between 1 and 65535" }
