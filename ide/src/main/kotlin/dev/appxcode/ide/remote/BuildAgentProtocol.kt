@@ -112,3 +112,14 @@ data class BuildAgentCancelRequest(
         require(reason.isNotBlank()) { "Cancel reason must not be blank" }
     }
 }
+
+data class BuildAgentEndpoint(
+    val host: String,
+    val port: Int,
+    val tlsEnabled: Boolean = true,
+) {
+    init {
+        require(host.isNotBlank()) { "Build agent host must not be blank" }
+        require(port in 1..65535) { "Build agent port must be between 1 and 65535" }
+    }
+}
