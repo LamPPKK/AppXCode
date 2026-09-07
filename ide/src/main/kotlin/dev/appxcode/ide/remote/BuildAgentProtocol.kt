@@ -215,6 +215,13 @@ data class BuildAgentPairing(
     val pairingId: String,
     val expiresAtEpochMillis: Long,
 ) {
+    companion object {
+        fun issue(pairingId: String, ttlMillis: Long, nowEpochMillis: Long = System.currentTimeMillis()): BuildAgentPairing {
+            require(ttlMillis > 0) { "Pairing TTL must be positive" }
+            return BuildAgentPairing(pairingId, nowEpochMillis + ttlMillis)
+        }
+    }
+
     val isValid: Boolean get() = pairingId.isNotBlank() && expiresAtEpochMillis > 0 && isActive()
     init {
         require(pairingId.isNotBlank()) { "Pairing id must not be blank" }
