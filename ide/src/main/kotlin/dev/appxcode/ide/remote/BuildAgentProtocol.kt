@@ -75,7 +75,8 @@ enum class BuildAgentResponseStatus { ACCEPTED, REJECTED }
 fun BuildAgentResponse.withArtifacts(newArtifacts: List<BuildAgentArtifact>): BuildAgentResponse {
     require(accepted) { "Only accepted responses can carry artifacts" }
     val merged = (artifactMetadata + newArtifacts).distinctBy { it.reference }
-    return copy(artifacts = merged.map { it.reference }, artifactMetadata = merged)
+    val references = (artifacts + merged.map { it.reference }).distinct()
+    return copy(artifacts = references, artifactMetadata = merged)
 }
 
 enum class BuildAgentLogLevel { DEBUG, INFO, WARN, ERROR }
