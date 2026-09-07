@@ -21,5 +21,5 @@ class DebugSessionRegistry {
     fun create(sessionId: String) { require(sessionId.isNotBlank()) { "Debug session id must not be blank" }; sessions.putIfAbsent(sessionId, DebugSessionState.CREATED) }
     fun update(sessionId: String, state: DebugSessionState): Boolean = sessions.replace(sessionId, state) != null
     fun state(sessionId: String): DebugSessionState? = sessions[sessionId]
-    fun remove(sessionId: String) { sessions.remove(sessionId) }
+    fun remove(sessionId: String): Boolean = sessions.remove(sessionId) != null
 }
