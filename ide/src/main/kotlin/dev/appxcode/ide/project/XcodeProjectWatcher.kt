@@ -14,14 +14,17 @@ class XcodeProjectWatcher(private val root: Path) : AutoCloseable {
     @Volatile private var running = true
     private val worker = thread(isDaemon = true, name = "appxcode-project-watcher") { loop() }
 
-    init { root.register(service, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY) }
+    init {
+        java.nio.file.Files.walk(root).use { paths -> paths.filter(java.nio.file.Files::isDirectory).forEach { it.register(service, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY) } }
+    }
     fun onChange(listener: (Path) -> Unit) { listeners += listener }
 
     private fun loop() {
         while (running) {
             val key = runCatching { service.take() }.getOrNull() ?: break
             key.pollEvents().forEach { event ->
-                val path = root.resolve(event.context() as Path)
+                val watched = key.watchable() as Path
+                val path = watched.resolve(event.context() as Path)
                 if (path.fileName.toString().let { it.endsWith(".xcodeproj") || it.endsWith(".xcworkspace") || it == "Package.resolved" || it == "Podfile.lock" }) listeners.forEach { it(path) }
             }
             if (!key.reset()) break
