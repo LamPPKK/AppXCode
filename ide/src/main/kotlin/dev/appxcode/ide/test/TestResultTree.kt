@@ -3,6 +3,7 @@ package dev.appxcode.ide.test
 data class TestSuiteResult(val name: String, val cases: List<TestCaseResult>) {
     val passed: Int get() = cases.count { it.status == TestStatus.PASSED }
     val failed: Int get() = cases.count { it.status == TestStatus.FAILED }
+    val hasFailures: Boolean get() = failed > 0
     val skipped: Int get() = cases.count { it.status == TestStatus.SKIPPED }
     val hasSkipped: Boolean get() = skipped > 0
     val hasUnknown: Boolean get() = cases.any { it.status == TestStatus.UNKNOWN }
