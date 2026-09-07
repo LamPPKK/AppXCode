@@ -120,6 +120,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
         projectWatcher = null
         (swiftLanguage as? AutoCloseable)?.close()
         swiftLanguage = null
+        flutter.stopSession()
         changeListeners.clear()
     }
 }
