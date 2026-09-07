@@ -48,6 +48,9 @@ class XcodeBuildService(
     fun test(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult =
         execute(configuration, container, "test", timeout)
 
+    fun clean(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult =
+        execute(configuration, container, "clean", timeout)
+
     private fun execute(configuration: RunConfiguration, container: Path, action: String, timeout: Duration): XcodeBuildResult =
         execute(XcodeBuildRequest(container, configuration.scheme, configuration.destination.xcodebuildSpecifier(), configuration.configuration, action, configuration.arguments, configuration.environment), timeout)
 
