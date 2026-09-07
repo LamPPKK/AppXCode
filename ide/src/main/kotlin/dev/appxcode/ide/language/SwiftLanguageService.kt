@@ -30,6 +30,8 @@ class LspSwiftLanguageService(
     private val processManager: LspProcessManager
 ) : SwiftLanguageService, AutoCloseable {
     init { processManager.start() }
+    fun isAlive(): Boolean = processManager.isAlive()
+    fun restart(): Boolean = processManager.restart()
     override fun complete(file: Path, line: Int, column: Int): List<SwiftCompletion> = emptyList()
     override fun diagnostics(files: List<Path>): List<SwiftDiagnostic> =
         UnavailableSwiftLanguageService(toolchain).diagnostics(files)

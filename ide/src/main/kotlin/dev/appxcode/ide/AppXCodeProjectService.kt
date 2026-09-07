@@ -41,6 +41,7 @@ import dev.appxcode.ide.language.SwiftLanguageService
 import dev.appxcode.ide.language.SwiftLanguageServiceFactory
 import dev.appxcode.ide.language.SwiftCompletion
 import dev.appxcode.ide.language.SwiftDiagnostic
+import dev.appxcode.ide.language.LspSwiftLanguageService
 import dev.appxcode.ide.language.SwiftFormatterService
 import dev.appxcode.ide.language.FormatResult
 import dev.appxcode.ide.language.BatchFormatResult
@@ -86,6 +87,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun completeSwift(prefix: String): List<SwiftSymbol> = swiftSymbols.complete(prefix)
     fun swiftCompletions(file: Path, line: Int, column: Int): List<SwiftCompletion> = swiftLanguage?.complete(file, line, column).orEmpty()
     fun swiftDiagnostics(files: List<Path>): List<SwiftDiagnostic> = swiftLanguage?.diagnostics(files).orEmpty()
+    fun swiftLanguageAlive(): Boolean = (swiftLanguage as? LspSwiftLanguageService)?.isAlive() ?: false
+    fun restartSwiftLanguage(): Boolean = (swiftLanguage as? LspSwiftLanguageService)?.restart() ?: false
     fun formatSwift(file: Path): FormatResult = swiftFormatter.format(file)
     fun formatSwiftFiles(files: Iterable<Path>): BatchFormatResult = swiftFormatter.formatFiles(files)
     fun swiftFormatterAvailable(root: Path): Boolean = swiftFormatter.isAvailable(root)
