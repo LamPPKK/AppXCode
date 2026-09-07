@@ -21,11 +21,11 @@ object XcodeProjectModel {
     fun readSchemes(container: XcodeContainer): List<XcodeScheme> {
         if (!Files.isDirectory(container.path)) return emptyList()
         val roots = listOf(container.path.resolve("xcshareddata/xcschemes"), container.path.resolve("xcuserdata"))
-        return roots.filter(Files::isDirectory).flatMap { root ->
+        return roots.filter(Files::isDirectory).flatMap { root -> runCatching {
             Files.walk(root).use { files ->
-                files.filter { it.fileName.toString().endsWith(".xcscheme") }
-                    .mapNotNull(::readScheme).toList()
+                files.filter { it.fileName.toString().endsWith(".xcscheme") }.mapNotNull(::readScheme).toList()
             }
+        }.getOrDefault(emptyList())
         }.distinctBy(XcodeScheme::name).sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, XcodeScheme::name))
     }
 
@@ -51,7 +51,7 @@ object XcodeProjectModel {
     }
     fun discover(root: Path): List<XcodeContainer> {
         if (!Files.isDirectory(root)) return emptyList()
-        return Files.walk(root, 4).use { stream ->
+        return runCatching { Files.walk(root, 4).use { stream ->
             stream.filter { Files.isDirectory(it) }
                 .mapNotNull { path ->
                     when {
@@ -62,15 +62,16 @@ object XcodeProjectModel {
                 }
                 .sorted(compareBy(String.CASE_INSENSITIVE_ORDER) { it.displayName })
                 .toList()
-        }
+        } }.getOrDefault(emptyList())
     }
 
     private fun container(path: Path, kind: XcodeContainerKind): XcodeContainer {
         val shared = path.resolve("xcshareddata/xcschemes")
         val user = path.resolve("xcuserdata")
         val schemeRoots = listOf(shared, user).filter(Files::isDirectory)
-        val schemes = schemeRoots.flatMap { root ->
+        val schemes = schemeRoots.flatMap { root -> runCatching {
             Files.walk(root).use { files -> files.filter { it.fileName.toString().endsWith(".xcscheme") }.map { it.fileName.toString().removeSuffix(".xcscheme") }.toList() }
+        }.getOrDefault(emptyList())
         }.distinct().sorted(String.CASE_INSENSITIVE_ORDER)
         return XcodeContainer(path, kind, schemes)
     }
