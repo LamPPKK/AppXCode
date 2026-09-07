@@ -8,6 +8,7 @@ data class ArchiveResult(val build: XcodeBuildResult, val archivePath: Path?)
 
 class XcodeArchiveService(private val builder: XcodeBuildService) {
     fun archive(request: ArchiveRequest, timeout: Duration = Duration.ofMinutes(30)): ArchiveResult {
+        request.archivePath.parent?.toFile()?.mkdirs()
         val result = builder.execute(
             XcodeBuildRequest(request.container, request.scheme, request.destination, request.configuration, action = "archive", arguments = listOf("-archivePath", request.archivePath.toString())), timeout
         )
