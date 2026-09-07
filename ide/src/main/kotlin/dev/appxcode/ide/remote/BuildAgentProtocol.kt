@@ -138,11 +138,13 @@ data class BuildAgentEndpoint(
     val port: Int,
     val tlsEnabled: Boolean = true,
     val pairingId: String? = null,
+    val credentialFingerprint: String? = null,
 ) {
     init {
         require(host.isNotBlank()) { "Build agent host must not be blank" }
         require(port in 1..65535) { "Build agent port must be between 1 and 65535" }
         require(pairingId == null || pairingId.isNotBlank()) { "Build agent pairing id must not be blank" }
+        require(credentialFingerprint == null || credentialFingerprint.matches(Regex("[0-9a-fA-F]{64}"))) { "Credential fingerprint must be SHA-256" }
     }
 
     fun baseUri(): java.net.URI = java.net.URI("${if (tlsEnabled) "https" else "http"}://$host:$port")
