@@ -6,6 +6,7 @@ import dev.appxcode.ide.project.XcodeContainer
 import dev.appxcode.ide.project.XcodeProjectModel
 import dev.appxcode.ide.test.TestFramework
 import dev.appxcode.ide.test.TestFrameworkRegistry
+import dev.appxcode.ide.test.DiscoveredTest
 import dev.appxcode.ide.project.ProjectSnapshot
 import dev.appxcode.ide.project.ProjectSnapshotLoader
 import dev.appxcode.ide.debug.DebugSessionRegistry
@@ -44,6 +45,7 @@ class AppXCodeProjectService(private val project: Project) {
     fun completeSwift(prefix: String): List<SwiftSymbol> = swiftSymbols.complete(prefix)
     fun xcodeTargets(projectFile: Path): List<XcodeTarget> = XcodeProjectModel.readTargets(projectFile)
     fun testFrameworks(root: Path): Set<TestFramework> = TestFrameworkRegistry.detect(root)
+    fun discoverXCTest(root: Path): List<DiscoveredTest> = TestFrameworkRegistry.discoverXCTest(root)
     fun snapshot(root: Path): ProjectSnapshot = ProjectSnapshotLoader.load(root)
     fun gitStatus(root: Path): GitStatus = git.status(root)
     fun gitBranches(root: Path): List<GitBranch> = git.branches(root)
