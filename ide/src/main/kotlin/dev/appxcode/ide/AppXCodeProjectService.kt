@@ -13,6 +13,8 @@ import dev.appxcode.ide.flutter.FlutterProject
 import dev.appxcode.ide.flutter.FlutterProjectDetector
 import dev.appxcode.ide.language.SwiftSymbol
 import dev.appxcode.ide.language.SwiftSymbolIndex
+import dev.appxcode.ide.project.XcodeTarget
+import dev.appxcode.ide.project.XcodeProjectModel
 @Service(Service.Level.PROJECT)
 class AppXCodeProjectService(private val project: Project) {
     private val initialized = AtomicBoolean(false)
@@ -27,4 +29,5 @@ class AppXCodeProjectService(private val project: Project) {
     fun indexSwift(files: Iterable<Path>) { swiftSymbols.index(files) }
     fun findSwiftSymbols(name: String): List<SwiftSymbol> = swiftSymbols.find(name)
     fun completeSwift(prefix: String): List<SwiftSymbol> = swiftSymbols.complete(prefix)
+    fun xcodeTargets(projectFile: Path): List<XcodeTarget> = XcodeProjectModel.readTargets(projectFile)
 }
