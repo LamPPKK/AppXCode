@@ -8,11 +8,12 @@ data class DependencyPin(val manager: DependencyManager, val name: String, val v
 
 object DependencyModel {
     fun read(root: Path): List<DependencyPin> = buildList {
+        if (!Files.isDirectory(root)) return@buildList
         val resolved = root.resolve("Package.resolved")
         if (Files.isRegularFile(resolved)) addAll(readSwiftPins(resolved))
         val lock = root.resolve("Podfile.lock")
         if (Files.isRegularFile(lock)) addAll(readPodPins(lock))
-    }
+    }.distinctBy { it.manager to it.name }
 
     private fun readSwiftPins(path: Path): List<DependencyPin> {
         val text = Files.readString(path)
