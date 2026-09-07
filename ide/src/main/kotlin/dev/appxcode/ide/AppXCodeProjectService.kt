@@ -10,6 +10,7 @@ import dev.appxcode.ide.project.ProjectSnapshot
 import dev.appxcode.ide.project.ProjectSnapshotLoader
 import dev.appxcode.ide.debug.DebugSessionRegistry
 import dev.appxcode.ide.debug.DebugSessionState
+import dev.appxcode.ide.flutter.FlutterToolService
 import dev.appxcode.ide.git.GitBranch
 import dev.appxcode.ide.git.GitService
 import dev.appxcode.ide.git.GitStatus
@@ -30,6 +31,7 @@ class AppXCodeProjectService(private val project: Project) {
     private val swiftSymbols = SwiftSymbolIndex()
     private val git = GitService()
     private val debugSessions = DebugSessionRegistry()
+    private val flutter = FlutterToolService()
     fun initialize() { initialized.compareAndSet(false, true) }
     fun isInitialized(): Boolean = initialized.get()
     fun projectName(): String = project.name
@@ -48,4 +50,5 @@ class AppXCodeProjectService(private val project: Project) {
     fun createDebugSession(sessionId: String) = debugSessions.create(sessionId)
     fun updateDebugSession(sessionId: String, state: DebugSessionState) = debugSessions.update(sessionId, state)
     fun debugSessionState(sessionId: String): DebugSessionState? = debugSessions.state(sessionId)
+    fun flutterService(): FlutterToolService = flutter
 }
