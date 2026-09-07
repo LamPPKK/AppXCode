@@ -72,6 +72,7 @@ data class DeviceRegistrySnapshot(val devices: List<AppleDevice>, val providerEr
     val availableDevicesByKind: Map<DeviceKind, List<AppleDevice>> get() = availableDevices.groupBy(AppleDevice::kind)
     val offlineDevices: List<AppleDevice> get() = devices.filter { it.state == DeviceState.OFFLINE }
     val unknownDevices: List<AppleDevice> get() = devices.filter { it.state == DeviceState.UNKNOWN }
+    val offlineDevicesByKind: Map<DeviceKind, List<AppleDevice>> get() = offlineDevices.groupBy(AppleDevice::kind)
     val simulatorAvailableCount: Int get() = availableByKind[DeviceKind.SIMULATOR] ?: 0
     val physicalOfflineCount: Int get() = devices.count { it.kind == DeviceKind.PHYSICAL && it.state == DeviceState.OFFLINE }
     val hasProviderErrors: Boolean get() = providerErrors.isNotEmpty()
