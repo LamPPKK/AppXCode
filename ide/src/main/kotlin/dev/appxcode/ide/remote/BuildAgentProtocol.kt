@@ -156,6 +156,7 @@ data class BuildAgentEndpoint(
 
     fun matchesCredentialFingerprint(fingerprint: String): Boolean =
         credentialFingerprint != null && credentialFingerprint.equals(fingerprint.trim(), ignoreCase = true)
+    val isSecure: Boolean get() = tlsEnabled && credentialFingerprint != null
 }
 
 data class BuildAgentPairing(
