@@ -14,17 +14,20 @@ class FlutterToolService(
     },
 ) {
     private var session: Process? = null
+    private var sessionRoot: Path? = null
     private val sessionOutput = StringBuffer()
 
     @Synchronized fun startSession(root: Path, deviceId: String? = null): Boolean {
         if (!java.nio.file.Files.isDirectory(root)) return false
         if (session?.isAlive == true) return true
         session = null
+        sessionRoot = null
         sessionOutput.setLength(0)
         val args = buildList { add(flutter); add("run"); if (deviceId != null) { add("-d"); add(deviceId) } }
         return runCatching {
             session = ProcessBuilder(args).directory(root.toFile()).redirectErrorStream(true).start()
             if (session?.isAlive != true) { session = null; return@runCatching false }
+            sessionRoot = root.toAbsolutePath().normalize()
             Thread {
                 session?.inputStream?.bufferedReader()?.useLines { lines ->
                     lines.forEach { line ->
@@ -44,6 +47,7 @@ class FlutterToolService(
             runCatching { if (!process.waitFor(2, java.util.concurrent.TimeUnit.SECONDS)) process.destroyForcibly() }
         }
         session = null
+        sessionRoot = null
     }
     fun sessionOutput(): String = synchronized(sessionOutput) { sessionOutput.toString() }
     fun clearSessionOutput() = synchronized(sessionOutput) { sessionOutput.setLength(0) }
@@ -66,7 +70,8 @@ class FlutterToolService(
 
     private fun sendSignal(root: Path, signal: String): FlutterCommandResult {
         val process = session ?: return FlutterCommandResult(false, "No active Flutter session", null)
-        if (!process.isAlive) { session = null; return FlutterCommandResult(false, "Flutter session has exited", process.exitValue()) }
+        if (sessionRoot != root.toAbsolutePath().normalize()) return FlutterCommandResult(false, "Flutter session belongs to another project", null)
+        if (!process.isAlive) { session = null; sessionRoot = null; return FlutterCommandResult(false, "Flutter session has exited", process.exitValue()) }
         return runCatching { val writer = process.outputStream.bufferedWriter(); writer.write(signal); writer.flush(); FlutterCommandResult(true, "Sent $signal", null) }
             .getOrElse { FlutterCommandResult(false, it.message ?: "Unable to send Flutter command", null) }
     }
