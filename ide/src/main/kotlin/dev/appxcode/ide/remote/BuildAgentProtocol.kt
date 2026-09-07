@@ -49,6 +49,7 @@ data class BuildAgentResponse(
     fun artifactReferences(): List<String> = (artifacts + artifactMetadata.map { it.reference }).distinct().sorted()
     fun metadataFor(reference: String): BuildAgentArtifact? = artifactMetadata.firstOrNull { it.reference == reference }
     fun hasMetadataFor(reference: String): Boolean = metadataFor(reference) != null
+    fun metadataReferences(): List<String> = artifactMetadata.map { it.reference }.distinct().sorted()
     fun missingArtifacts(expected: Collection<String>): List<String> = expected.filterNot(::hasArtifact)
     private fun hasArtifact(reference: String): Boolean = artifactReferences().contains(reference)
     init {
