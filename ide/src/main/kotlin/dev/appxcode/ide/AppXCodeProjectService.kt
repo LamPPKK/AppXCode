@@ -111,6 +111,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun discoverDevices(): List<AppleDevice> = devices.discover()
     fun deviceProviderErrors(): Map<String, String> = devices.providerErrors()
     fun deviceSnapshot(): DeviceRegistrySnapshot = devices.snapshot()
+    fun findDevice(deviceId: String): AppleDevice? = devices.find(deviceId)
+    fun preferredDevice(): AppleDevice? = devices.preferred()
     fun registerDeviceProvider(provider: DeviceProvider) = devices.register(provider)
     fun unregisterDeviceProvider(providerId: String) = devices.unregister(providerId)
     fun dependencies(root: Path): List<DependencyPin> = DependencyModel.read(root)

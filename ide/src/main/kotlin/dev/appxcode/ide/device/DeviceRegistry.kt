@@ -48,6 +48,11 @@ class DeviceRegistry {
     fun snapshot(): DeviceRegistrySnapshot = DeviceRegistrySnapshot(discover(), providerErrors())
     fun providerIds(): List<String> = providers.map(DeviceProvider::id).sorted()
     fun hasProvider(providerId: String): Boolean = providers.any { it.id == providerId }
+    fun find(deviceId: String): AppleDevice? {
+        require(deviceId.isNotBlank()) { "Device id must not be blank" }
+        return discover().firstOrNull { it.id == deviceId }
+    }
+    fun preferred(): AppleDevice? = snapshot().preferredDevice()
     private fun notifyListeners() { val devices = discover(); listeners.forEach { runCatching { it(devices) } } }
 }
 
@@ -83,4 +88,21 @@ data class DeviceRegistrySnapshot(val devices: List<AppleDevice>, val providerEr
     val physicalUnknownCount: Int get() = devices.count { it.kind == DeviceKind.PHYSICAL && it.state == DeviceState.UNKNOWN }
     val hasProviderErrors: Boolean get() = providerErrors.isNotEmpty()
     val errorCount: Int get() = providerErrors.size
+
+    fun find(deviceId: String): AppleDevice? {
+        require(deviceId.isNotBlank()) { "Device id must not be blank" }
+        return devices.firstOrNull { it.id == deviceId }
+    }
+
+    /** Selects a runnable device using the same preference across Xcode and Flutter flows. */
+    fun preferredDevice(): AppleDevice? = availableDevices
+        .sortedWith(compareBy<AppleDevice> { kindPriority(it.kind) }
+            .thenComparator(compareBy(String.CASE_INSENSITIVE_ORDER, AppleDevice::platform, AppleDevice::name)))
+        .firstOrNull()
+
+    private fun kindPriority(kind: DeviceKind): Int = when (kind) {
+        DeviceKind.PHYSICAL -> 0
+        DeviceKind.SIMULATOR -> 1
+        DeviceKind.VPHONE -> 2
+    }
 }
