@@ -62,7 +62,10 @@ class XcodeExportService(
     fun export(options: ExportOptions): XcodeBuildResult {
         if (!options.archivePath.toFile().exists()) return XcodeBuildResult(null, "Archive not found: ${options.archivePath}", false)
         if (!options.optionsPlist.toFile().isFile) return XcodeBuildResult(null, "Export options plist not found: ${options.optionsPlist}", false)
-        options.outputDirectory.toFile().mkdirs()
+        val output = runCatching { Files.createDirectories(options.outputDirectory) }.getOrElse {
+            return XcodeBuildResult(null, "Unable to create export directory: ${it.message ?: options.outputDirectory}", false)
+        }
+        if (!Files.isDirectory(output) || !Files.isWritable(output)) return XcodeBuildResult(null, "Export directory is not writable: $output", false)
         val args = mutableListOf(executable, "-exportArchive", "-archivePath", options.archivePath.toString(), "-exportPath", options.outputDirectory.toString(), "-exportOptionsPlist", options.optionsPlist.toString())
         return run(args)
     }
