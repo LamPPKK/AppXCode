@@ -53,6 +53,8 @@ import dev.appxcode.ide.build.ArchiveRequest
 import dev.appxcode.ide.build.ArchiveResult
 import dev.appxcode.ide.build.XcodeExportService
 import dev.appxcode.ide.build.ExportOptions
+import dev.appxcode.ide.test.XcodeTestService
+import dev.appxcode.ide.test.XcodeTestResult
 import java.time.Duration
 import dev.appxcode.ide.project.XcodeTarget
 import dev.appxcode.ide.project.XcodeProjectModel
@@ -71,6 +73,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     private val xcodeBuildService = XcodeBuildService(AppleToolchainDetector.detect())
     private val xcodeArchiveService = XcodeArchiveService(xcodeBuildService)
     private val xcodeExportService = XcodeExportService()
+    private val xcodeTestService = XcodeTestService(xcodeBuildService)
     @Volatile private var projectWatcher: XcodeProjectWatcher? = null
     private val changeListeners = CopyOnWriteArrayList<(Path) -> Unit>()
     fun initialize() {
@@ -152,6 +155,10 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun xcodeClean(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.clean(configuration, container, timeout)
     fun xcodeArchive(request: ArchiveRequest, timeout: Duration = Duration.ofMinutes(30)): ArchiveResult = xcodeArchiveService.archive(request, timeout)
     fun xcodeExport(options: ExportOptions): XcodeBuildResult = xcodeExportService.export(options)
+    fun xcodeTest(container: Path, scheme: String, destination: String, configuration: String = "Debug", timeout: Duration = Duration.ofMinutes(20)): XcodeTestResult =
+        xcodeTestService.run(container, scheme, destination, configuration, timeout)
+    fun xcodeRerunFailed(container: Path, scheme: String, destination: String, previous: XcodeTestResult, configuration: String = "Debug", timeout: Duration = Duration.ofMinutes(20)): XcodeTestResult =
+        xcodeTestService.rerunFailed(container, scheme, destination, previous, configuration, timeout)
     fun flutterPubGet(root: Path): FlutterCommandResult = flutter.pubGet(root)
     fun flutterDoctor(root: Path): FlutterCommandResult = flutter.doctor(root)
     fun flutterRun(root: Path, deviceId: String? = null): FlutterCommandResult = flutter.run(root, deviceId)
