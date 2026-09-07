@@ -6,6 +6,7 @@ import com.intellij.openapi.wm.ToolWindowFactory
 import com.intellij.ui.components.JBList
 import com.intellij.ui.content.ContentFactory
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.Disposable
 import javax.swing.SwingUtilities
 import java.awt.BorderLayout
 import javax.swing.JButton
@@ -31,7 +32,7 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
 }
 
 @com.intellij.openapi.components.Service(com.intellij.openapi.components.Service.Level.PROJECT)
-class DeviceRegistryService {
+class DeviceRegistryService : Disposable {
     private val registry = DeviceRegistry()
     fun register(provider: DeviceProvider) = registry.register(provider)
     fun unregister(providerId: String) = registry.unregister(providerId)
@@ -39,4 +40,5 @@ class DeviceRegistryService {
     fun refresh() = registry.refresh()
     fun onDevicesChanged(listener: (List<AppleDevice>) -> Unit): AutoCloseable = registry.onDevicesChanged(listener)
     fun clear() = registry.clear()
+    override fun dispose() = registry.clear()
 }
