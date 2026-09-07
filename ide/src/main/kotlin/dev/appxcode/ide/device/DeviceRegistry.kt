@@ -70,6 +70,7 @@ data class DeviceRegistrySnapshot(val devices: List<AppleDevice>, val providerEr
     val physicalDevices: List<AppleDevice> get() = devices.filter { it.kind == DeviceKind.PHYSICAL }
     val availableSimulators: List<AppleDevice> get() = availableDevices.filter { it.kind == DeviceKind.SIMULATOR }
     val simulatorDevices: List<AppleDevice> get() = devices.filter { it.kind == DeviceKind.SIMULATOR }
+    val offlineSimulators: List<AppleDevice> get() = simulatorDevices.filter { it.state == DeviceState.OFFLINE }
     val availableVPhones: List<AppleDevice> get() = availableDevices.filter { it.kind == DeviceKind.VPHONE }
     val vphoneDevices: List<AppleDevice> get() = devices.filter { it.kind == DeviceKind.VPHONE }
     val availableDevicesByKind: Map<DeviceKind, List<AppleDevice>> get() = availableDevices.groupBy(AppleDevice::kind)
