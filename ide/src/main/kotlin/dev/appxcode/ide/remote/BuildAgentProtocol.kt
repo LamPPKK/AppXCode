@@ -159,6 +159,14 @@ data class BuildAgentEndpoint(
     val isSecure: Boolean get() = tlsEnabled && credentialFingerprint != null
 }
 
+data class BuildAgentTransportPolicy(
+    val requireTls: Boolean = true,
+    val requirePairing: Boolean = true,
+) {
+    fun permits(endpoint: BuildAgentEndpoint): Boolean =
+        (!requireTls || endpoint.tlsEnabled) && (!requirePairing || !endpoint.requiresPairing)
+}
+
 data class BuildAgentPairing(
     val pairingId: String,
     val expiresAtEpochMillis: Long,
