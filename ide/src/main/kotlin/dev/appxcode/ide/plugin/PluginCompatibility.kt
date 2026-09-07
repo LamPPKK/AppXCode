@@ -2,10 +2,10 @@ package dev.appxcode.ide.plugin
 
 data class PluginDescriptor(val id: String, val sinceBuild: String?, val untilBuild: String?, val requiredModules: Set<String> = emptySet()) {
     init {
-        require(id.isNotBlank()) { "Plugin id must not be blank" }
+        require(id.isNotBlank() && id == id.trim() && !id.any(Char::isWhitespace)) { "Plugin id must be a non-blank identifier" }
         require(sinceBuild == null || sinceBuild.isNotBlank()) { "sinceBuild must not be blank" }
         require(untilBuild == null || untilBuild.isNotBlank()) { "untilBuild must not be blank" }
-        require(requiredModules.none { it.isBlank() }) { "Required module ids must not be blank" }
+        require(requiredModules.none { it.isBlank() || it != it.trim() }) { "Required module ids must not be blank or padded" }
     }
 }
 data class CompatibilityResult(val compatible: Boolean, val reasons: List<String>)
