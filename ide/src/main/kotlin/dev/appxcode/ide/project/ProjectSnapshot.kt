@@ -14,6 +14,7 @@ data class ProjectSnapshot(
 
 object ProjectSnapshotLoader {
     fun load(root: Path): ProjectSnapshot {
+        if (!java.nio.file.Files.isDirectory(root)) return ProjectSnapshot(root, emptyList(), emptyList(), emptyList(), emptyList())
         val containers = XcodeProjectModel.discover(root)
         val project = containers.firstOrNull { it.kind == XcodeContainerKind.PROJECT }
         val schemes = containers.flatMap(XcodeProjectModel::readSchemes)
