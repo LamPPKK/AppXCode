@@ -267,6 +267,7 @@ data class BuildAgentArtifactRequest(
 ) {
     fun normalized(): BuildAgentArtifactRequest = copy(references = references.distinct().sorted())
     val isValid: Boolean get() = requestId.isNotBlank() && references.isNotEmpty() && references.all { it.isNotBlank() }
+    fun containsReference(reference: String): Boolean = references.contains(reference)
 
     init {
         require(requestId.isNotBlank()) { "Artifact request id must not be blank" }
