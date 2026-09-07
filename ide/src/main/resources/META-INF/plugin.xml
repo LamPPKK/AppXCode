@@ -3,6 +3,7 @@
   <name>AppXCode</name>
   <vendor email="hello@appxcode.dev">AppXCode</vendor>
   <description>Apple platform development support for the IntelliJ Platform.</description>
+  <idea-version since-build="251" />
   <depends>com.intellij.modules.platform</depends>
   <projectService serviceImplementation="dev.appxcode.ide.AppXCodeProjectService" />
   <postStartupActivity implementation="dev.appxcode.ide.AppXCodeStartupActivity" />
