@@ -183,6 +183,12 @@ data class BuildAgentTransportPolicy(
             (endpoint.tlsEnabled || endpoint.isLoopback || allowInsecureRemote) &&
             (!requirePairing || !endpoint.requiresPairing)
     fun permitsSecurely(endpoint: BuildAgentEndpoint): Boolean = permits(endpoint) && endpoint.isSecure
+    fun validationError(endpoint: BuildAgentEndpoint): String? = when {
+        requireTls && !endpoint.tlsEnabled -> "TLS is required"
+        !endpoint.tlsEnabled && !endpoint.isLoopback && !allowInsecureRemote -> "Insecure remote transport is disabled"
+        requirePairing && endpoint.requiresPairing -> "Pairing is required"
+        else -> null
+    }
 }
 
 data class BuildAgentPairing(
