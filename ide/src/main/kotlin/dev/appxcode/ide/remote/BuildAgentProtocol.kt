@@ -233,6 +233,10 @@ data class BuildAgentPairing(
     fun isActive(nowEpochMillis: Long = System.currentTimeMillis()): Boolean = !isExpired(nowEpochMillis)
     fun remainingMillis(nowEpochMillis: Long = System.currentTimeMillis()): Long =
         (expiresAtEpochMillis - nowEpochMillis).coerceAtLeast(0)
+    fun isNearExpiry(thresholdMillis: Long, nowEpochMillis: Long = System.currentTimeMillis()): Boolean {
+        require(thresholdMillis >= 0) { "Pairing expiry threshold must not be negative" }
+        return isActive(nowEpochMillis) && remainingMillis(nowEpochMillis) <= thresholdMillis
+    }
     fun renewed(additionalMillis: Long, nowEpochMillis: Long = System.currentTimeMillis()): BuildAgentPairing {
         require(additionalMillis > 0) { "Pairing renewal must be positive" }
         return copy(expiresAtEpochMillis = Math.addExact(nowEpochMillis, additionalMillis))
