@@ -108,6 +108,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun discoverTests(root: Path): List<DiscoveredTest> = TestFrameworkRegistry.discover(root)
     fun snapshot(root: Path): ProjectSnapshot = ProjectSnapshotLoader.load(root)
     fun gitStatus(root: Path): GitStatus = git.status(root)
+    fun gitFileDiff(root: Path, file: Path, staged: Boolean = false): String = git.fileDiff(root, file, staged)
     fun isGitRepository(root: Path): Boolean = git.isRepository(root)
     fun gitCurrentRevision(root: Path): String? = git.currentRevision(root)
     fun gitBranches(root: Path): List<GitBranch> = git.branches(root)
