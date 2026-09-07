@@ -100,6 +100,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun indexObjectiveC(files: Iterable<Path>) { objcSymbols.index(files) }
     fun findObjectiveCSymbols(name: String): List<ObjCSymbol> = objcSymbols.find(name)
     fun completeObjectiveC(prefix: String): List<ObjCSymbol> = objcSymbols.complete(prefix)
+    fun completeMixed(prefix: String): List<String> =
+        (swiftSymbols.complete(prefix).map { it.name } + objcSymbols.complete(prefix).map { it.name }).distinct().sorted()
     fun xcodeTargets(projectFile: Path): List<XcodeTarget> = XcodeProjectModel.readTargets(projectFile)
     fun testFrameworks(root: Path): Set<TestFramework> = TestFrameworkRegistry.detect(root)
     fun discoverXCTest(root: Path): List<DiscoveredTest> = TestFrameworkRegistry.discoverXCTest(root)
