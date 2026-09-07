@@ -37,3 +37,12 @@ data class BuildAgentResponse(
 }
 
 const val CURRENT_PROTOCOL_VERSION: Int = 1
+
+object BuildAgentErrorCode {
+    const val UNSUPPORTED_PROTOCOL = "unsupported_protocol"
+    const val INVALID_REQUEST = "invalid_request"
+    const val UNAUTHORIZED = "unauthorized"
+    const val TOOLCHAIN_UNAVAILABLE = "toolchain_unavailable"
+    const val BUILD_FAILED = "build_failed"
+    const val CANCELLED = "cancelled"
+}
