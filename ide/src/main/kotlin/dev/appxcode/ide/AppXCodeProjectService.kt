@@ -60,6 +60,7 @@ import dev.appxcode.ide.build.SigningConfiguration
 import dev.appxcode.ide.build.SigningCheck
 import dev.appxcode.ide.test.XcodeTestService
 import dev.appxcode.ide.test.XcodeTestResult
+import dev.appxcode.ide.test.TestFrameworkCommand
 import java.time.Duration
 import dev.appxcode.ide.project.XcodeTarget
 import dev.appxcode.ide.device.DeviceRegistry
@@ -140,6 +141,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun testFrameworks(root: Path): Set<TestFramework> = TestFrameworkRegistry.detect(root)
     fun discoverXCTest(root: Path): List<DiscoveredTest> = TestFrameworkRegistry.discoverXCTest(root)
     fun discoverTests(root: Path): List<DiscoveredTest> = TestFrameworkRegistry.discover(root)
+    fun testCommand(framework: TestFramework, filter: String? = null): TestFrameworkCommand = TestFrameworkRegistry.command(framework, filter)
     fun snapshot(root: Path): ProjectSnapshot = ProjectSnapshotLoader.load(root)
     fun gitStatus(root: Path): GitStatus = git.status(root)
     fun gitFileDiff(root: Path, file: Path, staged: Boolean = false): String = git.fileDiff(root, file, staged)
