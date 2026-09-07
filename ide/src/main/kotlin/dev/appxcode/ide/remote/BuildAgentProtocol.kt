@@ -153,6 +153,18 @@ data class BuildAgentEndpoint(
     }
 }
 
+data class BuildAgentPairing(
+    val pairingId: String,
+    val expiresAtEpochMillis: Long,
+) {
+    init {
+        require(pairingId.isNotBlank()) { "Pairing id must not be blank" }
+        require(expiresAtEpochMillis >= 0) { "Pairing expiry must not be negative" }
+    }
+
+    fun isExpired(nowEpochMillis: Long = System.currentTimeMillis()): Boolean = nowEpochMillis >= expiresAtEpochMillis
+}
+
 data class BuildAgentArtifactRequest(
     val requestId: String,
     val references: List<String>,
