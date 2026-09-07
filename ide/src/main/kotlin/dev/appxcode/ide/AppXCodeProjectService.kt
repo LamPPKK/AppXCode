@@ -85,7 +85,9 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun indexSwift(files: Iterable<Path>) { swiftSymbols.index(files) }
     fun findSwiftSymbols(name: String): List<SwiftSymbol> = swiftSymbols.find(name)
     fun completeSwift(prefix: String): List<SwiftSymbol> = swiftSymbols.complete(prefix)
-    fun swiftCompletions(file: Path, line: Int, column: Int): List<SwiftCompletion> = swiftLanguage?.complete(file, line, column).orEmpty()
+    fun swiftCompletions(file: Path, line: Int, column: Int): List<SwiftCompletion> =
+        swiftLanguage?.complete(file, line, column)?.takeIf { it.isNotEmpty() }
+            ?: swiftSymbols.complete("").map { SwiftCompletion(it.name, it.kind) }
     fun swiftDiagnostics(files: List<Path>): List<SwiftDiagnostic> = swiftLanguage?.diagnostics(files).orEmpty()
     fun swiftLanguageAlive(): Boolean = (swiftLanguage as? LspSwiftLanguageService)?.isAlive() ?: false
     fun restartSwiftLanguage(): Boolean = (swiftLanguage as? LspSwiftLanguageService)?.restart() ?: false
