@@ -41,6 +41,11 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
         }.toList()
     }
 
+    fun stashDiff(root: Path, index: Int): String {
+        require(index >= 0) { "stash index must be non-negative" }
+        return run(root, listOf("git", "stash", "show", "--patch", "stash@{$index}")) ?: ""
+    }
+
     fun branches(root: Path): List<GitBranch> = run(root, listOf("git", "branch", "--all"))?.lineSequence()?.mapNotNull { line ->
         val name = line.trim().removePrefix("*").trim().takeIf(String::isNotBlank) ?: return@mapNotNull null
         GitBranch(name.removePrefix("remotes/"), name.startsWith("remotes/"))

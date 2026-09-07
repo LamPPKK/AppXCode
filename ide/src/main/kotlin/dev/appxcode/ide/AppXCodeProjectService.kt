@@ -77,6 +77,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun gitBranches(root: Path): List<GitBranch> = git.branches(root)
     fun gitLog(root: Path, limit: Int = 50): List<GitCommit> = git.log(root, limit)
     fun gitStashes(root: Path): List<GitStash> = git.stashes(root)
+    fun gitStashDiff(root: Path, index: Int): String = git.stashDiff(root, index)
     fun createDebugSession(sessionId: String) = debugSessions.create(sessionId)
     fun updateDebugSession(sessionId: String, state: DebugSessionState) = debugSessions.update(sessionId, state)
     fun debugSessionState(sessionId: String): DebugSessionState? = debugSessions.state(sessionId)
