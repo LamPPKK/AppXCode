@@ -25,7 +25,7 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
         var attempt = 1
         while (true) {
             val response = runCatching { transport.submit(request) }.getOrElse { throw it }
-            val retryable = response.errorCode == BuildAgentErrorCode.TRANSPORT_UNAVAILABLE || response.errorCode == BuildAgentErrorCode.TIMEOUT
+            val retryable = RetryDecider.shouldRetry(response.errorCode)
             if (!response.isError || !retryable || attempt >= retryPolicy.maxAttempts) return response
             Thread.sleep(retryPolicy.delayFor(attempt++))
         }
