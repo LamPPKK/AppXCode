@@ -7,6 +7,8 @@ import dev.appxcode.ide.project.XcodeProjectModel
 import java.nio.file.Path
 import dev.appxcode.ide.toolchain.AppleToolchain
 import dev.appxcode.ide.toolchain.AppleToolchainDetector
+import dev.appxcode.ide.dependency.DependencyModel
+import dev.appxcode.ide.dependency.DependencyPin
 @Service(Service.Level.PROJECT)
 class AppXCodeProjectService(private val project: Project) {
     private val initialized = AtomicBoolean(false)
@@ -15,4 +17,5 @@ class AppXCodeProjectService(private val project: Project) {
     fun projectName(): String = project.name
     fun discoverXcodeContainers(root: Path): List<XcodeContainer> = XcodeProjectModel.discover(root)
     fun appleToolchain(): AppleToolchain = AppleToolchainDetector.detect()
+    fun dependencies(root: Path): List<DependencyPin> = DependencyModel.read(root)
 }
