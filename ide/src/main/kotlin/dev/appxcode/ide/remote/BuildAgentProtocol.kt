@@ -171,7 +171,7 @@ data class BuildAgentEndpoint(
     }
 
     init {
-        require(host.isNotBlank() && host == host.trim() && !host.any(Char::isWhitespace)) { "Build agent host must be a valid hostname" }
+        require(host.isNotBlank() && host == host.trim() && !host.any(Char::isWhitespace) && host.none { it == '/' || it == '?' || it == '#' }) { "Build agent host must be a valid hostname" }
         require(port in 1..65535) { "Build agent port must be between 1 and 65535" }
         require(pairingId == null || pairingId.isNotBlank()) { "Build agent pairing id must not be blank" }
         require(credentialFingerprint == null || credentialFingerprint.matches(Regex("[0-9a-fA-F]{64}"))) { "Credential fingerprint must be SHA-256" }
