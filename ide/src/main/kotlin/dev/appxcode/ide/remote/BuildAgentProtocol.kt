@@ -178,6 +178,7 @@ data class BuildAgentEndpoint(
 
     fun uri(path: String): java.net.URI {
         require(path.startsWith("/")) { "Build agent API path must start with /" }
+        require(path.split('/', '?', '#').none { it == ".." }) { "Build agent API path must not traverse parent paths" }
         return baseUri().resolve(path)
     }
 
