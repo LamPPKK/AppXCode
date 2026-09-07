@@ -5,6 +5,7 @@ import java.nio.file.Path
 data class GitStatus(val branch: String?, val changedFiles: List<String>, val available: Boolean)
 data class GitBranch(val name: String, val remote: Boolean)
 data class GitCommit(val hash: String, val subject: String, val author: String, val timestamp: Long?)
+data class GitStash(val index: Int, val name: String, val message: String)
 
 class GitService(private val command: (List<String>, Path) -> String? = { args, root ->
     val process = ProcessBuilder(args).directory(root.toFile()).redirectErrorStream(true).start()
@@ -28,6 +29,15 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
         return output.lineSequence().mapNotNull { line ->
             val parts = line.split('\u001f')
             if (parts.size < 4) null else GitCommit(parts[0], parts[1], parts[2], parts[3].toLongOrNull())
+        }.toList()
+    }
+
+    fun stashes(root: Path): List<GitStash> {
+        val output = run(root, listOf("git", "stash", "list", "--format=%gd%x1f%s")) ?: return emptyList()
+        return output.lineSequence().mapNotNull { line ->
+            val parts = line.split('\u001f', limit = 2)
+            val index = parts.firstOrNull()?.removePrefix("stash@{")?.removeSuffix("}")?.toIntOrNull()
+            if (index == null || parts.size < 2) null else GitStash(index, "stash@{$index}", parts[1])
         }.toList()
     }
 
