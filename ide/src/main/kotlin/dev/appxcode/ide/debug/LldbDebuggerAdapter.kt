@@ -7,11 +7,18 @@ class LldbDebuggerAdapter(private val command: (List<String>) -> String = { args
     ProcessBuilder(args).redirectErrorStream(true).start().inputStream.bufferedReader().readText()
 }) : DebuggerAdapter {
     private val processes = mutableMapOf<String, Process>()
+    private val breakpoints = mutableMapOf<String, MutableSet<Breakpoint>>()
 
     override fun launch(executable: Path, arguments: List<String>): String {
         val process = ProcessBuilder(listOf(executable.toString()) + arguments).redirectErrorStream(true).start()
         return UUID.randomUUID().toString().also { processes[it] = process }
     }
+    fun setBreakpoint(sessionId: String, breakpoint: Breakpoint): Boolean {
+        if (!processes.containsKey(sessionId)) return false
+        breakpoints.getOrPut(sessionId) { linkedSetOf() }.add(breakpoint)
+        return true
+    }
+    fun clearBreakpoint(sessionId: String, breakpoint: Breakpoint) { breakpoints[sessionId]?.remove(breakpoint) }
     override fun pause(sessionId: String) { processes[sessionId]?.let { command(listOf("kill", "-STOP", it.pid().toString())) } }
     override fun resume(sessionId: String) { processes[sessionId]?.let { command(listOf("kill", "-CONT", it.pid().toString())) } }
     override fun terminate(sessionId: String) { processes.remove(sessionId)?.destroy() }
