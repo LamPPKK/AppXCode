@@ -2,7 +2,9 @@ package dev.appxcode.ide.device
 
 import java.nio.file.Path
 
-data class DeviceOperationResult(val success: Boolean, val message: String, val output: String = "")
+data class DeviceOperationResult(val success: Boolean, val message: String, val output: String = "") {
+    val status: String get() = if (success) "succeeded" else "failed"
+}
 
 interface DeviceOperations {
     fun install(deviceId: String, app: Path): DeviceOperationResult
