@@ -11,6 +11,7 @@ data class GitCommit(val hash: String, val subject: String, val author: String, 
 data class GitStash(val index: Int, val name: String, val message: String)
 data class GitRemote(val name: String, val url: String, val pushUrl: String?)
 data class GitTag(val name: String, val hash: String?)
+data class GitBlameLine(val line: Int, val hash: String, val author: String, val text: String)
 
 class GitService(private val command: (List<String>, Path) -> String? = { args, root ->
     val process = ProcessBuilder(args).directory(root.toFile()).redirectErrorStream(true).start()
@@ -96,6 +97,27 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
         require(name.isNotBlank() && !name.contains(' ')) { "invalid branch name" }
         return run(root, listOf("git", "switch", name)) != null
     }
+
+    fun blame(root: Path, file: Path): List<GitBlameLine> {
+        val resolved = root.resolve(file).normalize()
+        require(resolved.startsWith(root.normalize())) { "file must stay within repository" }
+        val relative = root.normalize().relativize(resolved).toString()
+        val output = run(root, listOf("git", "blame", "--line-porcelain", "--", relative)) ?: return emptyList()
+        var line = 0
+        var hash = ""
+        var author = ""
+        return output.lineSequence().mapNotNull { value ->
+            when {
+                value.matches(Regex("^[0-9a-f]{40} \\d+ \\d+.*")) -> { hash = value.substringBefore(' '); line++; null }
+                value.startsWith("author ") -> { author = value.removePrefix("author "); null }
+                value.startsWith("\\t") -> GitBlameLine(line, hash, author, value.drop(1))
+                else -> null
+            }
+        }.toList()
+    }
+
+    fun hooks(root: Path): List<String> = run(root, listOf("git", "config", "--get-regexp", "^core.hooksPath$"))
+        ?.lineSequence()?.map { it.substringAfterLast(' ').trim() }?.filter(String::isNotBlank)?.toList() ?: emptyList()
 
     private fun run(root: Path, args: List<String>): String = runCatching { command(args, root) }.getOrNull()
 }
