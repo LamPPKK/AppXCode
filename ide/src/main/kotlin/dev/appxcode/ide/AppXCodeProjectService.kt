@@ -4,7 +4,6 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.Disposable
 import java.util.concurrent.atomic.AtomicBoolean
 import dev.appxcode.ide.project.XcodeContainer
-import dev.appxcode.ide.project.XcodeProjectModel
 import dev.appxcode.ide.project.XcodeProjectWatcher
 import dev.appxcode.ide.test.TestFramework
 import dev.appxcode.ide.test.TestFrameworkRegistry
@@ -132,6 +131,11 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun gitRemotes(root: Path): List<GitRemote> = git.remotes(root)
     fun gitTags(root: Path): List<GitTag> = git.tags(root)
     fun gitSyncStatus(root: Path): GitSyncStatus? = git.syncStatus(root)
+    fun gitCommit(root: Path, message: String): String? = git.commit(root, message)
+    fun gitMerge(root: Path, branch: String): Boolean = git.merge(root, branch)
+    fun gitFetch(root: Path, remote: String = "origin"): Boolean = git.fetch(root, remote)
+    fun gitPull(root: Path, remote: String = "origin", branch: String? = null): Boolean = git.pull(root, remote, branch)
+    fun gitPush(root: Path, remote: String = "origin", branch: String? = null): Boolean = git.push(root, remote, branch)
     fun createDebugSession(sessionId: String) = debugSessions.create(sessionId)
     fun updateDebugSession(sessionId: String, state: DebugSessionState) = debugSessions.update(sessionId, state)
     fun debugSessionState(sessionId: String): DebugSessionState? = debugSessions.state(sessionId)
