@@ -4,6 +4,7 @@ import dev.appxcode.ide.build.XcodeBuildRequest
 import dev.appxcode.ide.build.XcodeBuildService
 import java.nio.file.Path
 import java.time.Duration
+import java.util.LinkedHashMap
 
 enum class TestStatus { PASSED, FAILED, SKIPPED, UNKNOWN }
 
@@ -45,17 +46,21 @@ class XcodeTestService(private val builder: XcodeBuildService) {
         return XcodeTestResult(parseCases(result.output), result.output)
     }
 
-    private fun parseCases(output: String): List<TestCaseResult> = output.lineSequence().mapNotNull { line ->
-        val passed = PASSED.matchEntire(line)
-        val failed = FAILED.matchEntire(line)
-        val skipped = SKIPPED.matchEntire(line)
-        val match = passed ?: failed ?: skipped ?: return@mapNotNull null
-        TestCaseResult(match.groupValues[1], when { passed != null -> TestStatus.PASSED; failed != null -> TestStatus.FAILED; else -> TestStatus.SKIPPED }, match.groupValues[2].toDoubleOrNull())
-    }.toList()
+    private fun parseCases(output: String): List<TestCaseResult> {
+        val latest = LinkedHashMap<String, TestCaseResult>()
+        output.lineSequence().mapNotNull { line ->
+            val passed = PASSED.matchEntire(line)
+            val failed = FAILED.matchEntire(line)
+            val skipped = SKIPPED.matchEntire(line)
+            val match = passed ?: failed ?: skipped ?: return@mapNotNull null
+            TestCaseResult(match.groupValues[1].trim(), when { passed != null -> TestStatus.PASSED; failed != null -> TestStatus.FAILED; else -> TestStatus.SKIPPED }, match.groupValues[2].toDoubleOrNull())
+        }.forEach { latest[it.identifier] = it }
+        return latest.values.toList()
+    }
 
     private companion object {
-        val PASSED = Regex("^Test Case '-\\[(.+)\\]' passed \\(([^ ]+) (?:seconds|s)\\)$")
-        val FAILED = Regex("^Test Case '-\\[(.+)\\]' failed \\(([^ ]+) (?:seconds|s)\\)$")
-        val SKIPPED = Regex("^Test Case '-\\[(.+)\\]' skipped \\(([^ ]+) (?:seconds|s)\\)$")
+        val PASSED = Regex("^Test Case '-\\[(.+)\\]' passed \\(([0-9]+(?:\\.[0-9]+)?)\\s*(?:seconds|s)\\)$")
+        val FAILED = Regex("^Test Case '-\\[(.+)\\]' failed \\(([0-9]+(?:\\.[0-9]+)?)\\s*(?:seconds|s)\\)$")
+        val SKIPPED = Regex("^Test Case '-\\[(.+)\\]' skipped \\(([0-9]+(?:\\.[0-9]+)?)\\s*(?:seconds|s)\\)$")
     }
 }
