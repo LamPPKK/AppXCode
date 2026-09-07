@@ -36,8 +36,9 @@ launch, test, and debug signed builds on locally connected devices.
 
 ## Project status
 
-The project is currently in architecture and roadmap definition. No production
-code has been implemented yet.
+The project now contains the first executable IntelliJ Platform base: a Gradle
+plugin project, AppXCode plugin descriptor, and project-scoped startup service.
+Feature implementation follows the staged roadmap below.
 
 The current development plan is:
 
