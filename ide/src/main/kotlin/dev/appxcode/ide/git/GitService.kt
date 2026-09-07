@@ -89,12 +89,12 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
     }?.distinctBy { it.name }?.sortedBy(GitBranch::name) ?: emptyList()
 
     fun createBranch(root: Path, name: String): Boolean {
-        require(name.isNotBlank() && !name.contains(' ')) { "invalid branch name" }
+        require(validRef(name)) { "invalid branch name" }
         return run(root, listOf("git", "switch", "-c", name)) != null
     }
 
     fun checkout(root: Path, name: String): Boolean {
-        require(name.isNotBlank() && !name.contains(' ')) { "invalid branch name" }
+        require(validRef(name)) { "invalid branch name" }
         return run(root, listOf("git", "switch", name)) != null
     }
 
@@ -104,24 +104,24 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
     }
 
     fun merge(root: Path, branch: String): Boolean {
-        require(branch.isNotBlank() && !branch.contains(' ')) { "invalid branch name" }
+        require(validRef(branch)) { "invalid branch name" }
         return run(root, listOf("git", "merge", "--", branch)) != null
     }
 
     fun fetch(root: Path, remote: String = "origin"): Boolean {
-        require(remote.isNotBlank() && !remote.contains(' ')) { "invalid remote name" }
+        require(validRef(remote)) { "invalid remote name" }
         return run(root, listOf("git", "fetch", "--", remote)) != null
     }
 
     fun pull(root: Path, remote: String = "origin", branch: String? = null): Boolean {
-        require(remote.isNotBlank() && !remote.contains(' ')) { "invalid remote name" }
-        branch?.let { require(it.isNotBlank() && !it.contains(' ')) { "invalid branch name" } }
+        require(validRef(remote)) { "invalid remote name" }
+        branch?.let { require(validRef(it)) { "invalid branch name" } }
         return run(root, buildList { addAll(listOf("git", "pull", "--ff-only", "--", remote)); branch?.let { add(it) } }) != null
     }
 
     fun push(root: Path, remote: String = "origin", branch: String? = null): Boolean {
-        require(remote.isNotBlank() && !remote.contains(' ')) { "invalid remote name" }
-        branch?.let { require(it.isNotBlank() && !it.contains(' ')) { "invalid branch name" } }
+        require(validRef(remote)) { "invalid remote name" }
+        branch?.let { require(validRef(it)) { "invalid branch name" } }
         return run(root, buildList { addAll(listOf("git", "push", "--", remote)); branch?.let { add(it) } }) != null
     }
 
@@ -147,4 +147,5 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
         ?.lineSequence()?.map { it.substringAfterLast(' ').trim() }?.filter(String::isNotBlank)?.toList() ?: emptyList()
 
     private fun run(root: Path, args: List<String>): String = runCatching { command(args, root) }.getOrNull()
+    private fun validRef(value: String): Boolean = value.isNotBlank() && !value.startsWith('-') && !value.contains(' ') && !value.contains("..")
 }
