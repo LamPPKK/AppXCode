@@ -40,6 +40,7 @@ data class XcodeBuildResult(
     val warnings: List<BuildDiagnostic> get() = diagnostics.filter { it.severity == DiagnosticSeverity.WARNING }
     val notes: List<BuildDiagnostic> get() = diagnostics.filter { it.severity == DiagnosticSeverity.NOTE }
     val hasErrors: Boolean get() = errors.isNotEmpty()
+    val hasWarnings: Boolean get() = warnings.isNotEmpty()
 }
 
 class XcodeBuildService(
