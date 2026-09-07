@@ -56,6 +56,9 @@ data class BuildAgentResponse(
 
         fun rejected(request: BuildAgentRequest, errorCode: String, message: String): BuildAgentResponse =
             BuildAgentResponse(requestId = request.requestId, accepted = false, message = message, errorCode = errorCode)
+
+        fun cancelled(request: BuildAgentRequest, message: String = "cancelled by client"): BuildAgentResponse =
+            rejected(request, BuildAgentErrorCode.CANCELLED, message)
     }
 }
 
