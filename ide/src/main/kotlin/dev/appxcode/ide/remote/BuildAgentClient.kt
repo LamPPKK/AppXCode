@@ -23,11 +23,16 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
 
     private fun submitWithRetry(request: BuildAgentRequest): BuildAgentResponse {
         var attempt = 1
+        val timeoutNanos = if (request.timeoutMillis > Long.MAX_VALUE / 1_000_000L) Long.MAX_VALUE else request.timeoutMillis * 1_000_000L
+        val start = System.nanoTime()
+        val deadline = if (Long.MAX_VALUE - start < timeoutNanos) Long.MAX_VALUE else start + timeoutNanos
         while (true) {
+            if (System.nanoTime() >= deadline) return BuildAgentResponse.failed(request, BuildAgentErrorCode.TIMEOUT, "request timeout exceeded")
             val response = runCatching { transport.submit(request) }.getOrElse { throw it }
             val retryable = RetryDecider.shouldRetry(response.errorCode)
             if (!response.isError || !retryable || attempt >= retryPolicy.maxAttempts) return response
-            Thread.sleep(retryPolicy.delayFor(attempt++))
+            val delay = retryPolicy.delayFor(attempt++).coerceAtMost(((deadline - System.nanoTime()) / 1_000_000L).coerceAtLeast(0))
+            if (delay > 0) Thread.sleep(delay)
         }
     }
 
