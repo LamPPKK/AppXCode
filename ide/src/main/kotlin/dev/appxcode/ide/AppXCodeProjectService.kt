@@ -142,6 +142,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun gitFetch(root: Path, remote: String = "origin"): Boolean = git.fetch(root, remote)
     fun gitPull(root: Path, remote: String = "origin", branch: String? = null): Boolean = git.pull(root, remote, branch)
     fun gitPush(root: Path, remote: String = "origin", branch: String? = null): Boolean = git.push(root, remote, branch)
+    fun gitStage(root: Path, files: Collection<Path>): Boolean = git.stage(root, files)
+    fun gitUnstage(root: Path, files: Collection<Path>): Boolean = git.unstage(root, files)
     fun createDebugSession(sessionId: String) = debugSessions.create(sessionId)
     fun updateDebugSession(sessionId: String, state: DebugSessionState) = debugSessions.update(sessionId, state)
     fun debugSessionState(sessionId: String): DebugSessionState? = debugSessions.state(sessionId)
