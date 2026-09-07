@@ -16,7 +16,14 @@ data class AppleDestination(
 
     fun xcodebuildSpecifier(): String = buildString {
         append("platform=")
-        append(if (kind == DestinationKind.SIMULATOR) "${platform.name.lowercase()} Simulator" else platform.name.lowercase())
+        val platformName = when (platform) {
+            ApplePlatform.IOS -> "iOS"
+            ApplePlatform.IPADOS -> "iPadOS"
+            ApplePlatform.MACOS -> "macOS"
+            ApplePlatform.WATCHOS -> "watchOS"
+            ApplePlatform.TVOS -> "tvOS"
+        }
+        append(if (kind == DestinationKind.SIMULATOR) "$platformName Simulator" else platformName)
         append(",name=").append(name)
         identifier?.let { append(",id=").append(it) }
     }
