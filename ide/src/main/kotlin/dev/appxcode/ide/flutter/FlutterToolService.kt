@@ -13,6 +13,14 @@ class FlutterToolService(
         FlutterCommandResult(code == 0, output, code)
     },
 ) {
+    private var session: Process? = null
+
+    fun startSession(root: Path, deviceId: String? = null): Boolean {
+        if (session?.isAlive == true) return true
+        val args = buildList { add(flutter); add("run"); if (deviceId != null) { add("-d"); add(deviceId) } }
+        return runCatching { session = ProcessBuilder(args).directory(root.toFile()).redirectErrorStream(true).start(); true }.getOrDefault(false)
+    }
+    fun stopSession() { session?.destroy(); session = null }
     fun run(root: Path, deviceId: String? = null): FlutterCommandResult = execute(root, "run", deviceId)
     fun test(root: Path): FlutterCommandResult = execute(root, "test", null)
     fun hotReload(root: Path): FlutterCommandResult = sendSignal(root, "r")
@@ -21,6 +29,9 @@ class FlutterToolService(
     private fun execute(root: Path, action: String, deviceId: String?): FlutterCommandResult =
         runner(buildList { add(flutter); add(action); if (deviceId != null) { add("-d"); add(deviceId) } }, root)
 
-    private fun sendSignal(root: Path, signal: String): FlutterCommandResult =
-        FlutterCommandResult(false, "Interactive Flutter session required to send '$signal'", null)
+    private fun sendSignal(root: Path, signal: String): FlutterCommandResult {
+        val process = session ?: return FlutterCommandResult(false, "No active Flutter session", null)
+        return runCatching { val writer = process.outputStream.bufferedWriter(); writer.write(signal); writer.flush(); FlutterCommandResult(true, "Sent $signal", null) }
+            .getOrElse { FlutterCommandResult(false, it.message ?: "Unable to send Flutter command", null) }
+    }
 }
