@@ -59,6 +59,9 @@ data class BuildAgentResponse(
 
         fun cancelled(request: BuildAgentRequest, message: String = "cancelled by client"): BuildAgentResponse =
             rejected(request, BuildAgentErrorCode.CANCELLED, message)
+
+        fun failed(request: BuildAgentRequest, errorCode: String = BuildAgentErrorCode.BUILD_FAILED, message: String = "operation failed"): BuildAgentResponse =
+            rejected(request, errorCode, message)
     }
 }
 
