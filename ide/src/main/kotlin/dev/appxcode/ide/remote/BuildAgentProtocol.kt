@@ -169,6 +169,7 @@ data class BuildAgentEndpoint(
 data class BuildAgentTransportPolicy(
     val requireTls: Boolean = true,
     val requirePairing: Boolean = true,
+    val allowInsecureRemote: Boolean = false,
 ) {
     companion object {
         val SECURE_DEFAULT: BuildAgentTransportPolicy = BuildAgentTransportPolicy(requireTls = true, requirePairing = true)
@@ -176,7 +177,9 @@ data class BuildAgentTransportPolicy(
     }
 
     fun permits(endpoint: BuildAgentEndpoint): Boolean =
-        (!requireTls || endpoint.tlsEnabled) && (!requirePairing || !endpoint.requiresPairing)
+        (!requireTls || endpoint.tlsEnabled) &&
+            (endpoint.tlsEnabled || endpoint.isLoopback || allowInsecureRemote) &&
+            (!requirePairing || !endpoint.requiresPairing)
     fun permitsSecurely(endpoint: BuildAgentEndpoint): Boolean = permits(endpoint) && endpoint.isSecure
 }
 
