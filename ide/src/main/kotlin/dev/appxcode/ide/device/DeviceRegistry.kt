@@ -22,6 +22,7 @@ class DeviceRegistry {
         notifyListeners()
     }
     fun unregister(providerId: String) { if (providers.removeIf { it.id == providerId }) notifyListeners() }
+    fun clear() { if (providers.isNotEmpty()) { providers.clear(); notifyListeners() } }
     fun refresh() { notifyListeners() }
     fun onDevicesChanged(listener: (List<AppleDevice>) -> Unit): AutoCloseable {
         listeners += listener
