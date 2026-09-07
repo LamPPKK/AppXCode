@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.Disposable
 import java.util.concurrent.atomic.AtomicBoolean
 import dev.appxcode.ide.project.XcodeContainer
+import dev.appxcode.ide.project.XcodeScheme
 import dev.appxcode.ide.project.XcodeProjectWatcher
 import dev.appxcode.ide.test.TestFramework
 import dev.appxcode.ide.test.TestFrameworkRegistry
@@ -94,6 +95,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun isInitialized(): Boolean = initialized.get()
     fun projectName(): String = project.name
     fun discoverXcodeContainers(root: Path): List<XcodeContainer> = XcodeProjectModel.discover(root)
+    fun xcodeSchemes(container: XcodeContainer): List<XcodeScheme> = XcodeProjectModel.readSchemes(container)
     fun appleToolchain(): AppleToolchain = AppleToolchainDetector.detect()
     fun dependencies(root: Path): List<DependencyPin> = DependencyModel.read(root)
     fun resolveSwiftPackages(root: Path, timeoutMillis: Long = 600_000): ResolveResult = dependencyResolver.resolveSwift(root, timeoutMillis)
