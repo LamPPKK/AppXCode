@@ -73,6 +73,12 @@ data class BuildAgentArtifact(
         require(sizeBytes >= 0) { "Artifact size must not be negative" }
         require(sha256.matches(Regex("[0-9a-fA-F]{64}"))) { "Artifact sha256 must be 64 hexadecimal characters" }
     }
+
+    fun matches(content: ByteArray): Boolean {
+        val digest = java.security.MessageDigest.getInstance("SHA-256").digest(content)
+            .joinToString("") { "%02x".format(it) }
+        return digest.equals(sha256, ignoreCase = true) && content.size.toLong() == sizeBytes
+    }
 }
 
 const val CURRENT_PROTOCOL_VERSION: Int = 1
