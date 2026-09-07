@@ -17,14 +17,21 @@ data class ExportOptions(
         val body = buildString {
             append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<plist version=\"1.0\"><dict>")
             append("<key>method</key><string>").append(method.name.lowercase().replace('_', '-')).append("</string>")
-            teamId?.let { append("<key>teamID</key><string>").append(it).append("</string>") }
-            signingStyle?.let { append("<key>signingStyle</key><string>").append(it).append("</string>") }
+            teamId?.let { append("<key>teamID</key><string>").append(escapeXml(it)).append("</string>") }
+            signingStyle?.let { append("<key>signingStyle</key><string>").append(escapeXml(it)).append("</string>") }
             append("</dict></plist>")
         }
         optionsPlist.parent?.let(Files::createDirectories)
         Files.writeString(optionsPlist, body)
         return optionsPlist
     }
+
+    private fun escapeXml(value: String): String = value
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;")
+        .replace("'", "&apos;")
 }
 
 class XcodeExportService(private val runner: (List<String>) -> XcodeBuildResult = { command ->
