@@ -4,6 +4,8 @@ import com.intellij.openapi.project.Project
 import java.util.concurrent.atomic.AtomicBoolean
 import dev.appxcode.ide.project.XcodeContainer
 import dev.appxcode.ide.project.XcodeProjectModel
+import dev.appxcode.ide.test.TestFramework
+import dev.appxcode.ide.test.TestFrameworkRegistry
 import java.nio.file.Path
 import dev.appxcode.ide.toolchain.AppleToolchain
 import dev.appxcode.ide.toolchain.AppleToolchainDetector
@@ -30,4 +32,5 @@ class AppXCodeProjectService(private val project: Project) {
     fun findSwiftSymbols(name: String): List<SwiftSymbol> = swiftSymbols.find(name)
     fun completeSwift(prefix: String): List<SwiftSymbol> = swiftSymbols.complete(prefix)
     fun xcodeTargets(projectFile: Path): List<XcodeTarget> = XcodeProjectModel.readTargets(projectFile)
+    fun testFrameworks(root: Path): Set<TestFramework> = TestFrameworkRegistry.detect(root)
 }
