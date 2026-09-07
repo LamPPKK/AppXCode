@@ -29,7 +29,8 @@ class XcodeBuildService(
 ) {
     fun execute(request: XcodeBuildRequest, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult {
         val executable = toolchain.xcodebuildPath ?: return XcodeBuildResult(null, "xcodebuild is unavailable", false)
-        val command = listOf(executable.toString(), "-scheme", request.scheme, "-destination", request.destination, "-configuration", request.configuration, request.action, "-project", request.container.toString())
+        val containerFlag = if (request.container.fileName.toString().endsWith(".xcworkspace")) "-workspace" else "-project"
+        val command = listOf(executable.toString(), "-scheme", request.scheme, "-destination", request.destination, "-configuration", request.configuration, request.action, containerFlag, request.container.toString())
         val process = processFactory(command, request.container.parent)
         val outputBuffer = StringBuffer()
         val reader = Thread { process.inputStream.bufferedReader().use { outputBuffer.append(it.readText()) } }
