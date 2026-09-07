@@ -60,6 +60,12 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
 
     fun cancelAll(): List<BuildAgentResponse> = activeRequests().map { cancel(it.requestId) }
 
+    fun clear(): Int {
+        val count = states.size
+        states.clear()
+        return count
+    }
+
     fun forget(requestId: String): Boolean = states.remove(requestId) != null
 
     fun forgetCompleted(): Int {
