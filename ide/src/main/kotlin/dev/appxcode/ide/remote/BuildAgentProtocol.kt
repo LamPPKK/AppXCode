@@ -10,6 +10,7 @@ data class BuildAgentRequest(
 ) {
     val isCancelled: Boolean get() = cancellationRequested
     val typedOperation: BuildAgentOperation? get() = BuildAgentOperation.fromWireName(operation)
+    val isKnownOperation: Boolean get() = typedOperation != null
     fun cancelledCopy(): BuildAgentRequest = copy(cancellationRequested = true)
 
     constructor(requestId: String, operation: BuildAgentOperation, projectPath: String, timeoutMillis: Long = 900_000) :
