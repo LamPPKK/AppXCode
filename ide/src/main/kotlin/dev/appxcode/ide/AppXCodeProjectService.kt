@@ -8,6 +8,9 @@ import dev.appxcode.ide.test.TestFramework
 import dev.appxcode.ide.test.TestFrameworkRegistry
 import dev.appxcode.ide.project.ProjectSnapshot
 import dev.appxcode.ide.project.ProjectSnapshotLoader
+import dev.appxcode.ide.git.GitBranch
+import dev.appxcode.ide.git.GitService
+import dev.appxcode.ide.git.GitStatus
 import java.nio.file.Path
 import dev.appxcode.ide.toolchain.AppleToolchain
 import dev.appxcode.ide.toolchain.AppleToolchainDetector
@@ -23,6 +26,7 @@ import dev.appxcode.ide.project.XcodeProjectModel
 class AppXCodeProjectService(private val project: Project) {
     private val initialized = AtomicBoolean(false)
     private val swiftSymbols = SwiftSymbolIndex()
+    private val git = GitService()
     fun initialize() { initialized.compareAndSet(false, true) }
     fun isInitialized(): Boolean = initialized.get()
     fun projectName(): String = project.name
@@ -36,4 +40,6 @@ class AppXCodeProjectService(private val project: Project) {
     fun xcodeTargets(projectFile: Path): List<XcodeTarget> = XcodeProjectModel.readTargets(projectFile)
     fun testFrameworks(root: Path): Set<TestFramework> = TestFrameworkRegistry.detect(root)
     fun snapshot(root: Path): ProjectSnapshot = ProjectSnapshotLoader.load(root)
+    fun gitStatus(root: Path): GitStatus = git.status(root)
+    fun gitBranches(root: Path): List<GitBranch> = git.branches(root)
 }
