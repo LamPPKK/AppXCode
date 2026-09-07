@@ -55,6 +55,7 @@ data class DeviceRegistrySnapshot(val devices: List<AppleDevice>, val providerEr
     val totalCount: Int get() = devices.size
     val availableCount: Int get() = devices.count { it.state == DeviceState.AVAILABLE }
     val hasAvailable: Boolean get() = availableCount > 0
+    val availableDevices: List<AppleDevice> get() = devices.filter { it.state == DeviceState.AVAILABLE }
     val offlineCount: Int get() = devices.count { it.state == DeviceState.OFFLINE }
     val hasOffline: Boolean get() = offlineCount > 0
     val hasUnknown: Boolean get() = devices.any { it.state == DeviceState.UNKNOWN }
