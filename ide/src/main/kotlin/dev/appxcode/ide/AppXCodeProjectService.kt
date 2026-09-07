@@ -64,6 +64,7 @@ import java.time.Duration
 import dev.appxcode.ide.project.XcodeTarget
 import dev.appxcode.ide.device.DeviceRegistry
 import dev.appxcode.ide.device.AppleDevice
+import dev.appxcode.ide.device.DeviceRegistrySnapshot
 import dev.appxcode.ide.project.XcodeProjectModel
 @Service(Service.Level.PROJECT)
 class AppXCodeProjectService(private val project: Project) : Disposable {
@@ -107,6 +108,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun deviceRegistry(): DeviceRegistry = devices
     fun discoverDevices(): List<AppleDevice> = devices.discover()
     fun deviceProviderErrors(): Map<String, String> = devices.providerErrors()
+    fun deviceSnapshot(): DeviceRegistrySnapshot = devices.snapshot()
     fun dependencies(root: Path): List<DependencyPin> = DependencyModel.read(root)
     fun resolveSwiftPackages(root: Path, timeoutMillis: Long = 600_000): ResolveResult = dependencyResolver.resolveSwift(root, timeoutMillis)
     fun installCocoaPods(root: Path, timeoutMillis: Long = 600_000): ResolveResult = dependencyResolver.installPods(root, timeoutMillis)
