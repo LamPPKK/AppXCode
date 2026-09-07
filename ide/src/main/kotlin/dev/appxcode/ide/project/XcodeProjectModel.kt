@@ -18,6 +18,17 @@ data class XcodeTarget(val name: String, val productName: String?, val productTy
 
 /** Discovers Xcode containers without converting or rewriting their native files. */
 object XcodeProjectModel {
+    fun readSchemes(container: XcodeContainer): List<XcodeScheme> {
+        if (!Files.isDirectory(container.path)) return emptyList()
+        val roots = listOf(container.path.resolve("xcshareddata/xcschemes"), container.path.resolve("xcuserdata"))
+        return roots.filter(Files::isDirectory).flatMap { root ->
+            Files.walk(root).use { files ->
+                files.filter { it.fileName.toString().endsWith(".xcscheme") }
+                    .mapNotNull(::readScheme).toList()
+            }
+        }.distinctBy(XcodeScheme::name).sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, XcodeScheme::name))
+    }
+
     fun readTargets(project: Path): List<XcodeTarget> {
         val pbx = if (project.fileName.toString().endsWith(".xcodeproj")) project.resolve("project.pbxproj") else project
         if (!Files.isRegularFile(pbx)) return emptyList()
