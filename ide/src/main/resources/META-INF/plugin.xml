@@ -6,4 +6,8 @@
   <depends>com.intellij.modules.platform</depends>
   <projectService serviceImplementation="dev.appxcode.ide.AppXCodeProjectService" />
   <postStartupActivity implementation="dev.appxcode.ide.AppXCodeStartupActivity" />
+  <extensions defaultExtensionNs="com.intellij">
+    <toolWindow id="Embedded Devices" anchor="right" factoryClass="dev.appxcode.ide.device.EmbeddedDevicesToolWindowFactory" />
+  </extensions>
+  <projectService serviceImplementation="dev.appxcode.ide.device.DeviceRegistryService" />
 </idea-plugin>
