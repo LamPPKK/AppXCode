@@ -32,3 +32,5 @@ jobs:
           grep -q 'dev.appxcode.ide' ide/src/main/resources/META-INF/plugin.xml
       - name: Build plugin
         run: gradle buildPlugin --no-daemon
+      - name: Verify plugin compatibility
+        run: gradle verifyPlugin --no-daemon
