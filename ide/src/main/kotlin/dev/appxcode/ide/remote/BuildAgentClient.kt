@@ -13,6 +13,7 @@ interface BuildArtifactTransport {
 
 class BuildAgentClient(private val transport: BuildAgentTransport, private val retryPolicy: RetryPolicy = RetryPolicy()) {
     private val states = ConcurrentHashMap<String, BuildAgentResponse>()
+    private val requests = ConcurrentHashMap<String, BuildAgentRequest>()
 
     fun submit(request: BuildAgentRequest): BuildAgentResponse {
         if (!request.isValid()) return BuildAgentResponse.rejected(request, BuildAgentErrorCode.INVALID_REQUEST, "invalid build agent request")
@@ -20,6 +21,7 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
         if (states.putIfAbsent(request.requestId, BuildAgentResponse.accepted(request)) != null) {
             return BuildAgentResponse.rejected(request, BuildAgentErrorCode.INVALID_REQUEST, "requestId already exists")
         }
+        requests[request.requestId] = request
         return runCatching { submitWithRetry(request) }.getOrElse {
             BuildAgentResponse.failed(request, BuildAgentErrorCode.TRANSPORT_UNAVAILABLE, it.message ?: "transport failure")
         }.also { states[request.requestId] = it }
@@ -67,7 +69,15 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
     fun clear(): Int {
         val count = states.size
         states.clear()
+        requests.clear()
         return count
+    }
+
+    fun retry(requestId: String): BuildAgentResponse? {
+        val previous = states[requestId] ?: return null
+        if (!previous.isError || previous.isCancelled) return previous
+        val original = requests[requestId] ?: return null
+        return submit(original.copy(requestId = java.util.UUID.randomUUID().toString()))
     }
 
     fun forget(requestId: String): Boolean = states.remove(requestId) != null
