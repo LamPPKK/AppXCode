@@ -6,8 +6,15 @@ import java.nio.file.Path
 enum class TestFramework { XCTEST, QUICK, KIWI, CATCH }
 
 data class DiscoveredTest(val name: String, val file: Path, val line: Int, val framework: TestFramework)
+data class TestFrameworkCommand(val framework: TestFramework, val executable: String, val arguments: List<String>)
 
 object TestFrameworkRegistry {
+    fun command(framework: TestFramework, filter: String? = null): TestFrameworkCommand = when (framework) {
+        TestFramework.XCTEST -> TestFrameworkCommand(framework, "xcodebuild", buildList { add("test"); filter?.let { add("-only-testing:$it") } })
+        TestFramework.QUICK, TestFramework.KIWI -> TestFrameworkCommand(framework, "xcodebuild", buildList { add("test"); filter?.let { add("-only-testing:$it") } })
+        TestFramework.CATCH -> TestFrameworkCommand(framework, "ctest", buildList { filter?.let { add("-R"); add(it) } })
+    }
+
     fun discover(root: Path): List<DiscoveredTest> =
         discoverXCTest(root) + discoverQuick(root) + discoverKiwi(root) + discoverCatch(root)
 
