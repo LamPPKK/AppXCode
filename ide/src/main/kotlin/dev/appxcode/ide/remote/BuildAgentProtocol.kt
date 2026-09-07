@@ -165,6 +165,7 @@ data class BuildAgentTransportPolicy(
 ) {
     fun permits(endpoint: BuildAgentEndpoint): Boolean =
         (!requireTls || endpoint.tlsEnabled) && (!requirePairing || !endpoint.requiresPairing)
+    fun permitsSecurely(endpoint: BuildAgentEndpoint): Boolean = permits(endpoint) && endpoint.isSecure
 }
 
 data class BuildAgentPairing(
