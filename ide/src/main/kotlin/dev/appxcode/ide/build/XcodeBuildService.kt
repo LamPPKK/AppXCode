@@ -40,6 +40,7 @@ class XcodeBuildService(
         request.environment.forEach { (key, value) -> process.environment()[key] = value }
         val outputBuffer = StringBuffer()
         val reader = Thread { process.inputStream.bufferedReader().use { outputBuffer.append(it.readText()) } }
+        reader.isDaemon = true
         reader.start()
         val finished = process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS)
         if (!finished) process.destroyForcibly()
