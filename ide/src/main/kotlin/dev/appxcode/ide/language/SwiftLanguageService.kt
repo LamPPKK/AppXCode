@@ -14,8 +14,25 @@ interface SwiftLanguageService {
 
 object SwiftLanguageServiceFactory {
     fun create(toolchain: AppleToolchain, workspace: Path): SwiftLanguageService {
-        return UnavailableSwiftLanguageService(toolchain)
+        val executable = workspace.resolve(".appxcode/sourcekit-lsp")
+            .takeIf { java.nio.file.Files.isExecutable(it) }
+            ?: Path.of("sourcekit-lsp").takeIf { runCatching { ProcessBuilder(it.toString(), "--help").start().destroy(); true }.getOrDefault(false) }
+        return if (executable != null) {
+            LspSwiftLanguageService(toolchain, workspace, LspProcessManager(LspServerConfig(executable, workspace)))
+        } else UnavailableSwiftLanguageService(toolchain)
     }
+}
+
+class LspSwiftLanguageService(
+    private val toolchain: AppleToolchain,
+    private val workspace: Path,
+    private val processManager: LspProcessManager
+) : SwiftLanguageService, AutoCloseable {
+    init { processManager.start() }
+    override fun complete(file: Path, line: Int, column: Int): List<SwiftCompletion> = emptyList()
+    override fun diagnostics(files: List<Path>): List<SwiftDiagnostic> =
+        UnavailableSwiftLanguageService(toolchain).diagnostics(files)
+    override fun close() = processManager.close()
 }
 
 class UnavailableSwiftLanguageService(private val toolchain: AppleToolchain) : SwiftLanguageService {
