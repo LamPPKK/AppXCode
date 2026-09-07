@@ -19,8 +19,9 @@ data class XcodeBuildResult(
     val exitCode: Int?,
     val output: String,
     val timedOut: Boolean,
+    val cancelled: Boolean = false,
 ) {
-    val succeeded: Boolean get() = exitCode == 0 && !timedOut
+    val succeeded: Boolean get() = exitCode == 0 && !timedOut && !cancelled
     val diagnostics: List<BuildDiagnostic> get() = XcodeDiagnosticParser.parse(output)
 }
 
@@ -64,7 +65,12 @@ class XcodeBuildService(
         }
         reader.join(2_000)
         val timedOut = !finished && !cancelled
-        return XcodeBuildResult(if (timedOut || cancelled || !process.isAlive) process.exitValueOrNull() else process.exitValue(), outputBuffer.toString(), timedOut)
+        return XcodeBuildResult(
+            if (timedOut || cancelled || !process.isAlive) process.exitValueOrNull() else process.exitValue(),
+            outputBuffer.toString(),
+            timedOut,
+            cancelled,
+        )
     }
 
     private fun Process.exitValueOrNull(): Int? = runCatching { exitValue() }.getOrNull()
