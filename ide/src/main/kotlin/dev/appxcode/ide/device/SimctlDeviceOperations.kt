@@ -11,6 +11,10 @@ class SimctlDeviceOperations(
         DeviceOperationResult(process.waitFor() == 0, "simctl completed", output)
     },
 ) : DeviceOperations {
+    fun boot(deviceId: String): DeviceOperationResult = execute("boot", deviceId)
+    fun shutdown(deviceId: String): DeviceOperationResult = execute("shutdown", deviceId)
+    fun erase(deviceId: String): DeviceOperationResult = execute("erase", deviceId)
+
     override fun install(deviceId: String, app: Path): DeviceOperationResult =
         if (!Files.exists(app)) DeviceOperationResult(false, "App bundle not found: $app") else execute("install", deviceId, app.toString())
 
