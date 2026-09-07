@@ -218,7 +218,8 @@ data class BuildAgentPairing(
     companion object {
         fun issue(pairingId: String, ttlMillis: Long, nowEpochMillis: Long = System.currentTimeMillis()): BuildAgentPairing {
             require(ttlMillis > 0) { "Pairing TTL must be positive" }
-            return BuildAgentPairing(pairingId, nowEpochMillis + ttlMillis)
+            val expiry = Math.addExact(nowEpochMillis, ttlMillis)
+            return BuildAgentPairing(pairingId, expiry)
         }
     }
 
@@ -234,7 +235,7 @@ data class BuildAgentPairing(
         (expiresAtEpochMillis - nowEpochMillis).coerceAtLeast(0)
     fun renewed(additionalMillis: Long, nowEpochMillis: Long = System.currentTimeMillis()): BuildAgentPairing {
         require(additionalMillis > 0) { "Pairing renewal must be positive" }
-        return copy(expiresAtEpochMillis = nowEpochMillis + additionalMillis)
+        return copy(expiresAtEpochMillis = Math.addExact(nowEpochMillis, additionalMillis))
     }
     fun isValidFor(endpoint: BuildAgentEndpoint, nowEpochMillis: Long = System.currentTimeMillis()): Boolean =
         !isExpired(nowEpochMillis) && endpoint.pairingId == pairingId
