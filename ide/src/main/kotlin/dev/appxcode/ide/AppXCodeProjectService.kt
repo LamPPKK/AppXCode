@@ -40,6 +40,9 @@ import dev.appxcode.ide.language.SwiftLanguageService
 import dev.appxcode.ide.language.SwiftLanguageServiceFactory
 import dev.appxcode.ide.language.SwiftCompletion
 import dev.appxcode.ide.language.SwiftDiagnostic
+import dev.appxcode.ide.language.SwiftFormatterService
+import dev.appxcode.ide.language.FormatResult
+import dev.appxcode.ide.language.BatchFormatResult
 import dev.appxcode.ide.project.XcodeTarget
 import dev.appxcode.ide.project.XcodeProjectModel
 @Service(Service.Level.PROJECT)
@@ -47,6 +50,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     private val initialized = AtomicBoolean(false)
     private val swiftSymbols = SwiftSymbolIndex()
     private val objcSymbols = ObjCSymbolIndex()
+    private val swiftFormatter = SwiftFormatterService()
     @Volatile private var swiftLanguage: SwiftLanguageService? = null
     private val git = GitService()
     private val dependencyResolver = DependencyResolver()
@@ -81,6 +85,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun completeSwift(prefix: String): List<SwiftSymbol> = swiftSymbols.complete(prefix)
     fun swiftCompletions(file: Path, line: Int, column: Int): List<SwiftCompletion> = swiftLanguage?.complete(file, line, column).orEmpty()
     fun swiftDiagnostics(files: List<Path>): List<SwiftDiagnostic> = swiftLanguage?.diagnostics(files).orEmpty()
+    fun formatSwift(file: Path): FormatResult = swiftFormatter.format(file)
+    fun formatSwiftFiles(files: Iterable<Path>): BatchFormatResult = swiftFormatter.formatFiles(files)
     fun indexObjectiveC(files: Iterable<Path>) { objcSymbols.index(files) }
     fun findObjectiveCSymbols(name: String): List<ObjCSymbol> = objcSymbols.find(name)
     fun completeObjectiveC(prefix: String): List<ObjCSymbol> = objcSymbols.complete(prefix)
