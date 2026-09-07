@@ -56,6 +56,7 @@ data class DeviceRegistrySnapshot(val devices: List<AppleDevice>, val providerEr
     val availableCount: Int get() = devices.count { it.state == DeviceState.AVAILABLE }
     val hasAvailable: Boolean get() = availableCount > 0
     val offlineCount: Int get() = devices.count { it.state == DeviceState.OFFLINE }
+    val hasOffline: Boolean get() = offlineCount > 0
     val vphoneCount: Int get() = devices.count { it.kind == DeviceKind.VPHONE }
     val physicalCount: Int get() = devices.count { it.kind == DeviceKind.PHYSICAL }
     val simulatorCount: Int get() = devices.count { it.kind == DeviceKind.SIMULATOR }
