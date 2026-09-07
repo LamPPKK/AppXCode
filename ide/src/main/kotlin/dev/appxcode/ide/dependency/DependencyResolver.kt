@@ -14,7 +14,9 @@ class DependencyResolver(private val runner: (List<String>, Path) -> Process = {
     private fun run(command: List<String>, root: Path, timeoutMillis: Long): ResolveResult {
         require(timeoutMillis > 0) { "timeoutMillis must be positive" }
         if (!java.nio.file.Files.isDirectory(root)) return ResolveResult(false, null, "Project root does not exist: $root", false)
-        val process = runCatching { runner(command, root) }.getOrNull() ?: return ResolveResult(false, null, "Unable to start ${command.first()}", false)
+        val process = runCatching { runner(command, root) }.getOrElse {
+            return ResolveResult(false, null, "Unable to start ${command.first()}: ${it.message ?: "executable unavailable"}", false)
+        }
         val finished = process.waitFor(timeoutMillis, TimeUnit.MILLISECONDS)
         if (!finished) process.destroyForcibly()
         val output = process.inputStream.bufferedReader().use { it.readText() }
