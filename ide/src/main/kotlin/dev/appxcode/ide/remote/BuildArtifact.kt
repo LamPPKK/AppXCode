@@ -9,7 +9,13 @@ data class BuildArtifact(
     val path: Path,
     val sha256: String,
     val sizeBytes: Long,
-)
+) {
+    init {
+        require(sizeBytes >= 0) { "Artifact size must not be negative" }
+        require(sha256.matches(Regex("[0-9a-fA-F]{64}"))) { "Artifact sha256 must be 64 hexadecimal characters" }
+        require(path.fileName != null) { "Artifact path must point to a file" }
+    }
+}
 
 data class BuildTransfer(val requestId: String, val artifacts: List<BuildArtifact>, val totalBytes: Long = artifacts.sumOf { it.sizeBytes }) {
     init {
