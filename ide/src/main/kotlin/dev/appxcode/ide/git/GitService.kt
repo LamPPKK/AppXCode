@@ -9,6 +9,7 @@ data class GitBranch(val name: String, val remote: Boolean)
 data class GitCommit(val hash: String, val subject: String, val author: String, val timestamp: Long?)
 data class GitStash(val index: Int, val name: String, val message: String)
 data class GitRemote(val name: String, val url: String, val pushUrl: String?)
+data class GitTag(val name: String, val hash: String?)
 
 class GitService(private val command: (List<String>, Path) -> String? = { args, root ->
     val process = ProcessBuilder(args).directory(root.toFile()).redirectErrorStream(true).start()
@@ -55,6 +56,14 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
             val parts = line.trim().split(Regex("\\s+"))
             if (parts.size < 3) null else GitRemote(parts[0], parts[1], parts.getOrNull(2)?.takeIf { it == "(push)" }?.let { parts[1] })
         }.groupBy { it.name }.map { (name, entries) -> GitRemote(name, entries.first { it.pushUrl == null }.url, entries.firstOrNull { it.pushUrl != null }?.url) }
+    }
+
+    fun tags(root: Path): List<GitTag> {
+        val output = run(root, listOf("git", "tag", "--list", "--format=%(refname:short)%x1f%(objectname)")) ?: return emptyList()
+        return output.lineSequence().mapNotNull { line ->
+            val parts = line.split('\u001f', limit = 2)
+            parts.firstOrNull()?.takeIf(String::isNotBlank)?.let { GitTag(it, parts.getOrNull(1)?.ifBlank { null }) }
+        }.sortedBy(GitTag::name).toList()
     }
 
     fun branches(root: Path): List<GitBranch> = run(root, listOf("git", "branch", "--all"))?.lineSequence()?.mapNotNull { line ->

@@ -20,6 +20,7 @@ import dev.appxcode.ide.git.GitStatus
 import dev.appxcode.ide.git.GitCommit
 import dev.appxcode.ide.git.GitStash
 import dev.appxcode.ide.git.GitRemote
+import dev.appxcode.ide.git.GitTag
 import java.nio.file.Path
 import java.util.concurrent.CopyOnWriteArrayList
 import dev.appxcode.ide.toolchain.AppleToolchain
@@ -85,6 +86,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun gitStashes(root: Path): List<GitStash> = git.stashes(root)
     fun gitStashDiff(root: Path, index: Int): String = git.stashDiff(root, index)
     fun gitRemotes(root: Path): List<GitRemote> = git.remotes(root)
+    fun gitTags(root: Path): List<GitTag> = git.tags(root)
     fun createDebugSession(sessionId: String) = debugSessions.create(sessionId)
     fun updateDebugSession(sessionId: String, state: DebugSessionState) = debugSessions.update(sessionId, state)
     fun debugSessionState(sessionId: String): DebugSessionState? = debugSessions.state(sessionId)
