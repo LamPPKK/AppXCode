@@ -51,7 +51,7 @@ object XcodeProjectModel {
     }
     fun discover(root: Path): List<XcodeContainer> {
         if (!Files.isDirectory(root)) return emptyList()
-        return Files.list(root).use { stream ->
+        return Files.walk(root, 4).use { stream ->
             stream.filter { Files.isDirectory(it) }
                 .mapNotNull { path ->
                     when {
