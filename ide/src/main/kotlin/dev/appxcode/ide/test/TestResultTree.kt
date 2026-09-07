@@ -5,6 +5,7 @@ data class TestSuiteResult(val name: String, val cases: List<TestCaseResult>) {
     val failed: Int get() = cases.count { it.status == TestStatus.FAILED }
     val skipped: Int get() = cases.count { it.status == TestStatus.SKIPPED }
     val hasSkipped: Boolean get() = skipped > 0
+    val hasUnknown: Boolean get() = cases.any { it.status == TestStatus.UNKNOWN }
     val durationSeconds: Double get() = cases.mapNotNull { it.durationSeconds }.sum()
     val isSuccessful: Boolean get() = cases.isNotEmpty() && failed == 0 && cases.none { it.status == TestStatus.UNKNOWN }
 }
