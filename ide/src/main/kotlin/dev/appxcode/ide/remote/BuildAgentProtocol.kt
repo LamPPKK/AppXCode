@@ -157,6 +157,7 @@ data class BuildAgentEndpoint(
     fun matchesCredentialFingerprint(fingerprint: String): Boolean =
         credentialFingerprint != null && credentialFingerprint.equals(fingerprint.trim(), ignoreCase = true)
     val isSecure: Boolean get() = tlsEnabled && credentialFingerprint != null
+    val isLoopback: Boolean get() = host.equals("localhost", true) || host == "127.0.0.1" || host == "::1"
 }
 
 data class BuildAgentTransportPolicy(
