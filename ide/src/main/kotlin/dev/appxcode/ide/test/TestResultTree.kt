@@ -15,6 +15,7 @@ data class TestResultTree(val suites: List<TestSuiteResult>) {
     val passed: Int get() = suites.sumOf(TestSuiteResult::passed)
     val failed: Int get() = suites.sumOf(TestSuiteResult::failed)
     val skipped: Int get() = suites.sumOf(TestSuiteResult::skipped)
+    val hasSkipped: Boolean get() = skipped > 0
     val hasUnknown: Boolean get() = suites.any { suite -> suite.hasUnknown }
     val hasFailures: Boolean get() = failed > 0
     val isSuccessful: Boolean get() = total > 0 && failed == 0 && suites.flatMap { it.cases }.none { it.status == TestStatus.UNKNOWN }
