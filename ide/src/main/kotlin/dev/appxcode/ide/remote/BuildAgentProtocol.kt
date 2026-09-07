@@ -245,6 +245,7 @@ fun BuildAgentEndpoint.isPairedWith(pairing: BuildAgentPairing, nowEpochMillis: 
     pairingId != null && pairingId == pairing.pairingId && !pairing.isExpired(nowEpochMillis)
 
 fun BuildAgentEndpoint.withPairing(pairing: BuildAgentPairing): BuildAgentEndpoint = copy(pairingId = pairing.pairingId)
+fun BuildAgentEndpoint.withCredentialFingerprint(fingerprint: String): BuildAgentEndpoint = copy(credentialFingerprint = fingerprint)
 
 data class BuildAgentArtifactRequest(
     val requestId: String,
