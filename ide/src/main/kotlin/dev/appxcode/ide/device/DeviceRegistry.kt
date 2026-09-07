@@ -20,7 +20,11 @@ class DeviceRegistry {
         if (providers.none { it.id == provider.id }) { providers += provider; notifyListeners() }
     }
     fun unregister(providerId: String) { if (providers.removeIf { it.id == providerId }) notifyListeners() }
-    fun onDevicesChanged(listener: (List<AppleDevice>) -> Unit) { listeners += listener; listener(discover()) }
+    fun onDevicesChanged(listener: (List<AppleDevice>) -> Unit): AutoCloseable {
+        listeners += listener
+        listener(discover())
+        return AutoCloseable { listeners.remove(listener) }
+    }
     fun discover(): List<AppleDevice> = providers.flatMap { runCatching { it.list() }.getOrDefault(emptyList()) }
         .distinctBy(AppleDevice::id)
         .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, AppleDevice::platform, AppleDevice::name))
