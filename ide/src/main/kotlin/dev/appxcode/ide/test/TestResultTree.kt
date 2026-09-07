@@ -4,6 +4,8 @@ data class TestSuiteResult(val name: String, val cases: List<TestCaseResult>) {
     val passed: Int get() = cases.count { it.status == TestStatus.PASSED }
     val failed: Int get() = cases.count { it.status == TestStatus.FAILED }
     val skipped: Int get() = cases.count { it.status == TestStatus.SKIPPED }
+    val durationSeconds: Double get() = cases.mapNotNull { it.durationSeconds }.sum()
+    val isSuccessful: Boolean get() = cases.isNotEmpty() && failed == 0 && cases.none { it.status == TestStatus.UNKNOWN }
 }
 
 data class TestResultTree(val suites: List<TestSuiteResult>) {
