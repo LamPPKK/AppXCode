@@ -16,6 +16,7 @@ data class XcodeTestResult(val cases: List<TestCaseResult>, val rawOutput: Strin
     val passed: Boolean get() = cases.isNotEmpty() && cases.all { it.status == TestStatus.PASSED }
     val isComplete: Boolean get() = cases.isNotEmpty() && cases.none { it.status == TestStatus.UNKNOWN }
     val failedCases: List<TestCaseResult> get() = cases.filter { it.status == TestStatus.FAILED }
+    val hasFailures: Boolean get() = failedCases.isNotEmpty()
     val skippedCases: List<TestCaseResult> get() = cases.filter { it.status == TestStatus.SKIPPED }
     val hasSkipped: Boolean get() = skippedCases.isNotEmpty()
     val hasUnknown: Boolean get() = cases.any { it.status == TestStatus.UNKNOWN }
