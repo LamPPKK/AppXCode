@@ -187,6 +187,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
         (swiftLanguage as? AutoCloseable)?.close()
         swiftLanguage = null
         flutter.stopSession()
+        devices.clear()
         runConfigurations.clear()
         changeListeners.clear()
     }
