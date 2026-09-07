@@ -8,6 +8,8 @@ data class BuildAgentRequest(
     val timeoutMillis: Long = 900_000,
     val cancellationRequested: Boolean = false,
 ) {
+    val isCancelled: Boolean get() = cancellationRequested
+
     constructor(requestId: String, operation: BuildAgentOperation, projectPath: String, timeoutMillis: Long = 900_000) :
         this(CURRENT_PROTOCOL_VERSION, requestId, operation.wireName, projectPath, timeoutMillis, false)
 
