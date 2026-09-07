@@ -29,6 +29,8 @@ data class AgentResponse(
     val protocolVersion: String = BUILD_AGENT_PROTOCOL_VERSION,
 )
 
+data class AgentHealth(val ready: Boolean, val version: String = BUILD_AGENT_PROTOCOL_VERSION, val capabilities: AgentCapabilities? = null, val message: String? = null)
+
 object BuildAgentProtocol {
     fun isCompatible(version: String): Boolean = version.substringBefore('.') == BUILD_AGENT_PROTOCOL_VERSION.substringBefore('.')
     fun validate(request: AgentRequest): List<String> = buildList {
@@ -37,5 +39,10 @@ object BuildAgentProtocol {
         if (request.scheme.isBlank()) add("scheme is required")
         if (request.destination.isBlank()) add("destination is required")
         if (!isCompatible(request.protocolVersion)) add("unsupported protocol version: ${request.protocolVersion}")
+    }
+
+    fun validateHealth(health: AgentHealth): List<String> = buildList {
+        if (!isCompatible(health.version)) add("unsupported agent version: ${health.version}")
+        if (health.ready && health.capabilities == null) add("ready agent must advertise capabilities")
     }
 }
