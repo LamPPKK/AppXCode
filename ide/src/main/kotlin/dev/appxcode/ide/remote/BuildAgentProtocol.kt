@@ -142,6 +142,8 @@ data class BuildAgentEndpoint(
 ) {
     companion object {
         fun localDevelopment(port: Int): BuildAgentEndpoint = BuildAgentEndpoint("127.0.0.1", port, tlsEnabled = false)
+        fun paired(host: String, port: Int, pairingId: String, credentialFingerprint: String): BuildAgentEndpoint =
+            BuildAgentEndpoint(host, port, tlsEnabled = true, pairingId = pairingId, credentialFingerprint = credentialFingerprint)
     }
 
     init {
