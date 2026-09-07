@@ -177,7 +177,10 @@ data class BuildAgentEndpoint(
         require(credentialFingerprint == null || credentialFingerprint.matches(Regex("[0-9a-fA-F]{64}"))) { "Credential fingerprint must be SHA-256" }
     }
 
-    fun baseUri(): java.net.URI = java.net.URI("${if (tlsEnabled) "https" else "http"}://$host:$port")
+    fun baseUri(): java.net.URI {
+        val uriHost = if (host.contains(':') && !host.startsWith('[')) "[$host]" else host
+        return java.net.URI("${if (tlsEnabled) "https" else "http"}://$uriHost:$port")
+    }
 
     fun uri(path: String): java.net.URI {
         require(path.startsWith("/")) { "Build agent API path must start with /" }
