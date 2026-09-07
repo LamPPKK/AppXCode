@@ -49,10 +49,14 @@ class XcodeExportService(
     constructor(runner: (List<String>) -> XcodeBuildResult) : this("xcodebuild", runner)
 
     private fun run(command: List<String>): XcodeBuildResult = runner?.invoke(command) ?: run {
-    val process = ProcessBuilder(command).redirectErrorStream(true).start()
-    val output = process.inputStream.bufferedReader().readText()
-    val code = process.waitFor()
-    XcodeBuildResult(code, output, false)
+    runCatching {
+        val process = ProcessBuilder(command).redirectErrorStream(true).start()
+        val output = process.inputStream.bufferedReader().readText()
+        val code = process.waitFor()
+        XcodeBuildResult(code, output, false)
+    }.getOrElse { error ->
+        XcodeBuildResult(null, "Unable to start export process: ${error.message ?: error.javaClass.simpleName}", false)
+    }
     }
 
     fun export(options: ExportOptions): XcodeBuildResult {
