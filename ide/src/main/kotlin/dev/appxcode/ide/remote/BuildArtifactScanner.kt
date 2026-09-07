@@ -5,6 +5,9 @@ import java.nio.file.Path
 import java.security.MessageDigest
 
 object BuildArtifactScanner {
+    fun verify(artifact: BuildArtifact): Boolean =
+        Files.isRegularFile(artifact.path) && Files.size(artifact.path) == artifact.sizeBytes && sha256(artifact.path) == artifact.sha256
+
     fun scan(requestId: String, files: Map<ArtifactKind, Path>): BuildTransfer =
         BuildTransfer(requestId, files.mapNotNull { (kind, path) ->
             if (!Files.isRegularFile(path)) return@mapNotNull null
