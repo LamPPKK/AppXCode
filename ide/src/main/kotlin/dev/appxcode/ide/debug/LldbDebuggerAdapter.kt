@@ -2,12 +2,13 @@ package dev.appxcode.ide.debug
 
 import java.nio.file.Path
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
 
 class LldbDebuggerAdapter(private val command: (List<String>) -> String = { args ->
     ProcessBuilder(args).redirectErrorStream(true).start().inputStream.bufferedReader().readText()
 }) : DebuggerAdapter {
-    private val processes = mutableMapOf<String, Process>()
-    private val breakpoints = mutableMapOf<String, MutableSet<Breakpoint>>()
+    private val processes = ConcurrentHashMap<String, Process>()
+    private val breakpoints = ConcurrentHashMap<String, MutableSet<Breakpoint>>()
 
     override fun launch(executable: Path, arguments: List<String>): String {
         val process = ProcessBuilder(listOf(executable.toString()) + arguments).redirectErrorStream(true).start()
@@ -16,7 +17,7 @@ class LldbDebuggerAdapter(private val command: (List<String>) -> String = { args
     fun setBreakpoint(sessionId: String, breakpoint: Breakpoint): Boolean {
         require(breakpoint.line > 0) { "Breakpoint line must be positive" }
         if (!processes.containsKey(sessionId)) return false
-        breakpoints.getOrPut(sessionId) { linkedSetOf() }.add(breakpoint)
+        breakpoints.computeIfAbsent(sessionId) { ConcurrentHashMap.newKeySet() }.add(breakpoint)
         return true
     }
     fun clearBreakpoint(sessionId: String, breakpoint: Breakpoint) { breakpoints[sessionId]?.remove(breakpoint) }
