@@ -16,7 +16,9 @@ object TestFrameworkRegistry {
     }
 
     fun discover(root: Path): List<DiscoveredTest> =
-        discoverXCTest(root) + discoverQuick(root) + discoverKiwi(root) + discoverCatch(root)
+        (discoverXCTest(root) + discoverQuick(root) + discoverKiwi(root) + discoverCatch(root))
+            .distinctBy { Triple(it.framework, it.file, it.line) to it.name }
+            .sortedWith(compareBy({ it.framework.name }, { it.file.toString() }, { it.line }, { it.name }))
 
     fun discoverXCTest(root: Path): List<DiscoveredTest> {
         if (!Files.isDirectory(root)) return emptyList()
