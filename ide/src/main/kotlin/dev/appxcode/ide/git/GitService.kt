@@ -8,6 +8,7 @@ data class GitStatus(val branch: String?, val changedFiles: List<String>, val av
 data class GitBranch(val name: String, val remote: Boolean)
 data class GitCommit(val hash: String, val subject: String, val author: String, val timestamp: Long?)
 data class GitStash(val index: Int, val name: String, val message: String)
+data class GitRemote(val name: String, val url: String, val pushUrl: String?)
 
 class GitService(private val command: (List<String>, Path) -> String? = { args, root ->
     val process = ProcessBuilder(args).directory(root.toFile()).redirectErrorStream(true).start()
@@ -46,6 +47,14 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
     fun stashDiff(root: Path, index: Int): String {
         require(index >= 0) { "stash index must be non-negative" }
         return run(root, listOf("git", "stash", "show", "--patch", "stash@{$index}")) ?: ""
+    }
+
+    fun remotes(root: Path): List<GitRemote> {
+        val output = run(root, listOf("git", "remote", "-v")) ?: return emptyList()
+        return output.lineSequence().mapNotNull { line ->
+            val parts = line.trim().split(Regex("\\s+"))
+            if (parts.size < 3) null else GitRemote(parts[0], parts[1], parts.getOrNull(2)?.takeIf { it == "(push)" }?.let { parts[1] })
+        }.groupBy { it.name }.map { (name, entries) -> GitRemote(name, entries.first { it.pushUrl == null }.url, entries.firstOrNull { it.pushUrl != null }?.url) }
     }
 
     fun branches(root: Path): List<GitBranch> = run(root, listOf("git", "branch", "--all"))?.lineSequence()?.mapNotNull { line ->
