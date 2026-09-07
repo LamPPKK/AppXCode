@@ -46,6 +46,8 @@ class XcodeExportService(
     private val executable: String = "xcodebuild",
     private val runner: ((List<String>) -> XcodeBuildResult)? = null,
 ) {
+    constructor(runner: (List<String>) -> XcodeBuildResult) : this("xcodebuild", runner)
+
     private fun run(command: List<String>): XcodeBuildResult = runner?.invoke(command) ?: run {
     val process = ProcessBuilder(command).redirectErrorStream(true).start()
     val output = process.inputStream.bufferedReader().readText()
