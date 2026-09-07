@@ -26,6 +26,21 @@ class XcodeTestService(private val builder: XcodeBuildService) {
         return XcodeTestResult(parseCases(result.output), result.output)
     }
 
+    fun rerunFailed(
+        container: Path,
+        scheme: String,
+        destination: String,
+        previous: XcodeTestResult,
+        configuration: String = "Debug",
+        timeout: Duration = Duration.ofMinutes(20),
+    ): XcodeTestResult {
+        val tests = previous.tree.failedCases().map { it.identifier }.distinct()
+        if (tests.isEmpty()) return XcodeTestResult(emptyList(), "No failed tests to rerun")
+        val args = tests.flatMap { listOf("-only-testing:$it") }
+        val result = builder.execute(XcodeBuildRequest(container, scheme, destination, configuration, action = "test", arguments = args), timeout)
+        return XcodeTestResult(parseCases(result.output), result.output)
+    }
+
     private fun parseCases(output: String): List<TestCaseResult> = output.lineSequence().mapNotNull { line ->
         val passed = PASSED.matchEntire(line)
         val failed = FAILED.matchEntire(line)
