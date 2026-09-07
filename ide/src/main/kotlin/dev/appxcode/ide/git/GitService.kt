@@ -3,9 +3,12 @@ package dev.appxcode.ide.git
 import java.nio.file.Path
 
 data class GitStatus(val branch: String?, val changedFiles: List<String>, val available: Boolean)
+data class GitBranch(val name: String, val remote: Boolean)
 
-class GitService(private val command: (List<String>, Path) -> String = { args, root ->
-    ProcessBuilder(args).directory(root.toFile()).redirectErrorStream(true).start().inputStream.bufferedReader().readText()
+class GitService(private val command: (List<String>, Path) -> String? = { args, root ->
+    val process = ProcessBuilder(args).directory(root.toFile()).redirectErrorStream(true).start()
+    val output = process.inputStream.bufferedReader().readText()
+    if (process.waitFor() == 0) output else null
 }) {
     fun status(root: Path): GitStatus {
         val output = run(root, listOf("git", "status", "--short", "--branch")) ?: return GitStatus(null, emptyList(), false)
@@ -17,6 +20,16 @@ class GitService(private val command: (List<String>, Path) -> String = { args, r
 
     fun diff(root: Path, staged: Boolean = false): String =
         run(root, if (staged) listOf("git", "diff", "--cached") else listOf("git", "diff")) ?: ""
+
+    fun branches(root: Path): List<GitBranch> = run(root, listOf("git", "branch", "--all"))?.lineSequence()?.mapNotNull { line ->
+        val name = line.trim().removePrefix("*").trim().takeIf(String::isNotBlank) ?: return@mapNotNull null
+        GitBranch(name.removePrefix("remotes/"), name.startsWith("remotes/"))
+    }?.distinctBy { it.name }?.sortedBy(GitBranch::name) ?: emptyList()
+
+    fun createBranch(root: Path, name: String): Boolean {
+        require(name.isNotBlank() && !name.contains(' ')) { "invalid branch name" }
+        return run(root, listOf("git", "switch", "-c", name)) != null
+    }
 
     private fun run(root: Path, args: List<String>): String = runCatching { command(args, root) }.getOrNull()
 }
