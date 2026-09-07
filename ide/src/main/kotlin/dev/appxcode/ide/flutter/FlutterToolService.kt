@@ -24,6 +24,7 @@ class FlutterToolService(
         val args = buildList { add(flutter); add("run"); if (deviceId != null) { add("-d"); add(deviceId) } }
         return runCatching {
             session = ProcessBuilder(args).directory(root.toFile()).redirectErrorStream(true).start()
+            if (session?.isAlive != true) { session = null; return@runCatching false }
             Thread {
                 session?.inputStream?.bufferedReader()?.useLines { lines ->
                     lines.forEach { line ->
