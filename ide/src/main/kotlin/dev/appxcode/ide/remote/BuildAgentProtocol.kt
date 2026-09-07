@@ -138,6 +138,8 @@ data class BuildAgentHealth(
     val toolchainAvailable: Boolean,
     val message: String = "",
 ) {
+    val ready: Boolean get() = online && toolchainAvailable && protocolVersion == CURRENT_PROTOCOL_VERSION
+
     init {
         require(protocolVersion == CURRENT_PROTOCOL_VERSION) { "Unsupported build agent protocol: $protocolVersion" }
         require(agentId.isNotBlank()) { "Build agent id must not be blank" }
