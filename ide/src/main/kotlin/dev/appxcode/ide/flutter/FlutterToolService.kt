@@ -65,6 +65,7 @@ class FlutterToolService(
 
     private fun sendSignal(root: Path, signal: String): FlutterCommandResult {
         val process = session ?: return FlutterCommandResult(false, "No active Flutter session", null)
+        if (!process.isAlive) { session = null; return FlutterCommandResult(false, "Flutter session has exited", process.exitValue()) }
         return runCatching { val writer = process.outputStream.bufferedWriter(); writer.write(signal); writer.flush(); FlutterCommandResult(true, "Sent $signal", null) }
             .getOrElse { FlutterCommandResult(false, it.message ?: "Unable to send Flutter command", null) }
     }
