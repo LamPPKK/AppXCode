@@ -10,12 +10,18 @@ data class AppleToolchain(
     val swiftPath: Path?,
     val xcodeVersion: String?,
 ) {
+    val simctlPath: Path? get() = xcrunPath?.takeIf { Files.isExecutable(it) }
+    val devicectlPath: Path? get() = simctlPath
+    private val xcrunPath: Path? get() = developerDirectory?.resolve("usr/bin/xcrun") ?: existingPath(Path.of("/usr/bin/xcrun"))
     val available: Boolean get() = xcodebuildPath != null && developerDirectory != null
     val capabilities: Set<String> get() = buildSet {
         if (available) add("xcodebuild")
         if (swiftPath != null) add("swift")
+        if (simctlPath != null) add("simctl")
+        if (devicectlPath != null) add("devicectl")
         if (available && swiftPath != null) add("apple-platform-build")
     }
+    private fun existingPath(path: Path): Path? = path.takeIf { Files.exists(it) }
 }
 
 /** Resolves installed Apple tooling without mutating the developer machine. */
