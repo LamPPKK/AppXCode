@@ -51,7 +51,14 @@ class XcodeBuildService(
             ?: return XcodeBuildResult(null, "Xcode container has no working directory", false)
         if (!java.nio.file.Files.isDirectory(workingDirectory)) return XcodeBuildResult(null, "Working directory not found: $workingDirectory", false)
         val containerFlag = if (request.container.fileName.toString().endsWith(".xcworkspace")) "-workspace" else "-project"
-        val command = listOf(executable.toString(), "-scheme", request.scheme, "-destination", request.destination, "-configuration", request.configuration, request.action, containerFlag, request.container.toString()) + request.arguments
+        val command = listOf(
+            executable.toString(),
+            containerFlag, request.container.toString(),
+            "-scheme", request.scheme,
+            "-destination", request.destination,
+            "-configuration", request.configuration,
+            request.action,
+        ) + request.arguments
         val process = processFactoryWithEnvironment?.let { it(command, workingDirectory, request.environment) }
             ?: if (request.environment.isEmpty()) processFactory(command, workingDirectory)
             else ProcessBuilder(command).directory(workingDirectory.toFile()).apply {
