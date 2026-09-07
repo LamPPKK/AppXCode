@@ -57,7 +57,7 @@ object TestFrameworkRegistry {
 
     fun detect(root: Path): Set<TestFramework> {
         val files = if (!Files.isDirectory(root)) emptySequence() else Files.walk(root).use { it.filter(Files::isRegularFile).toList().asSequence() }
-        val text = files.filter { it.toString().endsWith(".swift") || it.toString().endsWith(".m") || it.toString().endsWith(".mm") }
+        val text = files.filter { it.toString().endsWith(".swift") || it.toString().endsWith(".m") || it.toString().endsWith(".mm") || it.toString().endsWith(".c") || it.toString().endsWith(".cc") || it.toString().endsWith(".cpp") || it.toString().endsWith(".h") || it.toString().endsWith(".hpp") }
             .map { runCatching { Files.readString(it) }.getOrDefault("") }.joinToString("\n")
         return buildSet {
             if (text.contains("import XCTest") || text.contains("XCTestCase")) add(TestFramework.XCTEST)
