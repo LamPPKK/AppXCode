@@ -167,11 +167,13 @@ data class BuildAgentHealth(
     val online: Boolean,
     val toolchainAvailable: Boolean,
     val message: String = "",
+    val observedAtEpochMillis: Long = System.currentTimeMillis(),
 ) {
     val ready: Boolean get() = online && toolchainAvailable && protocolVersion == CURRENT_PROTOCOL_VERSION
 
     init {
         require(protocolVersion == CURRENT_PROTOCOL_VERSION) { "Unsupported build agent protocol: $protocolVersion" }
         require(agentId.isNotBlank()) { "Build agent id must not be blank" }
+        require(observedAtEpochMillis >= 0) { "Health observation timestamp must not be negative" }
     }
 }
