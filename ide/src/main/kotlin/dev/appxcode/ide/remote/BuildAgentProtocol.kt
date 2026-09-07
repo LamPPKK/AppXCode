@@ -22,6 +22,8 @@ data class BuildAgentResponse(
     val message: String = "",
     val errorCode: String? = null,
 ) {
+    val status: BuildAgentResponseStatus get() = if (accepted) BuildAgentResponseStatus.ACCEPTED else BuildAgentResponseStatus.REJECTED
+    val isError: Boolean get() = !accepted
     init {
         require(protocolVersion == CURRENT_PROTOCOL_VERSION) { "Unsupported build agent protocol: $protocolVersion" }
         require(requestId.isNotBlank()) { "Build agent response id must not be blank" }
@@ -36,6 +38,8 @@ data class BuildAgentResponse(
             BuildAgentResponse(requestId = request.requestId, accepted = false, message = message, errorCode = errorCode)
     }
 }
+
+enum class BuildAgentResponseStatus { ACCEPTED, REJECTED }
 
 const val CURRENT_PROTOCOL_VERSION: Int = 1
 
