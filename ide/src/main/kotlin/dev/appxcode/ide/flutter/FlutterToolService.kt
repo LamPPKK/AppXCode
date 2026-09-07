@@ -29,12 +29,13 @@ class FlutterToolService(
     fun sessionOutput(): String = sessionOutput.toString()
     fun run(root: Path, deviceId: String? = null): FlutterCommandResult = execute(root, "run", deviceId)
     fun test(root: Path): FlutterCommandResult = execute(root, "test", null)
-    fun pubGet(root: Path): FlutterCommandResult = runner(listOf(flutter, "pub", "get"), root)
+    fun pubGet(root: Path): FlutterCommandResult = if (!java.nio.file.Files.isDirectory(root)) FlutterCommandResult(false, "Flutter project root does not exist", null) else runner(listOf(flutter, "pub", "get"), root)
     fun hotReload(root: Path): FlutterCommandResult = sendSignal(root, "r")
     fun hotRestart(root: Path): FlutterCommandResult = sendSignal(root, "R")
 
     private fun execute(root: Path, action: String, deviceId: String?): FlutterCommandResult =
-        runner(buildList { add(flutter); add(action); if (deviceId != null) { add("-d"); add(deviceId) } }, root)
+        if (!java.nio.file.Files.isDirectory(root)) FlutterCommandResult(false, "Flutter project root does not exist", null)
+        else runner(buildList { add(flutter); add(action); if (deviceId != null) { add("-d"); add(deviceId) } }, root)
 
     private fun sendSignal(root: Path, signal: String): FlutterCommandResult {
         val process = session ?: return FlutterCommandResult(false, "No active Flutter session", null)
