@@ -154,6 +154,9 @@ data class BuildAgentArtifactRequest(
 fun BuildAgentArtifactRequest.accepted(artifacts: List<BuildAgentArtifact>, message: String = "artifacts ready"): BuildAgentResponse =
     BuildAgentResponse(requestId = requestId, accepted = true, message = message, artifacts = artifacts.map { it.reference }, artifactMetadata = artifacts)
 
+fun BuildAgentArtifactRequest.rejected(errorCode: String, message: String): BuildAgentResponse =
+    BuildAgentResponse(requestId = requestId, accepted = false, message = message, errorCode = errorCode)
+
 data class BuildAgentHealth(
     val protocolVersion: Int = CURRENT_PROTOCOL_VERSION,
     val agentId: String,
