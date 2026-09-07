@@ -12,6 +12,7 @@ data class AppleDestination(
     init {
         require(name.isNotBlank() && name == name.trim()) { "Destination name must not be blank or padded" }
         require(identifier == null || (identifier.isNotBlank() && identifier == identifier.trim() && !identifier.any(Char::isWhitespace))) { "Destination identifier must be a compact value" }
+        require(!(platform == ApplePlatform.MACOS && kind == DestinationKind.SIMULATOR)) { "macOS does not support a Simulator destination" }
     }
 
     fun xcodebuildSpecifier(): String = buildString {
