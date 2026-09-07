@@ -153,6 +153,9 @@ data class BuildAgentEndpoint(
         require(path.startsWith("/")) { "Build agent API path must start with /" }
         return baseUri().resolve(path)
     }
+
+    fun matchesCredentialFingerprint(fingerprint: String): Boolean =
+        credentialFingerprint != null && credentialFingerprint.equals(fingerprint.trim(), ignoreCase = true)
 }
 
 data class BuildAgentPairing(
