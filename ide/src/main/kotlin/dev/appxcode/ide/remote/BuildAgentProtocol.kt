@@ -168,6 +168,8 @@ data class BuildAgentPairing(
 fun BuildAgentEndpoint.isPairedWith(pairing: BuildAgentPairing, nowEpochMillis: Long = System.currentTimeMillis()): Boolean =
     pairingId != null && pairingId == pairing.pairingId && !pairing.isExpired(nowEpochMillis)
 
+fun BuildAgentEndpoint.withPairing(pairing: BuildAgentPairing): BuildAgentEndpoint = copy(pairingId = pairing.pairingId)
+
 data class BuildAgentArtifactRequest(
     val requestId: String,
     val references: List<String>,
