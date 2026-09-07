@@ -41,6 +41,7 @@ data class BuildAgentResponse(
 ) {
     val status: BuildAgentResponseStatus get() = if (accepted) BuildAgentResponseStatus.ACCEPTED else BuildAgentResponseStatus.REJECTED
     val isError: Boolean get() = !accepted
+    val isSuccessful: Boolean get() = accepted && errorCode == null
     init {
         require(protocolVersion == CURRENT_PROTOCOL_VERSION) { "Unsupported build agent protocol: $protocolVersion" }
         require(requestId.isNotBlank()) { "Build agent response id must not be blank" }
