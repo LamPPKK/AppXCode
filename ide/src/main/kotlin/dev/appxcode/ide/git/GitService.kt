@@ -36,6 +36,11 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
 
     fun diff(root: Path, staged: Boolean = false): String =
         run(root, if (staged) listOf("git", "diff", "--cached") else listOf("git", "diff")) ?: ""
+    fun fileDiff(root: Path, file: Path, staged: Boolean = false): String {
+        require(file.isAbsolute || !file.toString().contains("..")) { "file must stay within repository" }
+        val flag = if (staged) "--cached" else "--"
+        return run(root, listOf("git", "diff") + if (staged) listOf(flag, file.toString()) else listOf(flag, file.toString())) ?: ""
+    }
 
     fun log(root: Path, limit: Int = 50): List<GitCommit> {
         require(limit in 1..500) { "limit must be between 1 and 500" }
