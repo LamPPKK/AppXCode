@@ -49,9 +49,10 @@ class XcodeTestService(private val builder: XcodeBuildService) {
     private fun parseCases(output: String): List<TestCaseResult> {
         val latest = LinkedHashMap<String, TestCaseResult>()
         output.lineSequence().mapNotNull { line ->
-            val passed = PASSED.matchEntire(line)
-            val failed = FAILED.matchEntire(line)
-            val skipped = SKIPPED.matchEntire(line)
+            val normalized = line.trim()
+            val passed = PASSED.matchEntire(normalized)
+            val failed = FAILED.matchEntire(normalized)
+            val skipped = SKIPPED.matchEntire(normalized)
             val match = passed ?: failed ?: skipped ?: return@mapNotNull null
             TestCaseResult(match.groupValues[1].trim(), when { passed != null -> TestStatus.PASSED; failed != null -> TestStatus.FAILED; else -> TestStatus.SKIPPED }, match.groupValues[2].toDoubleOrNull())
         }.forEach { latest[it.identifier] = it }
