@@ -317,6 +317,8 @@ data class BuildAgentHealth(
             BuildAgentHealth(agentId = agentId, online = true, toolchainAvailable = true, message = message)
         fun toolchainUnavailable(agentId: String, message: String = "toolchain unavailable"): BuildAgentHealth =
             BuildAgentHealth(agentId = agentId, online = true, toolchainAvailable = false, message = message)
+        fun incompatible(agentId: String, protocolVersion: Int, message: String = "unsupported agent protocol"): BuildAgentHealth =
+            BuildAgentHealth(protocolVersion = protocolVersion, agentId = agentId, online = true, toolchainAvailable = true, message = message)
     }
 
     val ready: Boolean get() = online && toolchainAvailable && protocolVersion == CURRENT_PROTOCOL_VERSION
