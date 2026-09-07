@@ -58,6 +58,8 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
         .filter { it.isSuccessful || it.errorCode == BuildAgentErrorCode.CANCELLED }
         .sortedBy(BuildAgentResponse::requestId)
 
+    fun cancelAll(): List<BuildAgentResponse> = activeRequests().map { cancel(it.requestId) }
+
     fun forget(requestId: String): Boolean = states.remove(requestId) != null
 
     fun forgetCompleted(): Int {
