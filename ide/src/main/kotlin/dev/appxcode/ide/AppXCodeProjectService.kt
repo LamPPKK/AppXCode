@@ -47,6 +47,9 @@ import dev.appxcode.ide.language.FormatResult
 import dev.appxcode.ide.language.BatchFormatResult
 import dev.appxcode.ide.build.RunConfiguration
 import dev.appxcode.ide.build.RunConfigurationRegistry
+import dev.appxcode.ide.build.XcodeBuildService
+import dev.appxcode.ide.build.XcodeBuildResult
+import java.time.Duration
 import dev.appxcode.ide.project.XcodeTarget
 import dev.appxcode.ide.project.XcodeProjectModel
 @Service(Service.Level.PROJECT)
@@ -61,6 +64,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     private val debugSessions = DebugSessionRegistry()
     private val flutter = FlutterToolService()
     private val runConfigurations = RunConfigurationRegistry()
+    private val xcodeBuildService = XcodeBuildService(AppleToolchainDetector.detect())
     @Volatile private var projectWatcher: XcodeProjectWatcher? = null
     private val changeListeners = CopyOnWriteArrayList<(Path) -> Unit>()
     fun initialize() {
@@ -129,6 +133,9 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun removeRunConfiguration(name: String) = runConfigurations.remove(name)
     fun runConfiguration(name: String): RunConfiguration? = runConfigurations.get(name)
     fun runConfigurations(): List<RunConfiguration> = runConfigurations.all()
+    fun xcodeBuild(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.execute(configuration, container, timeout)
+    fun xcodeRun(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.run(configuration, container, timeout)
+    fun xcodeTest(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.test(configuration, container, timeout)
     fun flutterPubGet(root: Path): FlutterCommandResult = flutter.pubGet(root)
     fun flutterDoctor(root: Path): FlutterCommandResult = flutter.doctor(root)
     fun flutterRun(root: Path, deviceId: String? = null): FlutterCommandResult = flutter.run(root, deviceId)
