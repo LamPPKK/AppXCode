@@ -163,6 +163,8 @@ data class BuildAgentPairing(
     }
 
     fun isExpired(nowEpochMillis: Long = System.currentTimeMillis()): Boolean = nowEpochMillis >= expiresAtEpochMillis
+    fun isValidFor(endpoint: BuildAgentEndpoint, nowEpochMillis: Long = System.currentTimeMillis()): Boolean =
+        !isExpired(nowEpochMillis) && endpoint.pairingId == pairingId
 }
 
 fun BuildAgentEndpoint.isPairedWith(pairing: BuildAgentPairing, nowEpochMillis: Long = System.currentTimeMillis()): Boolean =
