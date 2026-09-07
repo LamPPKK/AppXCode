@@ -17,7 +17,9 @@ class FlutterToolService(
     private val sessionOutput = StringBuffer()
 
     fun startSession(root: Path, deviceId: String? = null): Boolean {
+        if (!java.nio.file.Files.isDirectory(root)) return false
         if (session?.isAlive == true) return true
+        session = null
         val args = buildList { add(flutter); add("run"); if (deviceId != null) { add("-d"); add(deviceId) } }
         return runCatching {
             session = ProcessBuilder(args).directory(root.toFile()).redirectErrorStream(true).start()
