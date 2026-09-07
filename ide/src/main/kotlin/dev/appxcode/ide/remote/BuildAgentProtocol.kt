@@ -8,12 +8,6 @@ data class BuildAgentRequest(
     val timeoutMillis: Long = 900_000,
     val cancellationRequested: Boolean = false,
 ) {
-    val isStrict: Boolean get() = requireTls && requirePairing && !allowInsecureRemote
-    val isDevelopment: Boolean get() = !requireTls && !requirePairing
-    fun describe(): String = "tls=$requireTls,pairing=$requirePairing,allowInsecureRemote=$allowInsecureRemote"
-
-    val requiresPairing: Boolean get() = pairingId == null
-
     val isCancelled: Boolean get() = cancellationRequested
     val typedOperation: BuildAgentOperation? get() = BuildAgentOperation.fromWireName(operation)
     val isKnownOperation: Boolean get() = typedOperation != null
@@ -192,6 +186,7 @@ data class BuildAgentEndpoint(
     fun credentialMatches(fingerprint: String?): Boolean = fingerprint != null && matchesCredentialFingerprint(fingerprint)
     val isSecure: Boolean get() = tlsEnabled && credentialFingerprint != null
     val credentialRequired: Boolean get() = credentialFingerprint == null
+    val requiresPairing: Boolean get() = pairingId == null
     val isLoopback: Boolean get() = host.equals("localhost", true) || host == "127.0.0.1" || host == "::1"
     val displayName: String get() = buildString {
         append(host).append(':').append(port)
