@@ -32,7 +32,7 @@ class XcodeBuildService(
     fun execute(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult =
         execute(XcodeBuildRequest(container, configuration.scheme, configuration.destination.xcodebuildSpecifier(), configuration.configuration, "build", configuration.arguments, configuration.environment), timeout)
 
-    fun execute(request: XcodeBuildRequest, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult {
+    fun execute(request: XcodeBuildRequest, timeout: Duration = Duration.ofMinutes(15), cancellation: BuildCancellation? = null): XcodeBuildResult {
         val executable = toolchain.xcodebuildPath ?: return XcodeBuildResult(null, "xcodebuild is unavailable", false)
         val containerFlag = if (request.container.fileName.toString().endsWith(".xcworkspace")) "-workspace" else "-project"
         val command = listOf(executable.toString(), "-scheme", request.scheme, "-destination", request.destination, "-configuration", request.configuration, request.action, containerFlag, request.container.toString()) + request.arguments
@@ -42,10 +42,12 @@ class XcodeBuildService(
         val reader = Thread { process.inputStream.bufferedReader().use { outputBuffer.append(it.readText()) } }
         reader.isDaemon = true
         reader.start()
-        val finished = process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS)
-        if (!finished) process.destroyForcibly()
+        val deadline = System.nanoTime() + timeout.toNanos()
+        var finished = false
+        while (!finished && System.nanoTime() < deadline && cancellation?.isCancelled() != true) finished = process.waitFor(250, TimeUnit.MILLISECONDS)
+        if (!finished || cancellation?.isCancelled() == true) process.destroyForcibly()
         reader.join(2_000)
-        val timedOut = !finished
+        val timedOut = !finished && cancellation?.isCancelled() != true
         return XcodeBuildResult(if (timedOut) null else process.exitValue(), outputBuffer.toString(), timedOut)
     }
 }
