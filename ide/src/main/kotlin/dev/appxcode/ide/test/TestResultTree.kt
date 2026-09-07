@@ -17,7 +17,8 @@ data class TestResultTree(val suites: List<TestSuiteResult>) {
 
     companion object {
         fun from(cases: List<TestCaseResult>): TestResultTree = TestResultTree(
-            cases.groupBy { it.identifier.substringBefore("/").ifBlank { "Tests" } }
+            cases.asReversed().distinctBy(TestCaseResult::identifier).asReversed()
+                .groupBy { it.identifier.substringBefore("/").ifBlank { "Tests" } }
                 .map { (suite, entries) -> TestSuiteResult(suite, entries) }
                 .sortedBy(TestSuiteResult::name)
         )
