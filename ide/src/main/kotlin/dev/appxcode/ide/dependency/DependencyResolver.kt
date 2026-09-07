@@ -10,6 +10,8 @@ class DependencyResolver(private val runner: (List<String>, Path) -> Process = {
     fun installPods(root: Path, timeoutMillis: Long = 600_000): ResolveResult = run(listOf("pod", "install"), root, timeoutMillis)
 
     private fun run(command: List<String>, root: Path, timeoutMillis: Long): ResolveResult {
+        require(timeoutMillis > 0) { "timeoutMillis must be positive" }
+        if (!java.nio.file.Files.isDirectory(root)) return ResolveResult(false, null, "Project root does not exist: $root", false)
         val process = runCatching { runner(command, root) }.getOrNull() ?: return ResolveResult(false, null, "Unable to start ${command.first()}", false)
         val finished = process.waitFor(timeoutMillis, TimeUnit.MILLISECONDS)
         if (!finished) process.destroyForcibly()
