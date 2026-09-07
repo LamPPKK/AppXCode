@@ -30,6 +30,7 @@ data class XcodeBuildResult(
 ) {
     val succeeded: Boolean get() = exitCode == 0 && !timedOut && !cancelled
     val failed: Boolean get() = !succeeded && !timedOut && !cancelled
+    val status: String get() = when { succeeded -> "succeeded"; cancelled -> "cancelled"; timedOut -> "timed_out"; else -> "failed" }
     val diagnostics: List<BuildDiagnostic> get() = XcodeDiagnosticParser.parse(output)
 }
 
