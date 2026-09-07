@@ -13,8 +13,10 @@ class PhysicalDeviceProvider(
         if (!Files.isExecutable(xcrun)) return emptyList()
         val output = runCatching { runner(listOf(xcrun.toString(), "devicectl", "list", "devices")) }.getOrNull() ?: return emptyList()
         return output.lineSequence().mapNotNull { line ->
-            val match = Regex("^\\s*(.+?)\\s+([0-9A-Fa-f-]{20,})\\s+(iOS|iPadOS|macOS|watchOS|tvOS)\\s+(.+)$").find(line) ?: return@mapNotNull null
+            val match = DEVICE_LINE.find(line) ?: return@mapNotNull null
             AppleDevice(match.groupValues[2], match.groupValues[1], match.groupValues[3], DeviceKind.PHYSICAL, if (match.groupValues[4].contains("available", true)) DeviceState.AVAILABLE else DeviceState.UNKNOWN)
-        }.distinctBy(AppleDevice::id)
+        }.distinctBy(AppleDevice::id).sortedBy { it.name.lowercase() }
     }
+
+    private companion object { val DEVICE_LINE = Regex("^\\s*(.+?)\\s+([0-9A-Fa-f-]{20,})\\s+(iOS|iPadOS|macOS|watchOS|tvOS)\\s+(.+)$") }
 }
