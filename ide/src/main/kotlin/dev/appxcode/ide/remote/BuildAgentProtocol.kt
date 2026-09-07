@@ -213,6 +213,7 @@ data class BuildAgentPairing(
     val pairingId: String,
     val expiresAtEpochMillis: Long,
 ) {
+    val isValid: Boolean get() = pairingId.isNotBlank() && expiresAtEpochMillis > 0 && isActive()
     init {
         require(pairingId.isNotBlank()) { "Pairing id must not be blank" }
         require(expiresAtEpochMillis >= 0) { "Pairing expiry must not be negative" }
