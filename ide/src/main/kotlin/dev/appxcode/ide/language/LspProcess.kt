@@ -20,6 +20,10 @@ class LspProcessManager(private val config: LspServerConfig) : AutoCloseable {
         }.getOrElse { state = LspState.FAILED; false }
     }
 
+    fun isAlive(): Boolean = process?.isAlive == true
+
+    fun restart(): Boolean { close(); return start() }
+
     override fun close() {
         process?.destroy()
         process = null
