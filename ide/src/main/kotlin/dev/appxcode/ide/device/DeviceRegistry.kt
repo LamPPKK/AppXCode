@@ -28,7 +28,7 @@ class DeviceRegistry {
     fun refresh() { notifyListeners() }
     fun onDevicesChanged(listener: (List<AppleDevice>) -> Unit): AutoCloseable {
         listeners += listener
-        listener(discover())
+        runCatching { listener(discover()) }
         return AutoCloseable { listeners.remove(listener) }
     }
     fun discover(): List<AppleDevice> {
