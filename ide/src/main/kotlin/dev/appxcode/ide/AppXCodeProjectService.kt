@@ -87,7 +87,10 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun completeSwift(prefix: String): List<SwiftSymbol> = swiftSymbols.complete(prefix)
     fun swiftCompletions(file: Path, line: Int, column: Int): List<SwiftCompletion> =
         swiftLanguage?.complete(file, line, column)?.takeIf { it.isNotEmpty() }
-            ?: swiftSymbols.complete("").map { SwiftCompletion(it.name, it.kind) }
+            ?: swiftSymbols.complete(runCatching {
+                val sourceLine = java.nio.file.Files.readAllLines(file).getOrNull(line - 1).orEmpty()
+                sourceLine.take(column.coerceIn(0, sourceLine.length)).takeLastWhile { it.isLetterOrDigit() || it == '_' }
+            }.getOrDefault("")).map { SwiftCompletion(it.name, it.kind) }
     fun swiftDiagnostics(files: List<Path>): List<SwiftDiagnostic> = swiftLanguage?.diagnostics(files).orEmpty()
     fun swiftLanguageAlive(): Boolean = (swiftLanguage as? LspSwiftLanguageService)?.isAlive() ?: false
     fun restartSwiftLanguage(): Boolean = (swiftLanguage as? LspSwiftLanguageService)?.restart() ?: false
