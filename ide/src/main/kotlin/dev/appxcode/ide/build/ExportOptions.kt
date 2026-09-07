@@ -42,17 +42,22 @@ data class ExportOptions(
         .replace("'", "&apos;")
 }
 
-class XcodeExportService(private val runner: (List<String>) -> XcodeBuildResult = { command ->
+class XcodeExportService(
+    private val executable: String = "xcodebuild",
+    private val runner: ((List<String>) -> XcodeBuildResult)? = null,
+) {
+    private fun run(command: List<String>): XcodeBuildResult = runner?.invoke(command) ?: run {
     val process = ProcessBuilder(command).redirectErrorStream(true).start()
     val output = process.inputStream.bufferedReader().readText()
     val code = process.waitFor()
     XcodeBuildResult(code, output, false)
-}) {
+    }
+
     fun export(options: ExportOptions): XcodeBuildResult {
         if (!options.archivePath.toFile().exists()) return XcodeBuildResult(null, "Archive not found: ${options.archivePath}", false)
         if (!options.optionsPlist.toFile().isFile) return XcodeBuildResult(null, "Export options plist not found: ${options.optionsPlist}", false)
         options.outputDirectory.toFile().mkdirs()
-        val args = mutableListOf("xcodebuild", "-exportArchive", "-archivePath", options.archivePath.toString(), "-exportPath", options.outputDirectory.toString(), "-exportOptionsPlist", options.optionsPlist.toString())
-        return runner(args)
+        val args = mutableListOf(executable, "-exportArchive", "-archivePath", options.archivePath.toString(), "-exportPath", options.outputDirectory.toString(), "-exportOptionsPlist", options.optionsPlist.toString())
+        return run(args)
     }
 }
