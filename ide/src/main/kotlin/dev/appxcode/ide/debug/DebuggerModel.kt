@@ -18,8 +18,8 @@ interface DebuggerAdapter {
 
 class DebugSessionRegistry {
     private val sessions = ConcurrentHashMap<String, DebugSessionState>()
-    fun create(sessionId: String) { sessions.putIfAbsent(sessionId, DebugSessionState.CREATED) }
-    fun update(sessionId: String, state: DebugSessionState) { if (sessions.containsKey(sessionId)) sessions[sessionId] = state }
+    fun create(sessionId: String) { require(sessionId.isNotBlank()) { "Debug session id must not be blank" }; sessions.putIfAbsent(sessionId, DebugSessionState.CREATED) }
+    fun update(sessionId: String, state: DebugSessionState): Boolean = sessions.replace(sessionId, state) != null
     fun state(sessionId: String): DebugSessionState? = sessions[sessionId]
     fun remove(sessionId: String) { sessions.remove(sessionId) }
 }
