@@ -43,4 +43,12 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
     }
 
     fun status(requestId: String): BuildAgentResponse? = states[requestId]
+
+    fun forget(requestId: String): Boolean = states.remove(requestId) != null
+
+    fun forgetCompleted(): Int {
+        val completed = states.entries.filter { it.value.isSuccessful || it.value.errorCode == BuildAgentErrorCode.CANCELLED }
+        completed.forEach { states.remove(it.key, it.value) }
+        return completed.size
+    }
 }
