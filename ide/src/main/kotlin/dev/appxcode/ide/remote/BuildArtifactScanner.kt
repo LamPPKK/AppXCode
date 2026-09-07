@@ -7,8 +7,9 @@ import java.security.MessageDigest
 object BuildArtifactScanner {
     fun verify(transfer: BuildTransfer): Boolean = transfer.artifacts.all(::verify)
 
-    fun verify(artifact: BuildArtifact): Boolean =
-        Files.isRegularFile(artifact.path) && Files.size(artifact.path) == artifact.sizeBytes && sha256(artifact.path) == artifact.sha256
+    fun verify(artifact: BuildArtifact): Boolean = runCatching {
+        Files.isRegularFile(artifact.path) && Files.size(artifact.path) == artifact.sizeBytes && sha256(artifact.path).equals(artifact.sha256, ignoreCase = true)
+    }.getOrDefault(false)
 
     fun scan(requestId: String, files: Map<ArtifactKind, Path>): BuildTransfer =
         BuildTransfer(requestId, files.mapNotNull { (kind, path) ->
