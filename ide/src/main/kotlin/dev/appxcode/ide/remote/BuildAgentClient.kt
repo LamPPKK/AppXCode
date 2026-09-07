@@ -80,6 +80,17 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
         return submit(original.copy(requestId = java.util.UUID.randomUUID().toString()))
     }
 
+    fun downloadArtifact(request: BuildAgentArtifactRequest, destination: java.nio.file.Path): BuildAgentResponse {
+        if (!request.isValid || !destination.isAbsolute) {
+            return BuildAgentResponse(requestId = request.requestId, accepted = false, errorCode = BuildAgentErrorCode.INVALID_REQUEST, message = "invalid artifact download request")
+        }
+        return runCatching {
+            java.nio.file.Files.createDirectories(destination)
+            transport.let { (it as? BuildArtifactTransport)?.download(request, destination)
+                ?: BuildAgentResponse(requestId = request.requestId, accepted = false, errorCode = BuildAgentErrorCode.INVALID_REQUEST, message = "artifact transport is unavailable") }
+        }.getOrElse { BuildAgentResponse(requestId = request.requestId, accepted = false, errorCode = BuildAgentErrorCode.TRANSPORT_UNAVAILABLE, message = it.message ?: "artifact download failed") }
+    }
+
     fun forget(requestId: String): Boolean = states.remove(requestId) != null
 
     fun forgetCompleted(): Int {
