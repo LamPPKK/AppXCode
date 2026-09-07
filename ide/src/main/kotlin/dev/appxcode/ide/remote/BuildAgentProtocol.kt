@@ -157,6 +157,8 @@ data class BuildAgentArtifactRequest(
     val requestId: String,
     val references: List<String>,
 ) {
+    val isValid: Boolean get() = requestId.isNotBlank() && references.isNotEmpty() && references.all { it.isNotBlank() }
+
     init {
         require(requestId.isNotBlank()) { "Artifact request id must not be blank" }
         require(references.isNotEmpty()) { "Artifact request must include at least one reference" }
