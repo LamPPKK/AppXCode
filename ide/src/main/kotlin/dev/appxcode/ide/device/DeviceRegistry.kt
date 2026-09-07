@@ -52,6 +52,7 @@ class DeviceRegistry {
 }
 
 data class DeviceRegistrySnapshot(val devices: List<AppleDevice>, val providerErrors: Map<String, String>) {
+    val totalCount: Int get() = devices.size
     val availableCount: Int get() = devices.count { it.state == DeviceState.AVAILABLE }
     val offlineCount: Int get() = devices.count { it.state == DeviceState.OFFLINE }
     val hasProviderErrors: Boolean get() = providerErrors.isNotEmpty()
