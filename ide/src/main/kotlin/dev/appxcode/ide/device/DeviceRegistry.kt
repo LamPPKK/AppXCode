@@ -33,5 +33,6 @@ class DeviceRegistry {
         .distinctBy(AppleDevice::id)
         .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, AppleDevice::platform, AppleDevice::name))
     fun providerIds(): List<String> = providers.map(DeviceProvider::id).sorted()
+    fun hasProvider(providerId: String): Boolean = providers.any { it.id == providerId }
     private fun notifyListeners() { val devices = discover(); listeners.forEach { runCatching { it(devices) } } }
 }
