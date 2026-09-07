@@ -10,7 +10,7 @@ data class XcodeContainer(
     val kind: XcodeContainerKind,
     val schemes: List<String> = emptyList(),
 ) {
-    val displayName: String get() = path.fileName.toString().substringBeforeLast('.')
+    val displayName: String get() = path.fileName?.toString()?.substringBeforeLast('.') ?: path.toString()
 }
 
 data class XcodeScheme(val name: String, val buildables: List<String>, val testables: List<String>)
