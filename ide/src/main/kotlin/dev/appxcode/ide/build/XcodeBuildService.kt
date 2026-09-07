@@ -37,6 +37,7 @@ class XcodeBuildService(
     fun execute(request: XcodeBuildRequest, timeout: Duration = Duration.ofMinutes(15), cancellation: BuildCancellation? = null): XcodeBuildResult {
         require(!timeout.isNegative && !timeout.isZero) { "timeout must be positive" }
         val executable = toolchain.xcodebuildPath ?: return XcodeBuildResult(null, "xcodebuild is unavailable", false)
+        if (!java.nio.file.Files.isRegularFile(request.container)) return XcodeBuildResult(null, "Xcode container not found: ${request.container}", false)
         val containerFlag = if (request.container.fileName.toString().endsWith(".xcworkspace")) "-workspace" else "-project"
         val command = listOf(executable.toString(), "-scheme", request.scheme, "-destination", request.destination, "-configuration", request.configuration, request.action, containerFlag, request.container.toString()) + request.arguments
         val process = processFactoryWithEnvironment?.let { it(command, request.container.parent, request.environment) }
