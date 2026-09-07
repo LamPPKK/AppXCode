@@ -38,6 +38,7 @@ data class XcodeBuildResult(
     val diagnostics: List<BuildDiagnostic> by lazy(LazyThreadSafetyMode.PUBLICATION) { XcodeDiagnosticParser.parse(output) }
     val errors: List<BuildDiagnostic> get() = diagnostics.filter { it.severity == DiagnosticSeverity.ERROR }
     val warnings: List<BuildDiagnostic> get() = diagnostics.filter { it.severity == DiagnosticSeverity.WARNING }
+    val notes: List<BuildDiagnostic> get() = diagnostics.filter { it.severity == DiagnosticSeverity.NOTE }
     val hasErrors: Boolean get() = errors.isNotEmpty()
 }
 
