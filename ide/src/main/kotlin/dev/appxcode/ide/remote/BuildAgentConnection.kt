@@ -2,7 +2,7 @@ package dev.appxcode.ide.remote
 
 enum class ConnectionState { DISCONNECTED, CONNECTING, CONNECTED, FAILED }
 
-class BuildAgentConnection(val endpoint: BuildAgentEndpoint? = null) {
+class BuildAgentConnection(val endpoint: BuildAgentEndpoint? = null) : AutoCloseable {
     private val listeners = java.util.concurrent.CopyOnWriteArrayList<(ConnectionState) -> Unit>()
     @Volatile var state: ConnectionState = ConnectionState.DISCONNECTED
         private set
@@ -35,5 +35,10 @@ class BuildAgentConnection(val endpoint: BuildAgentEndpoint? = null) {
         val previous = state
         state = next
         if (previous != next) listeners.forEach { listener -> runCatching { listener(next) } }
+    }
+
+    override fun close() {
+        disconnect()
+        listeners.clear()
     }
 }
