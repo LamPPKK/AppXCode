@@ -33,7 +33,10 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
         preferred.addActionListener {
             registry.preferred()?.let { device ->
                 val index = registry.discover().indexOfFirst { it.id == device.id }
-                if (index >= 0) list.selectedIndex = index
+                if (index >= 0) {
+                    list.selectedIndex = index
+                    list.ensureIndexIsVisible(index)
+                }
             }
         }
         val status = JLabel()
