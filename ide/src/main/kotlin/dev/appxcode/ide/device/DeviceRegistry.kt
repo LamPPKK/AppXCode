@@ -17,8 +17,10 @@ class DeviceRegistry : AutoCloseable {
     private val listeners = CopyOnWriteArrayList<(List<AppleDevice>) -> Unit>()
     private val snapshotListeners = CopyOnWriteArrayList<(DeviceRegistrySnapshot) -> Unit>()
     @Volatile private var providerErrors: Map<String, String> = emptyMap()
+    @Volatile private var closed = false
 
     fun register(provider: DeviceProvider) {
+        check(!closed) { "Device registry is closed" }
         require(provider.id.isNotBlank()) { "Device provider id must not be blank" }
         val existing = providers.indexOfFirst { it.id == provider.id }
         if (existing >= 0 && providers[existing] === provider) return
@@ -35,11 +37,13 @@ class DeviceRegistry : AutoCloseable {
         return true
     }
     fun onDevicesChanged(listener: (List<AppleDevice>) -> Unit): AutoCloseable {
+        if (closed) return AutoCloseable {}
         listeners += listener
         runCatching { listener(discover()) }
         return AutoCloseable { listeners.remove(listener) }
     }
     fun onSnapshotChanged(listener: (DeviceRegistrySnapshot) -> Unit): AutoCloseable {
+        if (closed) return AutoCloseable {}
         snapshotListeners += listener
         runCatching { listener(snapshot()) }
         return AutoCloseable { snapshotListeners.remove(listener) }
@@ -67,6 +71,8 @@ class DeviceRegistry : AutoCloseable {
         snapshotListeners.forEach { runCatching { it(snapshot) } }
     }
     override fun close() {
+        if (closed) return
+        closed = true
         providers.clear()
         providerErrors = emptyMap()
         listeners.clear()
