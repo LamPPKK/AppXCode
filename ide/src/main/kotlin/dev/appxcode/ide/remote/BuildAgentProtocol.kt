@@ -41,6 +41,7 @@ data class BuildAgentResponse(
     val isSuccessful: Boolean get() = accepted && errorCode == null
     val isRejected: Boolean get() = status == BuildAgentResponseStatus.REJECTED
     val isCancelled: Boolean get() = errorCode == BuildAgentErrorCode.CANCELLED
+    val isTerminal: Boolean get() = isSuccessful || isError
     val hasArtifacts: Boolean get() = artifacts.isNotEmpty() || artifactMetadata.isNotEmpty()
     fun artifactReferences(): List<String> = (artifacts + artifactMetadata.map { it.reference }).distinct().sorted()
     fun metadataFor(reference: String): BuildAgentArtifact? = artifactMetadata.firstOrNull { it.reference == reference }
