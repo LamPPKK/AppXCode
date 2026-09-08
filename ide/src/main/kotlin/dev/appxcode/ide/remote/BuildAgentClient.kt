@@ -66,6 +66,10 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
         .filter { it.isError }
         .sortedBy(BuildAgentResponse::requestId)
 
+    fun terminalRequests(): List<BuildAgentResponse> = states.values
+        .filter(BuildAgentResponse::isTerminal)
+        .sortedBy(BuildAgentResponse::requestId)
+
     fun cancelAll(): List<BuildAgentResponse> = activeRequests().map { cancel(it.requestId) }
 
     fun clear(): Int {
