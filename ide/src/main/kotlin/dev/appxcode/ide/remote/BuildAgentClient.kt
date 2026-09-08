@@ -110,6 +110,9 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
         }.getOrElse { BuildAgentResponse(requestId = request.requestId, accepted = false, errorCode = BuildAgentErrorCode.TRANSPORT_UNAVAILABLE, message = it.message ?: "artifact download failed") }
     }
 
+    fun downloadArtifacts(request: BuildAgentArtifactRequest, destination: java.nio.file.Path): BuildAgentResponse =
+        downloadArtifact(request.normalized(), destination)
+
     fun forget(requestId: String): Boolean = states.remove(requestId) != null
 
     fun forgetCompleted(): Int {
