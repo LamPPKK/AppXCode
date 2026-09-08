@@ -12,7 +12,7 @@ interface DeviceProvider {
     fun list(): List<AppleDevice>
 }
 
-class DeviceRegistry {
+class DeviceRegistry : AutoCloseable {
     private val providers = CopyOnWriteArrayList<DeviceProvider>()
     private val listeners = CopyOnWriteArrayList<(List<AppleDevice>) -> Unit>()
     private val snapshotListeners = CopyOnWriteArrayList<(DeviceRegistrySnapshot) -> Unit>()
@@ -65,6 +65,12 @@ class DeviceRegistry {
         val snapshot = DeviceRegistrySnapshot(devices, providerErrors)
         listeners.forEach { runCatching { it(devices) } }
         snapshotListeners.forEach { runCatching { it(snapshot) } }
+    }
+    override fun close() {
+        providers.clear()
+        providerErrors = emptyMap()
+        listeners.clear()
+        snapshotListeners.clear()
     }
 }
 
