@@ -37,7 +37,7 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
         fun render(devices: List<AppleDevice>) {
             list.setListData(devices.map { "${it.name} · ${it.platform} · ${it.kind} · ${it.state} · ${it.id}" }.toTypedArray())
             val snapshot = registry.snapshot()
-            status.text = "Available: ${snapshot.availableCount}/${snapshot.totalCount}" +
+            status.text = if (snapshot.totalCount == 0) "No devices discovered" else "Available: ${snapshot.availableCount}/${snapshot.totalCount}" +
                 if (snapshot.hasProviderErrors) " · Provider errors: ${snapshot.errorCount}" else ""
             status.toolTipText = snapshot.providerErrors.entries.takeIf { it.isNotEmpty() }
                 ?.joinToString("<br>", prefix = "<html>", postfix = "</html>") { "${it.key}: ${it.value}" }
