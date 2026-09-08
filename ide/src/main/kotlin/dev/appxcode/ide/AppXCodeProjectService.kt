@@ -224,6 +224,10 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
         )
         return xcodeBuildService.run(configuration.copy(destination = destination), container, timeout)
     }
+    fun xcodeRunOnSelectedDevice(configuration: RunConfiguration, container: Path, deviceId: String? = null, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult? {
+        val device = devices.select(deviceId) ?: return null
+        return xcodeRunOnDevice(configuration, container, device, timeout)
+    }
     fun xcodeTest(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.test(configuration, container, timeout)
     fun xcodeClean(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.clean(configuration, container, timeout)
     fun xcodeCleanOnDevice(configuration: RunConfiguration, container: Path, device: AppleDevice, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult {
