@@ -19,6 +19,7 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val registry = project.getService(DeviceRegistryService::class.java)
         val list = JBList<String>()
+        var currentSnapshot = DeviceRegistrySnapshot(emptyList(), emptyMap())
         list.name = "Embedded Devices"
         list.toolTipText = "Connected Apple devices and simulators"
         list.visibleRowCount = 12
@@ -32,7 +33,7 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
         preferred.toolTipText = "Select the preferred available device"
         preferred.addActionListener {
             registry.preferred()?.let { device ->
-                val index = registry.discover().indexOfFirst { it.id == device.id }
+                val index = currentSnapshot.devices.indexOfFirst { it.id == device.id }
                 if (index >= 0) {
                     list.selectedIndex = index
                     list.ensureIndexIsVisible(index)
@@ -41,6 +42,7 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
         }
         val status = JLabel()
         fun render(snapshot: DeviceRegistrySnapshot) {
+            currentSnapshot = snapshot
             list.setListData(snapshot.devices.map { "${it.name} · ${it.platform} · ${it.kind} · ${it.state} · ${it.id}" }.toTypedArray())
             status.text = if (snapshot.totalCount == 0) "No devices discovered" else "Available: ${snapshot.availableCount}/${snapshot.totalCount}" +
                 " · Physical: ${snapshot.physicalCount} · Sim: ${snapshot.simulatorCount} · vPhone: ${snapshot.vphoneCount}" +
@@ -58,7 +60,7 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
             it.addActionListener { refresh() }
         }, BorderLayout.WEST)
         actions.add(copyId.also { it.addActionListener {
-            val selected = registry.discover().getOrNull(list.selectedIndex)
+            val selected = currentSnapshot.devices.getOrNull(list.selectedIndex)
             selected?.id?.let { id -> Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(id), null) }
         } }, BorderLayout.EAST)
         actions.add(preferred, BorderLayout.SOUTH)
