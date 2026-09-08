@@ -22,9 +22,11 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
         list.name = "Embedded Devices"
         list.toolTipText = "Connected Apple devices and simulators"
         val copyId = JButton("Copy ID")
+        copyId.name = "Copy selected device ID"
         copyId.isEnabled = false
         list.addListSelectionListener { copyId.isEnabled = list.selectedIndex >= 0 }
         val preferred = JButton("Preferred")
+        preferred.name = "Select preferred device"
         preferred.addActionListener {
             registry.preferred()?.let { device ->
                 val index = registry.discover().indexOfFirst { it.id == device.id }
@@ -44,7 +46,10 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
         fun refresh() { render(registry.discover()) }
         val panel = JPanel(BorderLayout())
         val actions = JPanel(BorderLayout())
-        actions.add(JButton("Refresh").also { it.addActionListener { refresh() } }, BorderLayout.WEST)
+        actions.add(JButton("Refresh").also {
+            it.name = "Refresh embedded devices"
+            it.addActionListener { refresh() }
+        }, BorderLayout.WEST)
         actions.add(copyId.also { it.addActionListener {
             val selected = registry.discover().getOrNull(list.selectedIndex)
             selected?.id?.let { id -> Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(id), null) }
