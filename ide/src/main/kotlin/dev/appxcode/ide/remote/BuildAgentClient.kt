@@ -119,7 +119,10 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
 
     fun forgetCompleted(): Int {
         val completed = states.entries.filter { it.value.isSuccessful || it.value.errorCode == BuildAgentErrorCode.CANCELLED }
-        completed.forEach { states.remove(it.key, it.value) }
+        completed.forEach {
+            states.remove(it.key, it.value)
+            requests.remove(it.key)
+        }
         return completed.size
     }
 }
