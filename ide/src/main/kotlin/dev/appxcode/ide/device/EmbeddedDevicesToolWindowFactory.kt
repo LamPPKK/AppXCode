@@ -96,6 +96,8 @@ class DeviceRegistryService : Disposable {
     fun runnableCountsByKind(): Map<DeviceKind, Int> = registry.snapshot().runnableCountsByKind
     fun offlineDevices(): List<AppleDevice> = registry.snapshot().offlineDevices
     fun unknownDevices(): List<AppleDevice> = registry.snapshot().unknownDevices
+    fun offlineCount(): Int = registry.snapshot().offlineCount
+    fun unknownCount(): Int = registry.snapshot().unknownCount
     fun find(deviceId: String): AppleDevice? = registry.find(deviceId)
     fun isRunnable(deviceId: String): Boolean = registry.isRunnable(deviceId)
     fun preferred(): AppleDevice? = registry.preferred()
