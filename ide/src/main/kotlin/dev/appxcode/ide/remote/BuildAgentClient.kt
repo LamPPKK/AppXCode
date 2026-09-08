@@ -83,6 +83,15 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
     fun retryFailed(): List<BuildAgentResponse> = failedRequests()
         .mapNotNull { retry(it.requestId) }
 
+    fun forgetFailed(): Int {
+        val failed = failedRequests()
+        failed.forEach { response ->
+            states.remove(response.requestId, response)
+            requests.remove(response.requestId)
+        }
+        return failed.size
+    }
+
     fun downloadArtifact(request: BuildAgentArtifactRequest, destination: java.nio.file.Path): BuildAgentResponse {
         if (!request.isValid || !destination.isAbsolute) {
             return BuildAgentResponse(requestId = request.requestId, accepted = false, errorCode = BuildAgentErrorCode.INVALID_REQUEST, message = "invalid artifact download request")
