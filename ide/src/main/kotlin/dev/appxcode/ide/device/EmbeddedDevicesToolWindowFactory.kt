@@ -12,6 +12,8 @@ import java.awt.BorderLayout
 import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.JLabel
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
 
 class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
@@ -32,6 +34,10 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
         val panel = JPanel(BorderLayout())
         val actions = JPanel(BorderLayout())
         actions.add(JButton("Refresh").also { it.addActionListener { refresh() } }, BorderLayout.WEST)
+        actions.add(JButton("Copy ID").also { it.addActionListener {
+            val selected = registry.discover().getOrNull(list.selectedIndex)
+            selected?.id?.let { id -> Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(id), null) }
+        } }, BorderLayout.EAST)
         actions.add(status, BorderLayout.CENTER)
         panel.add(actions, BorderLayout.NORTH)
         panel.add(list, BorderLayout.CENTER)
