@@ -18,6 +18,7 @@ class DeviceRegistry : AutoCloseable {
     private val snapshotListeners = CopyOnWriteArrayList<(DeviceRegistrySnapshot) -> Unit>()
     @Volatile private var providerErrors: Map<String, String> = emptyMap()
     @Volatile private var closed = false
+    val isClosed: Boolean get() = closed
 
     fun register(provider: DeviceProvider) {
         check(!closed) { "Device registry is closed" }
