@@ -35,9 +35,8 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
             }
         }
         val status = JLabel()
-        fun render(devices: List<AppleDevice>) {
-            list.setListData(devices.map { "${it.name} · ${it.platform} · ${it.kind} · ${it.state} · ${it.id}" }.toTypedArray())
-            val snapshot = registry.snapshot()
+        fun render(snapshot: DeviceRegistrySnapshot) {
+            list.setListData(snapshot.devices.map { "${it.name} · ${it.platform} · ${it.kind} · ${it.state} · ${it.id}" }.toTypedArray())
             status.text = if (snapshot.totalCount == 0) "No devices discovered" else "Available: ${snapshot.availableCount}/${snapshot.totalCount}" +
                 " · Physical: ${snapshot.physicalCount} · Sim: ${snapshot.simulatorCount} · vPhone: ${snapshot.vphoneCount}" +
                 if (snapshot.hasProviderErrors) " · Provider errors: ${snapshot.errorCount}" else ""
@@ -45,7 +44,7 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
                 ?.joinToString("<br>", prefix = "<html>", postfix = "</html>") { "${it.key}: ${it.value}" }
             preferred.isEnabled = snapshot.hasAvailable
         }
-        fun refresh() { render(registry.discover()) }
+        fun refresh() { render(registry.snapshot()) }
         val panel = JPanel(BorderLayout())
         val actions = JPanel(BorderLayout())
         actions.add(JButton("Refresh").also {
@@ -62,7 +61,7 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
         panel.add(list, BorderLayout.CENTER)
         refresh()
         val content = ContentFactory.getInstance().createContent(panel, "Devices", false)
-        val subscription = registry.onDevicesChanged { devices -> SwingUtilities.invokeLater { render(devices) } }
+        val subscription = registry.onSnapshotChanged { snapshot -> SwingUtilities.invokeLater { render(snapshot) } }
         Disposer.register(content) { subscription.close() }
         toolWindow.contentManager.addContent(content)
     }
