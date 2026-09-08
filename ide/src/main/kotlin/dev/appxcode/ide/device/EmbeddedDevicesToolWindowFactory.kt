@@ -90,6 +90,7 @@ class DeviceRegistryService : Disposable {
     fun runnableDeviceIds(): List<String> = registry.snapshot().runnableDeviceIds
     fun hasRunnableDevices(): Boolean = registry.snapshot().hasRunnableDevices
     fun hasPhysicalAvailable(): Boolean = registry.snapshot().hasPhysicalAvailable
+    fun physicalAvailableCount(): Int = registry.snapshot().physicalAvailableCount
     fun hasAvailableDevices(): Boolean = registry.snapshot().hasAvailable
     fun availableDevicesByKind(): Map<DeviceKind, List<AppleDevice>> = registry.snapshot().availableDevicesByKind
     fun runnableDevicesByKind(): Map<DeviceKind, List<AppleDevice>> = registry.snapshot().runnableDevicesByKind
