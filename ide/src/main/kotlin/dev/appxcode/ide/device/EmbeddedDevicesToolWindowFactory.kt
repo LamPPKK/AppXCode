@@ -45,7 +45,8 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
             currentSnapshot = snapshot
             list.setListData(snapshot.devices.map { "${it.name} · ${it.platform} · ${it.kind} · ${it.state} · ${it.id}" }.toTypedArray())
             status.text = if (snapshot.totalCount == 0) "No devices discovered" else "Available: ${snapshot.availableCount}/${snapshot.totalCount}" +
-                " · Physical: ${snapshot.physicalCount} · Sim: ${snapshot.simulatorCount} · vPhone: ${snapshot.vphoneCount}" +
+                " · Physical: ${snapshot.physicalCount} (${snapshot.physicalAvailableCount} ready)" +
+                " · Sim: ${snapshot.simulatorCount} · vPhone: ${snapshot.vphoneCount}" +
                 if (snapshot.hasProviderErrors) " · Provider errors: ${snapshot.errorCount}" else ""
             status.toolTipText = snapshot.providerErrors.entries.takeIf { it.isNotEmpty() }
                 ?.joinToString("<br>", prefix = "<html>", postfix = "</html>") { "${it.key}: ${it.value}" }
