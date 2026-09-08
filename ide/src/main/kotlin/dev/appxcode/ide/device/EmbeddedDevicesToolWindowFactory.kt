@@ -54,6 +54,7 @@ class DeviceRegistryService : Disposable {
     fun unknownDevices(): List<AppleDevice> = registry.snapshot().unknownDevices
     fun find(deviceId: String): AppleDevice? = registry.find(deviceId)
     fun preferred(): AppleDevice? = registry.preferred()
+    fun preferredDevice(): AppleDevice? = registry.snapshot().preferredDevice()
     fun select(deviceId: String? = null): AppleDevice? = registry.select(deviceId)
     fun providerIds(): List<String> = registry.providerIds()
     fun hasProvider(providerId: String): Boolean = registry.hasProvider(providerId)
