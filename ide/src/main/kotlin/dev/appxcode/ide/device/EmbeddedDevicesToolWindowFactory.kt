@@ -72,6 +72,7 @@ class DeviceRegistryService : Disposable {
     fun providerIds(): List<String> = registry.providerIds()
     fun hasProvider(providerId: String): Boolean = registry.hasProvider(providerId)
     fun providerErrors(): Map<String, String> = registry.providerErrors()
+    fun providerError(providerId: String): String? = registry.providerErrors()[providerId]
     fun refresh() = registry.refresh()
     fun refresh(providerId: String): Boolean = registry.refresh(providerId)
     fun onDevicesChanged(listener: (List<AppleDevice>) -> Unit): AutoCloseable = registry.onDevicesChanged(listener)
