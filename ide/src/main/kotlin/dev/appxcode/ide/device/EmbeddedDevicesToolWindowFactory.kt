@@ -21,6 +21,7 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
         val list = JBList<String>()
         list.name = "Embedded Devices"
         list.toolTipText = "Connected Apple devices and simulators"
+        list.visibleRowCount = 12
         val copyId = JButton("Copy ID")
         copyId.name = "Copy selected device ID"
         copyId.isEnabled = false
