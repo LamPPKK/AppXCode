@@ -202,6 +202,10 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
             })
         return xcodeBuildService.execute(configuration.copy(destination = destination), container, timeout)
     }
+    fun xcodeBuildOnSelectedDevice(configuration: RunConfiguration, container: Path, deviceId: String? = null, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult? {
+        val device = devices.select(deviceId) ?: return null
+        return xcodeBuildOnDevice(configuration, container, device, timeout)
+    }
     fun xcodeRun(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.run(configuration, container, timeout)
     fun xcodeRunOnDevice(configuration: RunConfiguration, container: Path, device: AppleDevice, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult {
         require(device.state == dev.appxcode.ide.device.DeviceState.AVAILABLE) { "Device is not available: ${device.id}" }
