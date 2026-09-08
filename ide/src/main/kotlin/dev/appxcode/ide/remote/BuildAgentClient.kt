@@ -81,7 +81,14 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
     }
 
     fun retryFailed(): List<BuildAgentResponse> = failedRequests()
-        .mapNotNull { retry(it.requestId) }
+        .mapNotNull { previous ->
+            retry(previous.requestId)?.also { retried ->
+                if (retried.isSuccessful) {
+                    states.remove(previous.requestId, previous)
+                    requests.remove(previous.requestId)
+                }
+            }
+        }
 
     fun forgetFailed(): Int {
         val failed = failedRequests()
