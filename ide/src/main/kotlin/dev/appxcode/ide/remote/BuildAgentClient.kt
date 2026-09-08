@@ -51,6 +51,7 @@ class BuildAgentClient(private val transport: BuildAgentTransport, private val r
     }
 
     fun status(requestId: String): BuildAgentResponse? = states[requestId]
+    fun request(requestId: String): BuildAgentRequest? = requests[requestId]
 
     fun activeRequests(): List<BuildAgentResponse> = states.values
         .filter { !it.isSuccessful && it.errorCode != BuildAgentErrorCode.CANCELLED && !it.isError }
