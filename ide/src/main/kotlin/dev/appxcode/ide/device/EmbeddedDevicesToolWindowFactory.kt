@@ -30,8 +30,8 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
             val snapshot = registry.snapshot()
             status.text = "Available: ${snapshot.availableCount}/${snapshot.totalCount}" +
                 if (snapshot.hasProviderErrors) " · Provider errors: ${snapshot.errorCount}" else ""
-            status.toolTipText = snapshot.providerErrors.entries
-                .joinToString("<br>", prefix = "<html>", postfix = "</html>") { "${it.key}: ${it.value}" }
+            status.toolTipText = snapshot.providerErrors.entries.takeIf { it.isNotEmpty() }
+                ?.joinToString("<br>", prefix = "<html>", postfix = "</html>") { "${it.key}: ${it.value}" }
         }
         fun refresh() { render(registry.discover()) }
         val panel = JPanel(BorderLayout())
