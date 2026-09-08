@@ -123,6 +123,7 @@ data class DeviceRegistrySnapshot(val devices: List<AppleDevice>, val providerEr
         require(deviceId.isNotBlank()) { "Device id must not be blank" }
         return devices.firstOrNull { it.id == deviceId }
     }
+    fun isRunnable(deviceId: String): Boolean = find(deviceId)?.state == DeviceState.AVAILABLE
 
     /** Selects a runnable device using the same preference across Xcode and Flutter flows. */
     fun preferredDevice(): AppleDevice? = availableDevices
