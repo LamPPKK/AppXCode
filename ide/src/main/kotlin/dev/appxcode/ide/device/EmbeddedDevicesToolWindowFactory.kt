@@ -21,6 +21,9 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
         val list = JBList<String>()
         list.name = "Embedded Devices"
         list.toolTipText = "Connected Apple devices and simulators"
+        val copyId = JButton("Copy ID")
+        copyId.isEnabled = false
+        list.addListSelectionListener { copyId.isEnabled = list.selectedIndex >= 0 }
         val status = JLabel()
         fun render(devices: List<AppleDevice>) {
             list.setListData(devices.map { "${it.name} · ${it.platform} · ${it.kind} · ${it.state} · ${it.id}" }.toTypedArray())
@@ -34,7 +37,7 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
         val panel = JPanel(BorderLayout())
         val actions = JPanel(BorderLayout())
         actions.add(JButton("Refresh").also { it.addActionListener { refresh() } }, BorderLayout.WEST)
-        actions.add(JButton("Copy ID").also { it.addActionListener {
+        actions.add(copyId.also { it.addActionListener {
             val selected = registry.discover().getOrNull(list.selectedIndex)
             selected?.id?.let { id -> Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(id), null) }
         } }, BorderLayout.EAST)
