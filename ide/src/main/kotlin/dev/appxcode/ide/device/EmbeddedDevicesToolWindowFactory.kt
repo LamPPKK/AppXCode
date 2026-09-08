@@ -11,16 +11,24 @@ import javax.swing.SwingUtilities
 import java.awt.BorderLayout
 import javax.swing.JButton
 import javax.swing.JPanel
+import javax.swing.JLabel
 
 class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val registry = project.getService(DeviceRegistryService::class.java)
         val list = JBList<String>()
-        fun render(devices: List<AppleDevice>) { list.setListData(devices.map { "${it.name} · ${it.platform} · ${it.kind} · ${it.state}" }.toTypedArray()) }
+        val status = JLabel()
+        fun render(devices: List<AppleDevice>) {
+            list.setListData(devices.map { "${it.name} · ${it.platform} · ${it.kind} · ${it.state}" }.toTypedArray())
+            val snapshot = registry.snapshot()
+            status.text = "Available: ${snapshot.availableCount}/${snapshot.totalCount}" +
+                if (snapshot.hasProviderErrors) " · Provider errors: ${snapshot.errorCount}" else ""
+        }
         fun refresh() { render(registry.discover()) }
         val panel = JPanel(BorderLayout())
         val actions = JPanel(BorderLayout())
         actions.add(JButton("Refresh").also { it.addActionListener { refresh() } }, BorderLayout.WEST)
+        actions.add(status, BorderLayout.CENTER)
         panel.add(actions, BorderLayout.NORTH)
         panel.add(list, BorderLayout.CENTER)
         refresh()
