@@ -111,6 +111,7 @@ data class DeviceRegistrySnapshot(val devices: List<AppleDevice>, val providerEr
     val vphoneDevices: List<AppleDevice> get() = devices.filter { it.kind == DeviceKind.VPHONE }
     val availableDevicesByKind: Map<DeviceKind, List<AppleDevice>> get() = availableDevices.groupBy(AppleDevice::kind)
     val runnableDevicesByKind: Map<DeviceKind, List<AppleDevice>> get() = availableDevicesByKind
+    val runnableCountsByKind: Map<DeviceKind, Int> get() = runnableDevicesByKind.mapValues { it.value.size }
     val offlineDevices: List<AppleDevice> get() = devices.filter { it.state == DeviceState.OFFLINE }
     val unknownDevices: List<AppleDevice> get() = devices.filter { it.state == DeviceState.UNKNOWN }
     val offlineDevicesByKind: Map<DeviceKind, List<AppleDevice>> get() = offlineDevices.groupBy(AppleDevice::kind)
