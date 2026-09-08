@@ -105,6 +105,7 @@ class DeviceRegistryService : Disposable {
     fun isClosed(): Boolean = registry.isClosed
     fun hasProvider(providerId: String): Boolean = registry.hasProvider(providerId)
     fun providerErrors(): Map<String, String> = registry.providerErrors()
+    fun hasProviderErrors(): Boolean = registry.snapshot().hasProviderErrors
     fun providerError(providerId: String): String? {
         require(providerId.isNotBlank()) { "Device provider id must not be blank" }
         return registry.providerErrors()[providerId]
