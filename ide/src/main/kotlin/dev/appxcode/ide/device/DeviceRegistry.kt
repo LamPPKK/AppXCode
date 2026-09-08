@@ -31,6 +31,10 @@ class DeviceRegistry : AutoCloseable {
     fun unregister(providerId: String) { if (providers.removeIf { it.id == providerId }) { providerErrors = providerErrors - providerId; notifyListeners() } }
     fun clear() { if (providers.isNotEmpty()) { providers.clear(); providerErrors = emptyMap(); notifyListeners() } }
     fun refresh() { if (!closed) notifyListeners() }
+    fun refreshSnapshot(): DeviceRegistrySnapshot {
+        if (!closed) notifyListeners()
+        return snapshot()
+    }
     fun refresh(providerId: String): Boolean {
         require(providerId.isNotBlank()) { "Device provider id must not be blank" }
         if (closed) return false
