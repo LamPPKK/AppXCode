@@ -34,7 +34,7 @@ class BuildAgentConnection(val endpoint: BuildAgentEndpoint? = null) : AutoClose
         return true
     }
 
-    private fun transition(next: ConnectionState) {
+    @Synchronized private fun transition(next: ConnectionState) {
         if (closed && next != ConnectionState.DISCONNECTED) return
         val previous = state
         state = next
