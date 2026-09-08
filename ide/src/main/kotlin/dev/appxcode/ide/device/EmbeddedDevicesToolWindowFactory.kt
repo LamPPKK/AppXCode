@@ -21,7 +21,7 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
         list.toolTipText = "Connected Apple devices and simulators"
         val status = JLabel()
         fun render(devices: List<AppleDevice>) {
-            list.setListData(devices.map { "${it.name} · ${it.platform} · ${it.kind} · ${it.state}" }.toTypedArray())
+            list.setListData(devices.map { "${it.name} · ${it.platform} · ${it.kind} · ${it.state} · ${it.id}" }.toTypedArray())
             val snapshot = registry.snapshot()
             status.text = "Available: ${snapshot.availableCount}/${snapshot.totalCount}" +
                 if (snapshot.hasProviderErrors) " · Provider errors: ${snapshot.errorCount}" else ""
