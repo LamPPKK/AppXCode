@@ -101,5 +101,6 @@ class DeviceRegistryService : Disposable {
     fun onSnapshotChanged(listener: (DeviceRegistrySnapshot) -> Unit): AutoCloseable =
         registry.onSnapshotChanged(listener)
     fun clear() = registry.clear()
+    fun closeRegistry() = registry.close()
     override fun dispose() = registry.close()
 }
