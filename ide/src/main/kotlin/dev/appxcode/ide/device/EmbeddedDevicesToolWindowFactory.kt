@@ -62,7 +62,9 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
         }, BorderLayout.WEST)
         actions.add(copyId.also { it.addActionListener {
             val selected = currentSnapshot.devices.getOrNull(list.selectedIndex)
-            selected?.id?.let { id -> Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(id), null) }
+            selected?.id?.let { id -> runCatching {
+                Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(id), null)
+            } }
         } }, BorderLayout.EAST)
         actions.add(preferred, BorderLayout.SOUTH)
         actions.add(status, BorderLayout.CENTER)
