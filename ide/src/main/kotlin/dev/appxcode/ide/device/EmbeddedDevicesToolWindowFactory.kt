@@ -96,7 +96,7 @@ class DeviceRegistryService : Disposable {
     fun refresh(providerId: String): Boolean = registry.refresh(providerId)
     fun onDevicesChanged(listener: (List<AppleDevice>) -> Unit): AutoCloseable = registry.onDevicesChanged(listener)
     fun onSnapshotChanged(listener: (DeviceRegistrySnapshot) -> Unit): AutoCloseable =
-        registry.onDevicesChanged { listener(registry.snapshot()) }
+        registry.onSnapshotChanged(listener)
     fun clear() = registry.clear()
     override fun dispose() = registry.clear()
 }

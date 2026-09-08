@@ -15,6 +15,7 @@ interface DeviceProvider {
 class DeviceRegistry {
     private val providers = CopyOnWriteArrayList<DeviceProvider>()
     private val listeners = CopyOnWriteArrayList<(List<AppleDevice>) -> Unit>()
+    private val snapshotListeners = CopyOnWriteArrayList<(DeviceRegistrySnapshot) -> Unit>()
     @Volatile private var providerErrors: Map<String, String> = emptyMap()
 
     fun register(provider: DeviceProvider) {
@@ -38,6 +39,11 @@ class DeviceRegistry {
         runCatching { listener(discover()) }
         return AutoCloseable { listeners.remove(listener) }
     }
+    fun onSnapshotChanged(listener: (DeviceRegistrySnapshot) -> Unit): AutoCloseable {
+        snapshotListeners += listener
+        runCatching { listener(snapshot()) }
+        return AutoCloseable { snapshotListeners.remove(listener) }
+    }
     fun discover(): List<AppleDevice> {
         val errors = linkedMapOf<String, String>()
         val devices = providers.flatMap { provider -> runCatching { provider.list() }.getOrElse { error -> errors[provider.id] = error.message ?: error.javaClass.simpleName; emptyList() } }
@@ -54,7 +60,12 @@ class DeviceRegistry {
     }
     fun preferred(): AppleDevice? = snapshot().preferredDevice()
     fun select(deviceId: String? = null): AppleDevice? = snapshot().select(deviceId)
-    private fun notifyListeners() { val devices = discover(); listeners.forEach { runCatching { it(devices) } } }
+    private fun notifyListeners() {
+        val devices = discover()
+        val snapshot = DeviceRegistrySnapshot(devices, providerErrors)
+        listeners.forEach { runCatching { it(devices) } }
+        snapshotListeners.forEach { runCatching { it(snapshot) } }
+    }
 }
 
 data class DeviceRegistrySnapshot(val devices: List<AppleDevice>, val providerErrors: Map<String, String>) {
