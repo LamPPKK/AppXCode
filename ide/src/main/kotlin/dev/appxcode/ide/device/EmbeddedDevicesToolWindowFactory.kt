@@ -17,6 +17,8 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val registry = project.getService(DeviceRegistryService::class.java)
         val list = JBList<String>()
+        list.name = "Embedded Devices"
+        list.toolTipText = "Connected Apple devices and simulators"
         val status = JLabel()
         fun render(devices: List<AppleDevice>) {
             list.setListData(devices.map { "${it.name} · ${it.platform} · ${it.kind} · ${it.state}" }.toTypedArray())
