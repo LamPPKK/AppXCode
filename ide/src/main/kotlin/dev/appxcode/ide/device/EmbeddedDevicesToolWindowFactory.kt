@@ -40,6 +40,7 @@ class DeviceRegistryService : Disposable {
     fun discover(): List<AppleDevice> = registry.discover()
     fun snapshot(): DeviceRegistrySnapshot = registry.snapshot()
     fun availableDevices(): List<AppleDevice> = registry.snapshot().availableDevices
+    fun hasAvailableDevices(): Boolean = registry.snapshot().hasAvailable
     fun availableDevicesByKind(): Map<DeviceKind, List<AppleDevice>> = registry.snapshot().availableDevicesByKind
     fun offlineDevices(): List<AppleDevice> = registry.snapshot().offlineDevices
     fun unknownDevices(): List<AppleDevice> = registry.snapshot().unknownDevices
