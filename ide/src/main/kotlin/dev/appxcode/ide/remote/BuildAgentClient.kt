@@ -11,13 +11,22 @@ interface BuildArtifactTransport {
     fun download(request: BuildAgentArtifactRequest, destination: java.nio.file.Path): BuildAgentResponse
 }
 
-class BuildAgentClient(private val transport: BuildAgentTransport, private val retryPolicy: RetryPolicy = RetryPolicy()) {
+class BuildAgentClient(
+    private val transport: BuildAgentTransport,
+    private val retryPolicy: RetryPolicy = RetryPolicy(),
+    private val healthProvider: (() -> BuildAgentHealth?)? = null,
+    private val healthMaxAgeMillis: Long = 30_000,
+) {
     private val states = ConcurrentHashMap<String, BuildAgentResponse>()
     private val requests = ConcurrentHashMap<String, BuildAgentRequest>()
 
     fun submit(request: BuildAgentRequest): BuildAgentResponse {
         if (!request.isValid()) return BuildAgentResponse.rejected(request, BuildAgentErrorCode.INVALID_REQUEST, "invalid build agent request")
         if (request.isCancelled) return BuildAgentResponse.cancelled(request)
+        val health = healthProvider?.invoke()
+        if (health != null && !health.canAcceptRequests(healthMaxAgeMillis)) {
+            return health.asResponse(request.requestId, healthMaxAgeMillis)
+        }
         if (states.putIfAbsent(request.requestId, BuildAgentResponse.accepted(request)) != null) {
             return BuildAgentResponse.rejected(request, BuildAgentErrorCode.INVALID_REQUEST, "requestId already exists")
         }
