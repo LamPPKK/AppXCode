@@ -66,9 +66,13 @@ object TestFrameworkRegistry {
             .map { runCatching { Files.readString(it) }.getOrDefault("") }.joinToString("\n")
         return buildSet {
             if (text.contains("import XCTest") || text.contains("XCTestCase")) add(TestFramework.XCTEST)
-            if (text.contains("import Quick") || text.contains("QuickSpec")) add(TestFramework.QUICK)
-            if (text.contains("import Kiwi") || text.contains("describe(")) add(TestFramework.KIWI)
-            if (text.contains("Catch2") || text.contains("CATCH_CONFIG_MAIN")) add(TestFramework.CATCH)
+            if (text.contains("import Quick") || text.contains("QuickSpec") || manifestMentions(root, "Quick")) add(TestFramework.QUICK)
+            if (text.contains("import Kiwi") || text.contains("KiwiSpec") || manifestMentions(root, "Kiwi")) add(TestFramework.KIWI)
+            if (text.contains("Catch2") || text.contains("CATCH_CONFIG_MAIN") || manifestMentions(root, "Catch2")) add(TestFramework.CATCH)
         }
     }
+
+    private fun manifestMentions(root: Path, dependency: String): Boolean = listOf("Package.swift", "Podfile.lock", "Cartfile.resolved")
+        .asSequence().map(root::resolve).filter(Files::isRegularFile)
+        .any { runCatching { Files.readString(it) }.getOrDefault("").contains(dependency, ignoreCase = true) }
 }
