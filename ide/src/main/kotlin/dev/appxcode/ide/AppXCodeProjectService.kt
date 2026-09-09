@@ -307,6 +307,9 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
         return xcodeTestService.rerunFailed(container, scheme, "platform=$kind,name=${device.name},id=${device.id}", previous, configuration, timeout)
     }
     fun flutterPubGet(root: Path): FlutterCommandResult = flutter.pubGet(root)
+    fun flutterPubOutdated(root: Path): FlutterCommandResult = flutter.pubOutdated(root)
+    fun flutterPubUpgrade(root: Path): FlutterCommandResult = flutter.pubUpgrade(root)
+    fun flutterPubDeps(root: Path): FlutterCommandResult = flutter.pubDeps(root)
     fun flutterDoctor(root: Path): FlutterCommandResult = flutter.doctor(root)
     fun flutterRun(root: Path, deviceId: String? = null): FlutterCommandResult {
         val selected = devices.select(deviceId)

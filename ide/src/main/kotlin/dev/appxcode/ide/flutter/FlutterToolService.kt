@@ -62,6 +62,9 @@ class FlutterToolService(
         !java.nio.file.Files.isRegularFile(root.resolve("pubspec.yaml")) -> FlutterCommandResult(false, "pubspec.yaml not found", null)
         else -> runner(listOf(flutter, "pub", "get"), root)
     }
+    fun pubOutdated(root: Path): FlutterCommandResult = pubCommand(root, "outdated")
+    fun pubUpgrade(root: Path): FlutterCommandResult = pubCommand(root, "upgrade")
+    fun pubDeps(root: Path): FlutterCommandResult = pubCommand(root, "deps")
     fun doctor(root: Path): FlutterCommandResult = if (!java.nio.file.Files.isDirectory(root)) FlutterCommandResult(false, "Flutter project root does not exist", null) else runner(listOf(flutter, "doctor"), root)
     fun hotReload(root: Path): FlutterCommandResult = sendSignal(root, "r")
     fun hotRestart(root: Path): FlutterCommandResult = sendSignal(root, "R")
@@ -69,6 +72,12 @@ class FlutterToolService(
     private fun execute(root: Path, action: String, deviceId: String?): FlutterCommandResult =
         if (!java.nio.file.Files.isDirectory(root)) FlutterCommandResult(false, "Flutter project root does not exist", null)
         else runner(buildList { add(flutter); add(action); if (deviceId != null) { add("-d"); add(deviceId) } }, root)
+
+    private fun pubCommand(root: Path, action: String): FlutterCommandResult = when {
+        !java.nio.file.Files.isDirectory(root) -> FlutterCommandResult(false, "Flutter project root does not exist", null)
+        !java.nio.file.Files.isRegularFile(root.resolve("pubspec.yaml")) -> FlutterCommandResult(false, "pubspec.yaml not found", null)
+        else -> runner(listOf(flutter, "pub", action), root)
+    }
 
     private fun sendSignal(root: Path, signal: String): FlutterCommandResult {
         val process = session ?: return FlutterCommandResult(false, "No active Flutter session", null)
