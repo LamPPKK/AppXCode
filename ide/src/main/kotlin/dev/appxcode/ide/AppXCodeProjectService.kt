@@ -58,6 +58,8 @@ import dev.appxcode.ide.build.ExportOptions
 import dev.appxcode.ide.build.SigningService
 import dev.appxcode.ide.build.SigningConfiguration
 import dev.appxcode.ide.build.SigningCheck
+import dev.appxcode.ide.build.BuildCancellation
+import dev.appxcode.ide.build.XcodeBuildRequest
 import dev.appxcode.ide.test.XcodeTestService
 import dev.appxcode.ide.test.XcodeTestResult
 import dev.appxcode.ide.test.TestFrameworkCommand
@@ -182,6 +184,9 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun hasRunConfiguration(name: String): Boolean = runConfigurations.contains(name)
     fun clearRunConfigurations() = runConfigurations.clear()
     fun xcodeBuild(configuration: RunConfiguration, container: Path, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult = xcodeBuildService.execute(configuration, container, timeout)
+    /** Executes an arbitrary xcodebuild action while exposing cooperative cancellation and output streaming. */
+    fun xcodeBuild(request: XcodeBuildRequest, timeout: Duration = Duration.ofMinutes(15), cancellation: BuildCancellation? = null, onOutput: (String) -> Unit = {}): XcodeBuildResult =
+        xcodeBuildService.execute(request, timeout, cancellation, onOutput)
     fun xcodeBuildOnDevice(configuration: RunConfiguration, container: Path, device: AppleDevice, timeout: Duration = Duration.ofMinutes(15)): XcodeBuildResult {
         require(device.state == dev.appxcode.ide.device.DeviceState.AVAILABLE) { "Device is not available: ${device.id}" }
         val platform = when (device.platform.lowercase()) {
