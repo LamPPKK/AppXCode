@@ -19,8 +19,8 @@ object ProjectSnapshotLoader {
         val project = containers.firstOrNull { it.kind == XcodeContainerKind.PROJECT }
         val schemes = containers.flatMap(XcodeProjectModel::readSchemes)
             .distinctBy(XcodeScheme::name)
-            .sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, XcodeScheme::name))
+            .sortedBy { it.name.lowercase() }
         val dependencies = runCatching { DependencyModel.read(root) }.getOrDefault(emptyList())
-        return ProjectSnapshot(root, containers, schemes, project?.let(XcodeProjectModel::readTargets) ?: emptyList(), dependencies)
+        return ProjectSnapshot(root, containers, schemes, project?.let { XcodeProjectModel.readTargets(it.path) } ?: emptyList(), dependencies)
     }
 }

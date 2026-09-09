@@ -26,7 +26,7 @@ class XcodeArchiveService(private val builder: XcodeBuildService) {
         )
         val archive = request.archivePath.takeIf { result.succeeded && Files.isDirectory(it) }
         return if (result.succeeded && archive == null) {
-            ArchiveResult(result.copy(succeeded = false, output = result.output + "\nArchive was not created: ${request.archivePath}"), null)
+            ArchiveResult(result.copy(exitCode = -1, output = result.output + "\nArchive was not created: ${request.archivePath}"), null)
         } else ArchiveResult(result, archive)
     }
 }

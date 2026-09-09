@@ -15,7 +15,11 @@ class SwiftSymbolIndex {
                 DECLARATION.find(line)?.let { symbols += SwiftSymbol(it.groupValues[2], it.groupValues[1], file, index + 1) }
             }
         }
-        symbols.sortWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }.thenBy { it.file.toString() }.thenBy { it.line })
+        symbols.sortWith(
+            compareBy<SwiftSymbol> { it.name.lowercase() }
+                .thenBy { it.file.toString() }
+                .thenBy { it.line },
+        )
     }
 
     @Synchronized fun find(name: String): List<SwiftSymbol> = symbols.filter { it.name == name }

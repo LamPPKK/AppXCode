@@ -10,6 +10,8 @@ data class AppleDevice(val id: String, val name: String, val platform: String, v
 interface DeviceProvider {
     val id: String
     fun list(): List<AppleDevice>
+    fun capabilities(device: AppleDevice): Set<DeviceCapability> = emptySet()
+    fun operations(device: AppleDevice): DeviceOperations = UnsupportedDeviceOperations()
 }
 
 class DeviceRegistry : AutoCloseable {
@@ -17,6 +19,7 @@ class DeviceRegistry : AutoCloseable {
     private val listeners = CopyOnWriteArrayList<(List<AppleDevice>) -> Unit>()
     private val snapshotListeners = CopyOnWriteArrayList<(DeviceRegistrySnapshot) -> Unit>()
     @Volatile private var providerErrors: Map<String, String> = emptyMap()
+    @Volatile private var deviceProviders: Map<String, DeviceProvider> = emptyMap()
     @Volatile private var closed = false
     val isClosed: Boolean get() = closed
 
@@ -54,14 +57,33 @@ class DeviceRegistry : AutoCloseable {
         runCatching { listener(snapshot()) }
         return AutoCloseable { snapshotListeners.remove(listener) }
     }
-    fun discover(): List<AppleDevice> {
+    private fun discoverSnapshot(): DeviceRegistrySnapshot {
         val errors = linkedMapOf<String, String>()
-        val devices = providers.flatMap { provider -> runCatching { provider.list() }.getOrElse { error -> errors[provider.id] = error.message ?: error.javaClass.simpleName; emptyList() } }
+        val capabilities = linkedMapOf<String, Set<DeviceCapability>>()
+        val providerByDevice = linkedMapOf<String, DeviceProvider>()
+        val devices = providers.flatMap { provider ->
+            runCatching { provider.list() }.getOrElse { error ->
+                errors[provider.id] = error.message ?: error.javaClass.simpleName
+                emptyList()
+            }.filter { device ->
+                if (providerByDevice.containsKey(device.id)) false else {
+                    providerByDevice[device.id] = provider
+                    capabilities[device.id] = runCatching { provider.capabilities(device) }.getOrDefault(emptySet())
+                    true
+                }
+            }
+        }
         providerErrors = errors.toMap()
-        return devices.distinctBy(AppleDevice::id).sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, AppleDevice::platform, AppleDevice::name))
+        deviceProviders = providerByDevice.toMap()
+        val sortedDevices = devices.sortedWith(
+            compareBy<AppleDevice> { it.platform.lowercase() }
+                .thenBy { it.name.lowercase() },
+        )
+        return DeviceRegistrySnapshot(sortedDevices, providerErrors, capabilities.toMap())
     }
+    fun discover(): List<AppleDevice> = discoverSnapshot().devices
     fun providerErrors(): Map<String, String> = providerErrors
-    fun snapshot(): DeviceRegistrySnapshot = DeviceRegistrySnapshot(discover(), providerErrors())
+    fun snapshot(): DeviceRegistrySnapshot = discoverSnapshot()
     fun providerIds(): List<String> = providers.map(DeviceProvider::id).sorted()
     fun hasProvider(providerId: String): Boolean = providers.any { it.id == providerId }
     fun find(deviceId: String): AppleDevice? {
@@ -70,10 +92,45 @@ class DeviceRegistry : AutoCloseable {
     }
     fun preferred(): AppleDevice? = snapshot().preferredDevice()
     fun select(deviceId: String? = null): AppleDevice? = snapshot().select(deviceId)
+    fun capabilities(deviceId: String): Set<DeviceCapability> {
+        require(deviceId.isNotBlank()) { "Device id must not be blank" }
+        return snapshot().capabilities(deviceId)
+    }
+    fun supports(deviceId: String, capability: DeviceCapability): Boolean = capabilities(deviceId).contains(capability)
+    fun isRunnable(deviceId: String): Boolean = snapshot().isRunnable(deviceId)
+    fun install(deviceId: String, app: java.nio.file.Path): DeviceOperationResult =
+        execute(deviceId, DeviceCapability.INSTALL_APP) { operations, device -> operations.install(device.id, app) }
+    fun launch(deviceId: String, bundleId: String): DeviceOperationResult =
+        execute(deviceId, DeviceCapability.LAUNCH_APP) { operations, device -> operations.launch(device.id, bundleId) }
+    fun logs(deviceId: String, bundleId: String? = null): Sequence<String> {
+        val snapshot = snapshot()
+        val device = snapshot.find(deviceId) ?: return emptySequence()
+        if (!snapshot.supports(deviceId, DeviceCapability.LOGS)) return emptySequence()
+        return deviceProviders[deviceId]?.operations(device)?.logs(deviceId, bundleId) ?: emptySequence()
+    }
+    fun screenshot(deviceId: String, destination: java.nio.file.Path): DeviceOperationResult =
+        execute(deviceId, DeviceCapability.SCREENSHOT) { operations, device -> operations.screenshot(device.id, destination) }
+
+    private fun execute(
+        deviceId: String,
+        capability: DeviceCapability,
+        operation: (DeviceOperations, AppleDevice) -> DeviceOperationResult,
+    ): DeviceOperationResult {
+        require(deviceId.isNotBlank()) { "Device id must not be blank" }
+        val snapshot = snapshot()
+        val device = snapshot.find(deviceId)
+            ?: return DeviceOperationResult(false, "Device not found: $deviceId")
+        if (!snapshot.supports(deviceId, capability)) {
+            return DeviceOperationResult(false, "${capability.name.lowercase().replace('_', ' ')} is unavailable for ${device.name}")
+        }
+        val provider = deviceProviders[deviceId]
+            ?: return DeviceOperationResult(false, "Device provider is unavailable for ${device.name}")
+        return runCatching { operation(provider.operations(device), device) }
+            .getOrElse { DeviceOperationResult(false, it.message ?: "Device operation failed") }
+    }
     private fun notifyListeners() {
-        val devices = discover()
-        val snapshot = DeviceRegistrySnapshot(devices, providerErrors)
-        listeners.forEach { runCatching { it(devices) } }
+        val snapshot = discoverSnapshot()
+        listeners.forEach { runCatching { it(snapshot.devices) } }
         snapshotListeners.forEach { runCatching { it(snapshot) } }
     }
     override fun close() {
@@ -81,12 +138,17 @@ class DeviceRegistry : AutoCloseable {
         closed = true
         providers.clear()
         providerErrors = emptyMap()
+        deviceProviders = emptyMap()
         listeners.clear()
         snapshotListeners.clear()
     }
 }
 
-data class DeviceRegistrySnapshot(val devices: List<AppleDevice>, val providerErrors: Map<String, String>) {
+data class DeviceRegistrySnapshot(
+    val devices: List<AppleDevice>,
+    val providerErrors: Map<String, String>,
+    val capabilitiesByDeviceId: Map<String, Set<DeviceCapability>> = emptyMap(),
+) {
     val totalCount: Int get() = devices.size
     val availableCount: Int get() = devices.count { it.state == DeviceState.AVAILABLE }
     val hasAvailable: Boolean get() = availableCount > 0
@@ -123,6 +185,8 @@ data class DeviceRegistrySnapshot(val devices: List<AppleDevice>, val providerEr
     val hasProviderErrors: Boolean get() = providerErrors.isNotEmpty()
     val errorCount: Int get() = providerErrors.size
 
+    fun capabilities(deviceId: String): Set<DeviceCapability> = capabilitiesByDeviceId[deviceId].orEmpty()
+    fun supports(deviceId: String, capability: DeviceCapability): Boolean = capabilities(deviceId).contains(capability)
     fun find(deviceId: String): AppleDevice? {
         require(deviceId.isNotBlank()) { "Device id must not be blank" }
         return devices.firstOrNull { it.id == deviceId }
@@ -132,7 +196,8 @@ data class DeviceRegistrySnapshot(val devices: List<AppleDevice>, val providerEr
     /** Selects a runnable device using the same preference across Xcode and Flutter flows. */
     fun preferredDevice(): AppleDevice? = availableDevices
         .sortedWith(compareBy<AppleDevice> { kindPriority(it.kind) }
-            .thenComparator(compareBy(String.CASE_INSENSITIVE_ORDER, AppleDevice::platform, AppleDevice::name)))
+            .thenBy { it.platform.lowercase() }
+            .thenBy { it.name.lowercase() })
         .firstOrNull()
 
     fun select(deviceId: String? = null): AppleDevice? {

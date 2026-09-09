@@ -119,8 +119,10 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun registerDeviceProvider(provider: DeviceProvider) = devices.register(provider)
     fun unregisterDeviceProvider(providerId: String) = devices.unregister(providerId)
     fun dependencies(root: Path): List<DependencyPin> = DependencyModel.read(root)
-    fun resolveSwiftPackages(root: Path, timeoutMillis: Long = 600_000): ResolveResult = dependencyResolver.resolveSwift(root, timeoutMillis)
-    fun installCocoaPods(root: Path, timeoutMillis: Long = 600_000): ResolveResult = dependencyResolver.installPods(root, timeoutMillis)
+    fun resolveSwiftPackages(root: Path, timeoutMillis: Long = 600_000): ResolveResult =
+        dependencyResolver.resolveSwift(root, timeoutMillis = timeoutMillis)
+    fun installCocoaPods(root: Path, timeoutMillis: Long = 600_000): ResolveResult =
+        dependencyResolver.installPods(root, timeoutMillis = timeoutMillis)
     fun flutterProject(root: Path): FlutterProject? = FlutterProjectDetector.detect(root)
     fun indexSwift(files: Iterable<Path>) { swiftSymbols.index(files) }
     fun findSwiftSymbols(name: String): List<SwiftSymbol> = swiftSymbols.find(name)

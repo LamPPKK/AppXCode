@@ -23,10 +23,13 @@ object XcodeProjectModel {
         val roots = listOf(container.path.resolve("xcshareddata/xcschemes"), container.path.resolve("xcuserdata"))
         return roots.filter(Files::isDirectory).flatMap { root -> runCatching {
             Files.walk(root).use { files ->
-                files.filter { it.fileName.toString().endsWith(".xcscheme") }.mapNotNull(::readScheme).toList()
+                files.iterator().asSequence()
+                    .filter { it.fileName.toString().endsWith(".xcscheme") }
+                    .mapNotNull(::readScheme)
+                    .toList()
             }
         }.getOrDefault(emptyList())
-        }.distinctBy(XcodeScheme::name).sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, XcodeScheme::name))
+        }.distinctBy(XcodeScheme::name).sortedBy { it.name.lowercase() }
     }
 
     fun readTargets(project: Path): List<XcodeTarget> {
@@ -39,7 +42,7 @@ object XcodeProjectModel {
             val product = Regex("productName = ([^;]+);").find(block)?.groupValues?.get(1)?.trim()
             val type = Regex("productType = ([^;]+);").find(block)?.groupValues?.get(1)?.trim()
             XcodeTarget(name, product, type)
-        }.distinctBy(XcodeTarget::name).sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER, XcodeTarget::name))
+        }.distinctBy(XcodeTarget::name).sortedBy { it.name.lowercase() }
     }
 
     fun readScheme(path: Path): XcodeScheme? {
@@ -52,7 +55,8 @@ object XcodeProjectModel {
     fun discover(root: Path): List<XcodeContainer> {
         if (!Files.isDirectory(root)) return emptyList()
         return runCatching { Files.walk(root, 4).use { stream ->
-            stream.filter { Files.isDirectory(it) }
+            stream.iterator().asSequence()
+                .filter { Files.isDirectory(it) }
                 .mapNotNull { path ->
                     when {
                         path.fileName.toString().endsWith(".xcworkspace") -> container(path, XcodeContainerKind.WORKSPACE)
@@ -60,7 +64,7 @@ object XcodeProjectModel {
                         else -> null
                     }
                 }
-                .sorted(compareBy(String.CASE_INSENSITIVE_ORDER) { it.displayName })
+                .sortedBy { it.displayName.lowercase() }
                 .toList()
         } }.getOrDefault(emptyList())
     }
@@ -70,9 +74,14 @@ object XcodeProjectModel {
         val user = path.resolve("xcuserdata")
         val schemeRoots = listOf(shared, user).filter(Files::isDirectory)
         val schemes = schemeRoots.flatMap { root -> runCatching {
-            Files.walk(root).use { files -> files.filter { it.fileName.toString().endsWith(".xcscheme") }.map { it.fileName.toString().removeSuffix(".xcscheme") }.toList() }
+            Files.walk(root).use { files ->
+                files.iterator().asSequence()
+                    .filter { it.fileName.toString().endsWith(".xcscheme") }
+                    .map { it.fileName.toString().removeSuffix(".xcscheme") }
+                    .toList()
+            }
         }.getOrDefault(emptyList())
-        }.distinct().sorted(String.CASE_INSENSITIVE_ORDER)
+        }.distinct().sortedWith(String.CASE_INSENSITIVE_ORDER)
         return XcodeContainer(path, kind, schemes)
     }
 }

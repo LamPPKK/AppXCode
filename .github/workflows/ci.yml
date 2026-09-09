@@ -36,13 +36,15 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.10'
+          gradle-version: '9.1.0'
       - name: Verify source layout
         shell: bash
         run: |
           test -f settings.gradle.kts
           test -f ide/src/main/resources/META-INF/plugin.xml
           grep -q 'dev.appxcode.ide' ide/src/main/resources/META-INF/plugin.xml
+      - name: Run tests
+        run: gradle test --no-daemon
       - name: Build plugin
         run: gradle buildPlugin --no-daemon
       - name: Verify plugin compatibility

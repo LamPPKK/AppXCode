@@ -1,0 +1,4 @@
+.gradle/
+.intellijPlatform/
+ide/build/
+build/

@@ -91,7 +91,7 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
     fun branches(root: Path): List<GitBranch> = run(root, listOf("git", "branch", "--all"))?.lineSequence()?.mapNotNull { line ->
         val name = line.trim().removePrefix("*").trim().takeIf(String::isNotBlank) ?: return@mapNotNull null
         GitBranch(name.removePrefix("remotes/"), name.startsWith("remotes/"))
-    }?.distinctBy { it.name }?.sortedBy(GitBranch::name) ?: emptyList()
+    }?.distinctBy { it.name }?.sortedBy(GitBranch::name)?.toList() ?: emptyList()
 
     fun createBranch(root: Path, name: String): Boolean {
         require(validRef(name)) { "invalid branch name" }
@@ -153,7 +153,7 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
     fun hooks(root: Path): List<String> = run(root, listOf("git", "config", "--get-regexp", "^core.hooksPath$"))
         ?.lineSequence()?.map { it.substringAfterLast(' ').trim() }?.filter(String::isNotBlank)?.toList() ?: emptyList()
 
-    private fun run(root: Path, args: List<String>): String = runCatching { command(args, root) }.getOrNull()
+    private fun run(root: Path, args: List<String>): String? = runCatching { command(args, root) }.getOrNull()
     private fun updateIndex(root: Path, files: Collection<Path>, add: Boolean): Boolean {
         require(files.isNotEmpty()) { "At least one file is required" }
         val relative = files.map { file ->

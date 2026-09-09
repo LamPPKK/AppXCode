@@ -5,12 +5,12 @@
   <description>Apple platform development support for the IntelliJ Platform.</description>
   <idea-version since-build="251" />
   <depends>com.intellij.modules.platform</depends>
-  <projectService serviceImplementation="dev.appxcode.ide.AppXCodeProjectService" />
-  <postStartupActivity implementation="dev.appxcode.ide.AppXCodeStartupActivity" />
   <extensions defaultExtensionNs="com.intellij">
     <toolWindow id="Embedded Devices" anchor="right" factoryClass="dev.appxcode.ide.device.EmbeddedDevicesToolWindowFactory" />
+    <projectService serviceImplementation="dev.appxcode.ide.AppXCodeProjectService" />
+    <projectService serviceImplementation="dev.appxcode.ide.device.DeviceRegistryService" />
+    <postStartupActivity implementation="dev.appxcode.ide.AppXCodeStartupActivity" />
   </extensions>
-  <projectService serviceImplementation="dev.appxcode.ide.device.DeviceRegistryService" />
   <actions>
     <action id="AppXCode.RefreshEmbeddedDevices" class="dev.appxcode.ide.device.RefreshDevicesAction" />
   </actions>

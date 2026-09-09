@@ -19,7 +19,12 @@ class ObjCSymbolIndex {
                         ?.let { symbols += ObjCSymbol(it.groupValues[1], "method", file, index + 1) }
                 }
             }
-        symbols.sortWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name }.thenBy { it.kind }.thenBy { it.file.toString() }.thenBy { it.line })
+        symbols.sortWith(
+            compareBy<ObjCSymbol> { it.name.lowercase() }
+                .thenBy { it.kind }
+                .thenBy { it.file.toString() }
+                .thenBy { it.line },
+        )
     }
 
     @Synchronized fun find(name: String): List<ObjCSymbol> = symbols.filter { it.name == name }

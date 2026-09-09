@@ -3,6 +3,8 @@ package dev.appxcode.ide.device
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.PathManager
 import com.intellij.ui.components.JBList
 import com.intellij.ui.content.ContentFactory
 import com.intellij.openapi.util.Disposer
@@ -27,7 +29,21 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
         copyId.name = "Copy selected device ID"
         copyId.toolTipText = "Copy the selected device identifier"
         copyId.isEnabled = false
-        list.addListSelectionListener { copyId.isEnabled = list.selectedIndex >= 0 }
+        val screenshot = JButton("Screenshot")
+        screenshot.name = "Capture selected device screenshot"
+        screenshot.toolTipText = "Screenshot is unavailable for the selected device"
+        screenshot.isEnabled = false
+        fun updateSelectionActions() {
+            val selected = currentSnapshot.devices.getOrNull(list.selectedIndex)
+            copyId.isEnabled = selected != null
+            screenshot.isEnabled = selected?.let { currentSnapshot.supports(it.id, DeviceCapability.SCREENSHOT) } == true
+            screenshot.toolTipText = if (screenshot.isEnabled) {
+                "Capture a screenshot from ${selected?.name.orEmpty()}"
+            } else {
+                "Screenshot is unavailable for the selected device"
+            }
+        }
+        list.addListSelectionListener { updateSelectionActions() }
         val preferred = JButton("Preferred")
         preferred.name = "Select preferred device"
         preferred.toolTipText = "Select the preferred available device"
@@ -41,6 +57,7 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
             }
         }
         val status = JLabel()
+        val operationStatus = JLabel(" ")
         fun render(snapshot: DeviceRegistrySnapshot) {
             currentSnapshot = snapshot
             list.setListData(snapshot.devices.map { "${it.name} · ${it.platform} · ${it.kind} · ${it.state} · ${it.id}" }.toTypedArray())
@@ -51,6 +68,7 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
             status.toolTipText = snapshot.providerErrors.entries.takeIf { it.isNotEmpty() }
                 ?.joinToString("<br>", prefix = "<html>", postfix = "</html>") { "${it.key}: ${it.value}" }
             preferred.isEnabled = snapshot.hasAvailable
+            updateSelectionActions()
         }
         fun refresh() { render(registry.snapshot()) }
         val panel = JPanel(BorderLayout())
@@ -60,16 +78,44 @@ class EmbeddedDevicesToolWindowFactory : ToolWindowFactory {
             it.toolTipText = "Refresh connected devices"
             it.addActionListener { refresh() }
         }, BorderLayout.WEST)
-        actions.add(copyId.also { it.addActionListener {
+        val rightActions = JPanel()
+        rightActions.add(copyId.also { it.addActionListener {
             val selected = currentSnapshot.devices.getOrNull(list.selectedIndex)
             selected?.id?.let { id -> runCatching {
                 Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(id), null)
             } }
-        } }, BorderLayout.EAST)
+        } })
+        rightActions.add(screenshot.also { button ->
+            button.addActionListener {
+                val selected = currentSnapshot.devices.getOrNull(list.selectedIndex) ?: return@addActionListener
+                val safeId = selected.id.replace(Regex("[^A-Za-z0-9._-]"), "_")
+                val destination = java.nio.file.Path.of(
+                    PathManager.getTempPath(),
+                    "appxcode",
+                    "screenshots",
+                    "$safeId-${System.currentTimeMillis()}.png",
+                )
+                button.isEnabled = false
+                operationStatus.text = "Capturing screenshot from ${selected.name}…"
+                ApplicationManager.getApplication().executeOnPooledThread {
+                    val result = registry.screenshot(selected.id, destination)
+                    SwingUtilities.invokeLater {
+                        operationStatus.text = if (result.success) {
+                            "Screenshot saved to $destination"
+                        } else {
+                            "Screenshot failed: ${result.message}"
+                        }
+                        updateSelectionActions()
+                    }
+                }
+            }
+        })
+        actions.add(rightActions, BorderLayout.EAST)
         actions.add(preferred, BorderLayout.SOUTH)
         actions.add(status, BorderLayout.CENTER)
         panel.add(actions, BorderLayout.NORTH)
         panel.add(list, BorderLayout.CENTER)
+        panel.add(operationStatus, BorderLayout.SOUTH)
         refresh()
         val content = ContentFactory.getInstance().createContent(panel, "Devices", false)
         val subscription = registry.onSnapshotChanged { snapshot -> SwingUtilities.invokeLater { render(snapshot) } }
@@ -87,6 +133,8 @@ class DeviceRegistryService : Disposable {
     fun discover(): List<AppleDevice> = registry.discover()
     fun snapshot(): DeviceRegistrySnapshot = registry.snapshot()
     fun availableDevices(): List<AppleDevice> = registry.snapshot().availableDevices
+    fun capabilities(deviceId: String): Set<DeviceCapability> = registry.capabilities(deviceId)
+    fun supports(deviceId: String, capability: DeviceCapability): Boolean = registry.supports(deviceId, capability)
     fun runnableDeviceIds(): List<String> = registry.snapshot().runnableDeviceIds
     fun hasRunnableDevices(): Boolean = registry.snapshot().hasRunnableDevices
     fun hasPhysicalAvailable(): Boolean = registry.snapshot().hasPhysicalAvailable
@@ -114,6 +162,10 @@ class DeviceRegistryService : Disposable {
         require(providerId.isNotBlank()) { "Device provider id must not be blank" }
         return registry.providerErrors()[providerId]
     }
+    fun install(deviceId: String, app: java.nio.file.Path): DeviceOperationResult = registry.install(deviceId, app)
+    fun launch(deviceId: String, bundleId: String): DeviceOperationResult = registry.launch(deviceId, bundleId)
+    fun logs(deviceId: String, bundleId: String? = null): Sequence<String> = registry.logs(deviceId, bundleId)
+    fun screenshot(deviceId: String, destination: java.nio.file.Path): DeviceOperationResult = registry.screenshot(deviceId, destination)
     fun refresh() = registry.refresh()
     fun refreshSnapshot(): DeviceRegistrySnapshot {
         return registry.refreshSnapshot()
