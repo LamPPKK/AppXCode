@@ -126,6 +126,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun installCocoaPods(root: Path, timeoutMillis: Long = 600_000): ResolveResult =
         dependencyResolver.installPods(root, timeoutMillis = timeoutMillis)
     fun flutterProject(root: Path): FlutterProject? = FlutterProjectDetector.detect(root)
+    fun discoverFlutterProjects(root: Path): List<FlutterProject> = FlutterProjectDetector.discover(root)
     fun indexSwift(files: Iterable<Path>) { swiftSymbols.index(files) }
     fun findSwiftSymbols(name: String): List<SwiftSymbol> = swiftSymbols.find(name)
     fun completeSwift(prefix: String): List<SwiftSymbol> = swiftSymbols.complete(prefix)
