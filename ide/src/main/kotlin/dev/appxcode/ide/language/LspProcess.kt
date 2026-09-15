@@ -82,6 +82,16 @@ class LspProcessManager(private val config: LspServerConfig) : AutoCloseable {
         return start()
     }
 
+    fun initialize(rootUri: String, timeoutMillis: Long = 5_000): Boolean {
+        val response = request(
+            "initialize",
+            "{\"processId\":null,\"rootUri\":${jsonString(rootUri)},\"capabilities\":{},\"clientInfo\":{\"name\":\"AppXCode\"}}",
+            timeoutMillis,
+        ) ?: return false
+        if (!response.contains("\"result\"")) return false
+        return notify("initialized", "{}")
+    }
+
     @Synchronized
     override fun close() {
         runCatching { output?.let { writeMessage("{\"jsonrpc\":\"2.0\",\"method\":\"exit\",\"params\":{}}") } }
@@ -148,7 +158,7 @@ class LspProcessManager(private val config: LspServerConfig) : AutoCloseable {
         }
     }
 
-    private companion object {
+    internal companion object {
         val ID = Regex("\\\"id\\\"\\s*:\\s*(\\d+)")
         fun jsonString(value: String): String = buildString {
             append('"')
