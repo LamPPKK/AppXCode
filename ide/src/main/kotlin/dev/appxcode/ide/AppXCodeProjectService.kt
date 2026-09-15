@@ -38,6 +38,8 @@ import dev.appxcode.ide.flutter.FlutterAppleProject
 import dev.appxcode.ide.flutter.FlutterAppleProjectResolver
 import dev.appxcode.ide.language.SwiftSymbol
 import dev.appxcode.ide.language.SwiftSymbolIndex
+import dev.appxcode.ide.language.SwiftReference
+import dev.appxcode.ide.language.SwiftNavigationTarget
 import dev.appxcode.ide.language.ObjCSymbol
 import dev.appxcode.ide.language.ObjCSymbolIndex
 import dev.appxcode.ide.language.SwiftLanguageService
@@ -133,6 +135,10 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun flutterAppleProjects(project: FlutterProject): List<FlutterAppleProject> = FlutterAppleProjectResolver.resolve(project)
     fun indexSwift(files: Iterable<Path>) { swiftSymbols.index(files) }
     fun findSwiftSymbols(name: String): List<SwiftSymbol> = swiftSymbols.find(name)
+    fun findSwiftReferences(name: String): List<SwiftReference> = swiftSymbols.references(name)
+    fun swiftDeclarationTargets(name: String): List<SwiftNavigationTarget> = swiftSymbols.declarationTargets(name)
+    fun swiftUsageTargets(name: String, includeDeclarations: Boolean = false): List<SwiftNavigationTarget> =
+        swiftSymbols.usageTargets(name, includeDeclarations)
     fun completeSwift(prefix: String): List<SwiftSymbol> = swiftSymbols.complete(prefix)
     fun swiftCompletions(file: Path, line: Int, column: Int): List<SwiftCompletion> =
         swiftLanguage?.complete(file, line, column)?.takeIf { it.isNotEmpty() }
