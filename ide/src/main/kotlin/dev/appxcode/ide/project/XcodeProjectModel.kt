@@ -42,14 +42,84 @@ object XcodeProjectModel {
         val pbx = if (project.fileName?.toString()?.endsWith(".xcodeproj") == true) project.resolve("project.pbxproj") else project
         if (!Files.isRegularFile(pbx)) return emptyList()
         val text = runCatching { Files.readString(pbx) }.getOrNull() ?: return emptyList()
-        val blocks = text.split("PBXNativeTarget = {").drop(1)
-        return blocks.mapNotNull { block ->
-            val name = Regex("name = ([^;]+);").find(block)?.groupValues?.get(1)?.trim() ?: return@mapNotNull null
-            val product = Regex("productName = ([^;]+);").find(block)?.groupValues?.get(1)?.trim()
-            val type = Regex("productType = ([^;]+);").find(block)?.groupValues?.get(1)?.trim()
+        return pbxObjects(text).filter { TARGET_ISA.containsMatchIn(it) }.mapNotNull { block ->
+            val name = pbxField(block, "name") ?: return@mapNotNull null
+            val product = pbxField(block, "productName")
+            val type = pbxField(block, "productType")
             XcodeTarget(name, product, type)
-        }.distinctBy(XcodeTarget::name).sortedBy { it.name.lowercase() }
+        }.distinctBy(XcodeTarget::name).sortedBy { it.name.lowercase() }.toList()
     }
+
+    private fun pbxObjects(text: String): Sequence<String> = sequence {
+        val source = stripPbxComments(text)
+        for (header in PBX_OBJECT_HEADER.findAll(source)) {
+            val open = header.range.last
+            val close = matchingBrace(source, open)
+            if (close > open) yield(source.substring(open + 1, close))
+        }
+    }
+
+    private fun stripPbxComments(text: String): String {
+        val result = StringBuilder(text.length)
+        var inString = false
+        var escaped = false
+        var lineComment = false
+        var blockComment = false
+        var index = 0
+        while (index < text.length) {
+            val char = text[index]
+            val next = text.getOrNull(index + 1)
+            when {
+                lineComment -> {
+                    if (char == '\n' || char == '\r') { lineComment = false; result.append(char) } else result.append(' ')
+                }
+                blockComment -> {
+                    if (char == '*' && next == '/') { result.append("  "); index++; blockComment = false }
+                    else result.append(if (char == '\n' || char == '\r') char else ' ')
+                }
+                inString -> {
+                    result.append(char)
+                    if (escaped) escaped = false else if (char == '\\') escaped = true else if (char == '"') inString = false
+                }
+                char == '"' -> { inString = true; result.append(char) }
+                char == '/' && next == '/' -> { result.append("  "); index++; lineComment = true }
+                char == '/' && next == '*' -> { result.append("  "); index++; blockComment = true }
+                else -> result.append(char)
+            }
+            index++
+        }
+        return result.toString()
+    }
+
+    private fun matchingBrace(text: String, open: Int): Int {
+        if (open < 0) return -1
+        var depth = 0
+        var inString = false
+        var escaped = false
+        var index = open
+        while (index < text.length) {
+            val char = text[index]
+            if (inString) {
+                if (escaped) escaped = false else if (char == '\\') escaped = true else if (char == '"') inString = false
+            } else when (char) {
+                '"' -> inString = true
+                '{' -> depth++
+                '}' -> if (--depth == 0) return index
+            }
+            index++
+        }
+        return -1
+    }
+
+    private fun pbxField(block: String, field: String): String? {
+        val value = Regex("(?m)^\\s*${Regex.escape(field)}\\s*=\\s*(\\\"(?:\\\\.|[^\\\"])*\\\"|[^;]+);")
+            .find(block)?.groupValues?.get(1)?.trim() ?: return null
+        return if (value.startsWith('"') && value.endsWith('"')) value.substring(1, value.length - 1)
+            .replace("\\\"", "\"").replace("\\\\", "\\") else value
+    }
+
+    private val PBX_OBJECT_HEADER = Regex("(?m)^\\s*[A-Fa-f0-9]{24}\\s*=\\s*\\{")
+    private val TARGET_ISA = Regex("(?m)^\\s*isa\\s*=\\s*PBXNativeTarget\\s*;")
 
     fun readScheme(path: Path): XcodeScheme? {
         if (!Files.isRegularFile(path) || !path.fileName.toString().endsWith(".xcscheme")) return null
