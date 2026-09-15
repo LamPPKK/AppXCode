@@ -31,5 +31,30 @@ object SymbolRenameEngine {
         return preview.edits.map { it.file }.toSet()
     }
 
+    /** Builds a rename preview from indexed Swift usages, avoiding matches in comments and strings. */
+    fun preview(index: SwiftSymbolIndex, symbol: String, replacement: String): RenamePreview {
+        require(symbol.matches(IDENTIFIER)) { "symbol must be an identifier" }
+        require(replacement.matches(IDENTIFIER)) { "replacement must be an identifier" }
+        val edits = index.references(symbol).mapNotNull { reference ->
+            val text = runCatching { Files.readString(reference.file) }.getOrNull() ?: return@mapNotNull null
+            val lineStart = lineStartOffset(text, reference.line) ?: return@mapNotNull null
+            val start = lineStart + reference.column - 1
+            val end = start + symbol.length
+            if (start < 0 || end > text.length || text.substring(start, end) != symbol) null
+            else TextEdit(reference.file, start, end, replacement)
+        }
+        return RenamePreview(symbol, replacement, edits)
+    }
+
     private val IDENTIFIER = Regex("[A-Za-z_][A-Za-z0-9_]*")
+
+    private fun lineStartOffset(text: String, line: Int): Int? {
+        if (line < 1) return null
+        if (line == 1) return 0
+        var currentLine = 1
+        text.forEachIndexed { index, character ->
+            if (character == '\n' && ++currentLine == line) return index + 1
+        }
+        return null
+    }
 }

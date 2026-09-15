@@ -15,12 +15,15 @@ class SwiftSymbolIndex {
         symbols.clear()
         references.clear()
         files.filter { Files.isRegularFile(it) && it.toString().endsWith(".swift") }.forEach { file ->
+            var inBlockComment = false
             runCatching { Files.readAllLines(file) }.getOrDefault(emptyList()).forEachIndexed { index, line ->
-                DECLARATION.find(line)?.let {
+                val code = stripCommentsAndStrings(line, inBlockComment)
+                inBlockComment = code.second
+                DECLARATION.find(code.first)?.let {
                     val nameGroup = it.groups[2]
                     symbols += SwiftSymbol(it.groupValues[2], it.groupValues[1], file, index + 1, (nameGroup?.range?.first ?: 0) + 1)
                 }
-                IDENTIFIER.findAll(line).forEach { match ->
+                IDENTIFIER.findAll(code.first).forEach { match ->
                     references += SwiftReference(match.value, file, index + 1, match.range.first + 1)
                 }
             }
@@ -54,5 +57,49 @@ class SwiftSymbolIndex {
     private companion object {
         val DECLARATION = Regex("\\b(class|struct|enum|func|var|let|protocol)\\s+([A-Za-z_][A-Za-z0-9_]*)")
         val IDENTIFIER = Regex("[A-Za-z_][A-Za-z0-9_]*")
+
+        fun stripCommentsAndStrings(line: String, initiallyInBlockComment: Boolean): Pair<String, Boolean> {
+            val result = line.toCharArray()
+            var inBlockComment = initiallyInBlockComment
+            var inString = false
+            var escaped = false
+            var index = 0
+            while (index < line.length) {
+                if (inBlockComment) {
+                    result[index] = ' '
+                    if (index + 1 < line.length && line[index] == '*' && line[index + 1] == '/') {
+                        result[index + 1] = ' '
+                        inBlockComment = false
+                        index += 2
+                    } else index++
+                    continue
+                }
+                if (inString) {
+                    result[index] = ' '
+                    if (escaped) escaped = false
+                    else if (line[index] == '\\') escaped = true
+                    else if (line[index] == '"') inString = false
+                    index++
+                    continue
+                }
+                if (index + 1 < line.length && line[index] == '/' && line[index + 1] == '/') {
+                    for (tail in index until line.length) result[tail] = ' '
+                    break
+                }
+                if (index + 1 < line.length && line[index] == '/' && line[index + 1] == '*') {
+                    result[index] = ' '
+                    result[index + 1] = ' '
+                    inBlockComment = true
+                    index += 2
+                    continue
+                }
+                if (line[index] == '"') {
+                    result[index] = ' '
+                    inString = true
+                }
+                index++
+            }
+            return String(result) to inBlockComment
+        }
     }
 }

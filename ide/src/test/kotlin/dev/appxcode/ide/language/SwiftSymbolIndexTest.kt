@@ -69,4 +69,24 @@ class SwiftSymbolIndexTest {
         assertTrue(index.references("Legacy").isEmpty())
         assertEquals(1, index.references("Current").size)
     }
+
+    @Test
+    fun indexedRenameSkipsCommentsAndStrings() {
+        val root = Files.createTempDirectory("appxcode-swift-rename")
+        val file = root.resolve("Feature.swift")
+        Files.writeString(file, "struct Account {}\nlet value: Account\n// Account\nlet text = \"Account\"\n/* Account */")
+        val index = SwiftSymbolIndex()
+        index.index(listOf(file))
+
+        assertEquals(2, index.references("Account").size)
+        val preview = SymbolRenameEngine.preview(index, "Account", "Profile")
+        assertEquals(2, preview.edits.size)
+        SymbolRenameEngine.apply(preview)
+        val updated = Files.readString(file)
+        assertTrue(updated.contains("struct Profile {}"))
+        assertTrue(updated.contains("let value: Profile"))
+        assertTrue(updated.contains("// Account"))
+        assertTrue(updated.contains("\"Account\""))
+        assertTrue(updated.contains("/* Account */"))
+    }
 }

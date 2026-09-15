@@ -40,6 +40,8 @@ import dev.appxcode.ide.language.SwiftSymbol
 import dev.appxcode.ide.language.SwiftSymbolIndex
 import dev.appxcode.ide.language.SwiftReference
 import dev.appxcode.ide.language.SwiftNavigationTarget
+import dev.appxcode.ide.language.SymbolRenameEngine
+import dev.appxcode.ide.language.RenamePreview
 import dev.appxcode.ide.language.ObjCSymbol
 import dev.appxcode.ide.language.ObjCSymbolIndex
 import dev.appxcode.ide.language.SwiftLanguageService
@@ -139,6 +141,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun swiftDeclarationTargets(name: String): List<SwiftNavigationTarget> = swiftSymbols.declarationTargets(name)
     fun swiftUsageTargets(name: String, includeDeclarations: Boolean = false): List<SwiftNavigationTarget> =
         swiftSymbols.usageTargets(name, includeDeclarations)
+    fun previewSwiftRename(name: String, replacement: String): RenamePreview = SymbolRenameEngine.preview(swiftSymbols, name, replacement)
+    fun applySwiftRename(preview: RenamePreview): Set<Path> = SymbolRenameEngine.apply(preview)
     fun completeSwift(prefix: String): List<SwiftSymbol> = swiftSymbols.complete(prefix)
     fun swiftCompletions(file: Path, line: Int, column: Int): List<SwiftCompletion> =
         swiftLanguage?.complete(file, line, column)?.takeIf { it.isNotEmpty() }
