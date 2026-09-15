@@ -21,6 +21,15 @@ data class XcodeContainer(
 
 data class XcodeScheme(val name: String, val buildables: List<String>, val testables: List<String>)
 data class XcodeTarget(val name: String, val productName: String?, val productType: String?)
+enum class XcodeConfigurationOwnerKind { PROJECT, TARGET, UNKNOWN }
+data class XcodeBuildConfiguration(
+    val name: String,
+    val buildSettings: Map<String, String>,
+    val id: String = "",
+    val ownerId: String? = null,
+    val ownerName: String? = null,
+    val ownerKind: XcodeConfigurationOwnerKind = XcodeConfigurationOwnerKind.UNKNOWN,
+)
 
 /** Discovers Xcode containers without converting or rewriting their native files. */
 object XcodeProjectModel {
@@ -42,7 +51,7 @@ object XcodeProjectModel {
         val pbx = if (project.fileName?.toString()?.endsWith(".xcodeproj") == true) project.resolve("project.pbxproj") else project
         if (!Files.isRegularFile(pbx)) return emptyList()
         val text = runCatching { Files.readString(pbx) }.getOrNull() ?: return emptyList()
-        return pbxObjects(text).filter { TARGET_ISA.containsMatchIn(it) }.mapNotNull { block ->
+        return pbxObjects(text).filter { TARGET_ISA.containsMatchIn(it.body) }.mapNotNull { (_, block) ->
             val name = pbxField(block, "name") ?: return@mapNotNull null
             val product = pbxField(block, "productName")
             val type = pbxField(block, "productType")
@@ -50,12 +59,81 @@ object XcodeProjectModel {
         }.distinctBy(XcodeTarget::name).sortedBy { it.name.lowercase() }.toList()
     }
 
-    private fun pbxObjects(text: String): Sequence<String> = sequence {
+    fun readBuildConfigurations(project: Path): List<XcodeBuildConfiguration> {
+        val pbx = if (project.fileName?.toString()?.endsWith(".xcodeproj") == true) project.resolve("project.pbxproj") else project
+        if (!Files.isRegularFile(pbx)) return emptyList()
+        val text = runCatching { Files.readString(pbx) }.getOrNull() ?: return emptyList()
+        val objects = pbxObjects(text).toList()
+        val configurationToList = objects.filter { CONFIGURATION_LIST_ISA.containsMatchIn(it.body) }
+            .flatMap { list -> PBX_ID.findAll(pbxField(list.body, "buildConfigurations").orEmpty()).map { it.value to list.id } }
+            .toMap()
+        val owners = objects.mapNotNull { objectValue ->
+            val kind = when {
+                TARGET_ISA.containsMatchIn(objectValue.body) -> XcodeConfigurationOwnerKind.TARGET
+                PROJECT_ISA.containsMatchIn(objectValue.body) -> XcodeConfigurationOwnerKind.PROJECT
+                else -> return@mapNotNull null
+            }
+            val listId = PBX_ID.find(pbxField(objectValue.body, "buildConfigurationList").orEmpty())?.value ?: return@mapNotNull null
+            listId to ConfigurationOwner(objectValue.id, pbxField(objectValue.body, "name"), kind)
+        }.toMap()
+        return objects.filter { CONFIGURATION_ISA.containsMatchIn(it.body) }.mapNotNull { objectValue ->
+            val block = objectValue.body
+            val name = pbxField(block, "name") ?: return@mapNotNull null
+            val owner = configurationToList[objectValue.id]?.let(owners::get)
+            XcodeBuildConfiguration(name, readBuildSettings(block), objectValue.id, owner?.id, owner?.name, owner?.kind ?: XcodeConfigurationOwnerKind.UNKNOWN)
+        }.distinctBy(XcodeBuildConfiguration::id)
+            .sortedWith(compareBy<XcodeBuildConfiguration>({ it.ownerKind.name }, { it.ownerName.orEmpty() }, { it.name.lowercase() }, { it.id }))
+            .toList()
+    }
+
+    private fun readBuildSettings(block: String): Map<String, String> {
+        val assignment = Regex("(?m)^\\s*buildSettings\\s*=\\s*\\{").find(block) ?: return emptyMap()
+        val open = assignment.range.last
+        val close = matchingBrace(block, open)
+        if (close <= open) return emptyMap()
+        val settings = block.substring(open + 1, close)
+        return parseAssignments(settings).toSortedMap()
+    }
+
+    private fun parseAssignments(text: String): Map<String, String> {
+        val result = linkedMapOf<String, String>()
+        var start = 0
+        var equals = -1
+        var depth = 0
+        var inString = false
+        var escaped = false
+        var index = 0
+        while (index < text.length) {
+            val char = text[index]
+            if (inString) {
+                if (escaped) escaped = false else if (char == '\\') escaped = true else if (char == '"') inString = false
+            } else when (char) {
+                '"' -> inString = true
+                '(', '[', '{' -> depth++
+                ')', ']', '}' -> if (depth > 0) depth--
+                '=' -> if (depth == 0 && equals < 0) equals = index
+                ';' -> if (depth == 0 && equals >= 0) {
+                    val key = unquote(text.substring(start, equals).trim())
+                    val value = unquote(text.substring(equals + 1, index).trim())
+                    if (key.isNotBlank()) result[key] = value
+                    start = index + 1
+                    equals = -1
+                }
+            }
+            index++
+        }
+        return result
+    }
+
+    private data class PbxObject(val id: String, val body: String)
+    private data class ConfigurationOwner(val id: String, val name: String?, val kind: XcodeConfigurationOwnerKind)
+
+    private fun pbxObjects(text: String): Sequence<PbxObject> = sequence {
         val source = stripPbxComments(text)
         for (header in PBX_OBJECT_HEADER.findAll(source)) {
             val open = header.range.last
             val close = matchingBrace(source, open)
-            if (close > open) yield(source.substring(open + 1, close))
+            if (close > open) yield(PbxObject(header.groupValues[1], source.substring(open + 1, close)))
         }
     }
 
@@ -114,12 +192,18 @@ object XcodeProjectModel {
     private fun pbxField(block: String, field: String): String? {
         val value = Regex("(?m)^\\s*${Regex.escape(field)}\\s*=\\s*(\\\"(?:\\\\.|[^\\\"])*\\\"|[^;]+);")
             .find(block)?.groupValues?.get(1)?.trim() ?: return null
-        return if (value.startsWith('"') && value.endsWith('"')) value.substring(1, value.length - 1)
-            .replace("\\\"", "\"").replace("\\\\", "\\") else value
+        return unquote(value)
     }
 
-    private val PBX_OBJECT_HEADER = Regex("(?m)^\\s*[A-Fa-f0-9]{24}\\s*=\\s*\\{")
+    private fun unquote(value: String): String = if (value.startsWith('"') && value.endsWith('"') && value.length >= 2)
+        value.substring(1, value.length - 1).replace("\\\"", "\"").replace("\\\\", "\\") else value
+
+    private val PBX_OBJECT_HEADER = Regex("(?m)^\\s*([A-Fa-f0-9]{24})\\s*=\\s*\\{")
+    private val PBX_ID = Regex("[A-Fa-f0-9]{24}")
     private val TARGET_ISA = Regex("(?m)^\\s*isa\\s*=\\s*PBXNativeTarget\\s*;")
+    private val CONFIGURATION_ISA = Regex("(?m)^\\s*isa\\s*=\\s*XCBuildConfiguration\\s*;")
+    private val CONFIGURATION_LIST_ISA = Regex("(?m)^\\s*isa\\s*=\\s*XCConfigurationList\\s*;")
+    private val PROJECT_ISA = Regex("(?m)^\\s*isa\\s*=\\s*PBXProject\\s*;")
 
     fun readScheme(path: Path): XcodeScheme? {
         if (!Files.isRegularFile(path) || !path.fileName.toString().endsWith(".xcscheme")) return null

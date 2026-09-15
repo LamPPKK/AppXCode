@@ -72,6 +72,7 @@ import dev.appxcode.ide.device.AppleDevice
 import dev.appxcode.ide.device.DeviceRegistrySnapshot
 import dev.appxcode.ide.device.DeviceProvider
 import dev.appxcode.ide.project.XcodeProjectModel
+import dev.appxcode.ide.project.XcodeBuildConfiguration
 @Service(Service.Level.PROJECT)
 class AppXCodeProjectService(private val project: Project) : Disposable {
     private val initialized = AtomicBoolean(false)
@@ -151,6 +152,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun completeMixed(prefix: String): List<String> =
         (swiftSymbols.complete(prefix).map { it.name } + objcSymbols.complete(prefix).map { it.name }).distinct().sorted()
     fun xcodeTargets(projectFile: Path): List<XcodeTarget> = XcodeProjectModel.readTargets(projectFile)
+    fun xcodeBuildConfigurations(projectFile: Path): List<XcodeBuildConfiguration> = XcodeProjectModel.readBuildConfigurations(projectFile)
     fun testFrameworks(root: Path): Set<TestFramework> = TestFrameworkRegistry.detect(root)
     fun discoverXCTest(root: Path): List<DiscoveredTest> = TestFrameworkRegistry.discoverXCTest(root)
     fun discoverTests(root: Path): List<DiscoveredTest> = TestFrameworkRegistry.discover(root)
