@@ -5,6 +5,9 @@ import java.nio.file.FileVisitResult
 import java.nio.file.Path
 import java.nio.file.SimpleFileVisitor
 import java.nio.file.attribute.BasicFileAttributes
+import javax.xml.XMLConstants
+import javax.xml.parsers.DocumentBuilderFactory
+import org.w3c.dom.Element
 
 enum class XcodeContainerKind { PROJECT, WORKSPACE }
 
@@ -50,11 +53,34 @@ object XcodeProjectModel {
 
     fun readScheme(path: Path): XcodeScheme? {
         if (!Files.isRegularFile(path) || !path.fileName.toString().endsWith(".xcscheme")) return null
-        val text = runCatching { Files.readString(path) }.getOrNull() ?: return null
-        val buildables = Regex("BuildableName=\\\"([^\\\"]+)\\\"").findAll(text).map { it.groupValues[1] }.distinct().toList()
-        val testables = Regex("BlueprintName=\\\"([^\\\"]+)\\\"").findAll(text).map { it.groupValues[1] }.distinct().toList()
+        val document = runCatching {
+            DocumentBuilderFactory.newInstance().apply {
+                setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
+                setFeature("http://xml.org/sax/features/external-general-entities", false)
+                setFeature("http://xml.org/sax/features/external-parameter-entities", false)
+                setAttribute(XMLConstants.ACCESS_EXTERNAL_DTD, "")
+                setAttribute(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "")
+                isXIncludeAware = false
+                isExpandEntityReferences = false
+            }.newDocumentBuilder().parse(path.toFile())
+        }.getOrNull() ?: return null
+        if (document.documentElement?.tagName != "Scheme") return null
+        val buildables = descendantReferences(document.documentElement, "BuildActionEntry", "BuildableName")
+        val testables = descendantReferences(document.documentElement, "TestableReference", "BlueprintName")
         return XcodeScheme(path.fileName.toString().removeSuffix(".xcscheme"), buildables, testables)
     }
+
+    private fun descendantReferences(root: Element, parentTag: String, attribute: String): List<String> = buildList {
+        val parents = root.getElementsByTagName(parentTag)
+        for (index in 0 until parents.length) {
+            val parent = parents.item(index) as? Element ?: continue
+            val references = parent.getElementsByTagName("BuildableReference")
+            for (referenceIndex in 0 until references.length) {
+                val value = (references.item(referenceIndex) as? Element)?.getAttribute(attribute).orEmpty()
+                if (value.isNotBlank()) add(value)
+            }
+        }
+    }.distinct()
     fun discover(root: Path): List<XcodeContainer> {
         if (!Files.isDirectory(root)) return emptyList()
         val containers = mutableListOf<XcodeContainer>()
