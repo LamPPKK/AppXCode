@@ -1,7 +1,10 @@
 package dev.appxcode.ide.dependency
 
 import java.nio.file.Files
+import java.nio.file.FileVisitResult
 import java.nio.file.Path
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
 
 enum class DependencyManager { SWIFT_PACKAGE_MANAGER, COCOAPODS }
 data class DependencyPin(val manager: DependencyManager, val name: String, val version: String?, val revision: String? = null)
@@ -12,8 +15,9 @@ object DependencyModel {
         swiftResolvedFiles(root).forEach { resolved ->
             addAll(runCatching { readSwiftPins(resolved) }.getOrDefault(emptyList()))
         }
-        val lock = root.resolve("Podfile.lock")
-        if (Files.isRegularFile(lock)) addAll(runCatching { readPodPins(lock) }.getOrDefault(emptyList()))
+        podLockFiles(root).forEach { lock ->
+            addAll(runCatching { readPodPins(lock) }.getOrDefault(emptyList()))
+        }
     }.distinctBy { listOf(it.manager.name, it.name.lowercase(), it.version.orEmpty(), it.revision.orEmpty()) }
 
     private fun swiftResolvedFiles(root: Path): List<Path> = buildList {
@@ -27,6 +31,25 @@ object DependencyModel {
             }
         }
     }.distinct().sortedBy(Path::toString)
+
+    private fun podLockFiles(root: Path): List<Path> {
+        val locks = mutableListOf<Path>()
+        runCatching {
+            Files.walkFileTree(root, object : SimpleFileVisitor<Path>() {
+                override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult =
+                    if (dir != root && dir.fileName.toString() in IGNORED_DEPENDENCY_DIRECTORIES) FileVisitResult.SKIP_SUBTREE
+                    else FileVisitResult.CONTINUE
+
+                override fun visitFile(file: Path, attrs: BasicFileAttributes): FileVisitResult {
+                    if (attrs.isRegularFile && file.fileName.toString() == "Podfile.lock") locks.add(file)
+                    return FileVisitResult.CONTINUE
+                }
+
+                override fun visitFileFailed(file: Path, exc: java.io.IOException): FileVisitResult = FileVisitResult.CONTINUE
+            })
+        }
+        return locks.distinct().sortedBy(Path::toString)
+    }
 
     private fun readSwiftPins(path: Path): List<DependencyPin> {
         val text = Files.readString(path)
@@ -61,6 +84,7 @@ object DependencyModel {
 
     private val PIN_START = Regex("\\\"(identity|package)\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"")
     private val PINS_FIELD = Regex("\\\"pins\\\"\\s*:")
+    private val IGNORED_DEPENDENCY_DIRECTORIES = setOf(".git", ".gradle", ".build", "Pods", "build", "DerivedData")
 
     private fun jsonObjects(text: String): Sequence<String> = sequence {
         val starts = ArrayDeque<Int>()

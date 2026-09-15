@@ -2,6 +2,7 @@ package dev.appxcode.ide.dependency
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.nio.file.Files
 
@@ -66,5 +67,28 @@ class DependencyModelTest {
         assertEquals(2, pins.size)
         assertNull(pins.first { it.name == "branch-only" }.version)
         assertEquals("3.0.0", pins.first { it.name == "versioned" }.version)
+    }
+
+    @Test
+    fun discoversNestedPodLocksAndPreservesVersionConflicts() {
+        val root = Files.createTempDirectory("appxcode-pods-monorepo")
+        val first = root.resolve("apps/consumer")
+        val second = root.resolve("packages/sdk/Example")
+        Files.createDirectories(first)
+        Files.createDirectories(second)
+        Files.writeString(first.resolve("Podfile.lock"), "PODS:\n  - Alamofire (5.9.1)\nDEPENDENCIES:\n")
+        Files.writeString(second.resolve("Podfile.lock"), "PODS:\n  - Alamofire (5.10.0)\nDEPENDENCIES:\n")
+
+        val pins = DependencyModel.read(root).filter { it.manager == DependencyManager.COCOAPODS }
+        assertEquals(setOf("5.9.1", "5.10.0"), pins.mapNotNull { it.version }.toSet())
+    }
+
+    @Test
+    fun ignoresVendoredPodLocks() {
+        val root = Files.createTempDirectory("appxcode-vendored-pods")
+        val pods = root.resolve("App/Pods/Vendor")
+        Files.createDirectories(pods)
+        Files.writeString(pods.resolve("Podfile.lock"), "PODS:\n  - ShouldNotAppear (1.0.0)\n")
+        assertTrue(DependencyModel.read(root).isEmpty())
     }
 }
