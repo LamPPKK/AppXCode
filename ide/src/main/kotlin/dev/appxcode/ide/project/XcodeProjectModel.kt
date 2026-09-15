@@ -1,7 +1,10 @@
 package dev.appxcode.ide.project
 
 import java.nio.file.Files
+import java.nio.file.FileVisitResult
 import java.nio.file.Path
+import java.nio.file.SimpleFileVisitor
+import java.nio.file.attribute.BasicFileAttributes
 
 enum class XcodeContainerKind { PROJECT, WORKSPACE }
 
@@ -54,19 +57,29 @@ object XcodeProjectModel {
     }
     fun discover(root: Path): List<XcodeContainer> {
         if (!Files.isDirectory(root)) return emptyList()
-        return runCatching { Files.walk(root, 4).use { stream ->
-            stream.iterator().asSequence()
-                .filter { Files.isDirectory(it) }
-                .mapNotNull { path ->
-                    when {
-                        path.fileName.toString().endsWith(".xcworkspace") -> container(path, XcodeContainerKind.WORKSPACE)
-                        path.fileName.toString().endsWith(".xcodeproj") -> container(path, XcodeContainerKind.PROJECT)
+        val containers = mutableListOf<XcodeContainer>()
+        runCatching {
+            Files.walkFileTree(root, object : SimpleFileVisitor<Path>() {
+                override fun preVisitDirectory(dir: Path, attrs: BasicFileAttributes): FileVisitResult {
+                    if (dir != root && dir.fileName.toString() in IGNORED_DIRECTORIES) return FileVisitResult.SKIP_SUBTREE
+                    val name = dir.fileName?.toString().orEmpty()
+                    val kind = when {
+                        name.endsWith(".xcworkspace") -> XcodeContainerKind.WORKSPACE
+                        name.endsWith(".xcodeproj") -> XcodeContainerKind.PROJECT
                         else -> null
                     }
+                    if (kind != null) {
+                        containers.add(container(dir, kind))
+                        return FileVisitResult.SKIP_SUBTREE
+                    }
+                    return FileVisitResult.CONTINUE
                 }
-                .sortedBy { it.displayName.lowercase() }
-                .toList()
-        } }.getOrDefault(emptyList())
+
+                override fun visitFileFailed(file: Path, exc: java.io.IOException): FileVisitResult = FileVisitResult.CONTINUE
+            })
+        }
+        return containers.distinctBy { it.path.toAbsolutePath().normalize() }
+            .sortedWith(compareBy<XcodeContainer>({ it.displayName.lowercase() }, { it.path.toString() }))
     }
 
     private fun container(path: Path, kind: XcodeContainerKind): XcodeContainer {
@@ -84,4 +97,6 @@ object XcodeProjectModel {
         }.distinct().sortedWith(String.CASE_INSENSITIVE_ORDER)
         return XcodeContainer(path, kind, schemes)
     }
+
+    private val IGNORED_DIRECTORIES = setOf(".git", ".gradle", ".build", "build", "Pods", "DerivedData", ".dart_tool")
 }
