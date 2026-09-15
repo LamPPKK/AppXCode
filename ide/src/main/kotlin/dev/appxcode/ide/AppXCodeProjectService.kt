@@ -34,6 +34,8 @@ import dev.appxcode.ide.dependency.ResolveResult
 import dev.appxcode.ide.flutter.FlutterProject
 import dev.appxcode.ide.flutter.FlutterProjectDetector
 import dev.appxcode.ide.flutter.FlutterCommandResult
+import dev.appxcode.ide.flutter.FlutterAppleProject
+import dev.appxcode.ide.flutter.FlutterAppleProjectResolver
 import dev.appxcode.ide.language.SwiftSymbol
 import dev.appxcode.ide.language.SwiftSymbolIndex
 import dev.appxcode.ide.language.ObjCSymbol
@@ -127,6 +129,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
         dependencyResolver.installPods(root, timeoutMillis = timeoutMillis)
     fun flutterProject(root: Path): FlutterProject? = FlutterProjectDetector.detect(root)
     fun discoverFlutterProjects(root: Path): List<FlutterProject> = FlutterProjectDetector.discover(root)
+    fun flutterAppleProjects(project: FlutterProject): List<FlutterAppleProject> = FlutterAppleProjectResolver.resolve(project)
     fun indexSwift(files: Iterable<Path>) { swiftSymbols.index(files) }
     fun findSwiftSymbols(name: String): List<SwiftSymbol> = swiftSymbols.find(name)
     fun completeSwift(prefix: String): List<SwiftSymbol> = swiftSymbols.complete(prefix)
