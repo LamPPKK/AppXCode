@@ -8,6 +8,8 @@ import java.nio.file.attribute.BasicFileAttributes
 import javax.xml.XMLConstants
 import javax.xml.parsers.DocumentBuilderFactory
 import org.w3c.dom.Element
+import org.w3c.dom.Document
+import org.w3c.dom.Node
 
 enum class XcodeContainerKind { PROJECT, WORKSPACE }
 
@@ -207,7 +209,61 @@ object XcodeProjectModel {
 
     fun readScheme(path: Path): XcodeScheme? {
         if (!Files.isRegularFile(path) || !path.fileName.toString().endsWith(".xcscheme")) return null
-        val document = runCatching {
+        val document = secureDocument(path) ?: return null
+        if (document.documentElement?.tagName != "Scheme") return null
+        val buildables = descendantReferences(document.documentElement, "BuildActionEntry", "BuildableName")
+        val testables = descendantReferences(document.documentElement, "TestableReference", "BlueprintName")
+        return XcodeScheme(path.fileName.toString().removeSuffix(".xcscheme"), buildables, testables)
+    }
+
+    fun readWorkspaceProjects(workspace: Path): List<Path> {
+        if (workspace.fileName?.toString()?.endsWith(".xcworkspace") != true) return emptyList()
+        val document = secureDocument(workspace.resolve("contents.xcworkspacedata")) ?: return emptyList()
+        if (document.documentElement?.tagName != "Workspace") return emptyList()
+        val containerBase = workspace.parent ?: return emptyList()
+        return workspaceProjects(document.documentElement, containerBase, containerBase)
+            .distinct()
+            .sortedBy(Path::toString)
+    }
+
+    private fun workspaceProjects(element: Element, groupBase: Path, containerBase: Path): List<Path> = buildList {
+        var child = element.firstChild
+        while (child != null) {
+            if (child.nodeType == Node.ELEMENT_NODE) {
+                val childElement = child as Element
+                when (childElement.tagName) {
+                    "FileRef" -> resolveWorkspaceLocation(childElement.getAttribute("location"), groupBase, containerBase)
+                        ?.takeIf { it.fileName?.toString()?.endsWith(".xcodeproj") == true && Files.isDirectory(it) }
+                        ?.let(::add)
+                    "Group" -> {
+                        val nestedBase = childElement.getAttribute("location")
+                            .takeIf(String::isNotBlank)
+                            ?.let { resolveWorkspaceLocation(it, groupBase, containerBase) }
+                            ?: groupBase
+                        addAll(workspaceProjects(childElement, nestedBase, containerBase))
+                    }
+                }
+            }
+            child = child.nextSibling
+        }
+    }
+
+    private fun resolveWorkspaceLocation(location: String, groupBase: Path, containerBase: Path): Path? {
+        val separator = location.indexOf(':')
+        if (separator <= 0) return null
+        val value = location.substring(separator + 1)
+        val path = when (location.substring(0, separator)) {
+            "group" -> groupBase.resolve(value)
+            "container" -> containerBase.resolve(value)
+            "absolute" -> runCatching { Path.of(value) }.getOrNull()
+            else -> null
+        }
+        return path?.toAbsolutePath()?.normalize()
+    }
+
+    private fun secureDocument(path: Path): Document? {
+        if (!Files.isRegularFile(path)) return null
+        return runCatching {
             DocumentBuilderFactory.newInstance().apply {
                 setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)
                 setFeature("http://xml.org/sax/features/external-general-entities", false)
@@ -217,11 +273,7 @@ object XcodeProjectModel {
                 isXIncludeAware = false
                 isExpandEntityReferences = false
             }.newDocumentBuilder().parse(path.toFile())
-        }.getOrNull() ?: return null
-        if (document.documentElement?.tagName != "Scheme") return null
-        val buildables = descendantReferences(document.documentElement, "BuildActionEntry", "BuildableName")
-        val testables = descendantReferences(document.documentElement, "TestableReference", "BlueprintName")
-        return XcodeScheme(path.fileName.toString().removeSuffix(".xcscheme"), buildables, testables)
+        }.getOrNull()
     }
 
     private fun descendantReferences(root: Element, parentTag: String, attribute: String): List<String> = buildList {
