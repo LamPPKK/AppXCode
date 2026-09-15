@@ -4,6 +4,7 @@ import dev.appxcode.ide.toolchain.AppleToolchain
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
+import java.util.concurrent.ConcurrentHashMap
 
 data class SwiftCompletion(val label: String, val detail: String? = null, val insertText: String = label)
 data class SwiftDiagnostic(val file: Path, val line: Int, val column: Int, val message: String, val severity: Severity)
@@ -35,9 +36,15 @@ class LspSwiftLanguageService(
     private val processManager: LspProcessManager
 ) : SwiftLanguageService, AutoCloseable {
     private val fallbackIndex = SwiftSymbolIndex()
-    private val openedDocuments = mutableMapOf<Path, String>()
+    private data class OpenDocument(var text: String, var version: Int)
+    private val openedDocuments = mutableMapOf<Path, OpenDocument>()
+    private val diagnosticsByFile = ConcurrentHashMap<Path, List<SwiftDiagnostic>>()
+    private val notificationSubscription: AutoCloseable
 
     init {
+        notificationSubscription = processManager.onNotification { method, message ->
+            if (method == "textDocument/publishDiagnostics") handleDiagnostics(message)
+        }
         if (processManager.start()) {
             processManager.initialize(workspace.toUri().toASCIIString())
         }
@@ -62,25 +69,65 @@ class LspSwiftLanguageService(
         fallbackIndex.index(files)
         return fallbackIndex.complete(prefix).map { SwiftCompletion(it.name, it.kind, it.name) }
     }
-    override fun diagnostics(files: List<Path>): List<SwiftDiagnostic> =
-        UnavailableSwiftLanguageService(toolchain).diagnostics(files)
+    override fun diagnostics(files: List<Path>): List<SwiftDiagnostic> {
+        val regularFiles = files.filter(Files::isRegularFile)
+        regularFiles.forEach(::syncDocument)
+        val fallback = UnavailableSwiftLanguageService(toolchain)
+        return regularFiles.flatMap { file -> diagnosticsByFile[file.toAbsolutePath().normalize()].orEmpty() }
+            .takeIf { it.isNotEmpty() }
+            ?: fallback.diagnostics(files)
+    }
     override fun definition(file: Path, line: Int, column: Int): List<SwiftDocumentPosition> =
         locations("textDocument/definition", file, line, column, null)
     override fun references(file: Path, line: Int, column: Int, includeDeclaration: Boolean): List<SwiftDocumentPosition> =
         locations("textDocument/references", file, line, column, "\"context\":{\"includeDeclaration\":$includeDeclaration}")
-    override fun close() = processManager.close()
+    fun closeDocument(file: Path) {
+        val normalized = file.toAbsolutePath().normalize()
+        openedDocuments.remove(normalized) ?: return
+        processManager.notify(
+            "textDocument/didClose",
+            "{\"textDocument\":{\"uri\":${json(normalized.toUri().toASCIIString())}}}"
+        )
+        diagnosticsByFile.remove(normalized)
+    }
+
+    override fun close() {
+        openedDocuments.keys.toList().forEach(::closeDocument)
+        runCatching { notificationSubscription.close() }
+        processManager.close()
+    }
 
     private fun syncDocument(file: Path) {
-        val text = runCatching { Files.readString(file) }.getOrNull() ?: return
-        val previous = openedDocuments[file]
-        val uri = json(file.toUri().toASCIIString())
+        val normalized = file.toAbsolutePath().normalize()
+        val text = runCatching { Files.readString(normalized) }.getOrNull() ?: return
+        val previous = openedDocuments[normalized]
+        val uri = json(normalized.toUri().toASCIIString())
         val encodedText = json(text)
         if (previous == null) {
             processManager.notify("textDocument/didOpen", "{\"textDocument\":{\"uri\":$uri,\"languageId\":\"swift\",\"version\":1,\"text\":$encodedText}}")
-        } else if (previous != text) {
-            processManager.notify("textDocument/didChange", "{\"textDocument\":{\"uri\":$uri,\"version\":2},\"contentChanges\":[{\"text\":$encodedText}]}")
+            openedDocuments[normalized] = OpenDocument(text, 1)
+        } else if (previous.text != text) {
+            val version = previous.version + 1
+            processManager.notify("textDocument/didChange", "{\"textDocument\":{\"uri\":$uri,\"version\":$version},\"contentChanges\":[{\"text\":$encodedText}]}")
+            previous.text = text
+            previous.version = version
         }
-        openedDocuments[file] = text
+    }
+
+    private fun handleDiagnostics(message: String) {
+        val uri = DIAGNOSTIC_URI.find(message)?.groupValues?.getOrNull(1) ?: return
+        val file = runCatching { Path.of(URI(unescape(uri))).toAbsolutePath().normalize() }.getOrNull() ?: return
+        val diagnostics = DIAGNOSTIC.findAll(message).mapNotNull { match ->
+            val severity = when (match.groupValues[3].toIntOrNull()) {
+                1 -> Severity.ERROR
+                2 -> Severity.WARNING
+                else -> Severity.INFO
+            }
+            val line = match.groupValues[1].toIntOrNull()?.plus(1) ?: return@mapNotNull null
+            val column = match.groupValues[2].toIntOrNull()?.plus(1) ?: return@mapNotNull null
+            SwiftDiagnostic(file, line, column, unescape(match.groupValues[4]), severity)
+        }.toList()
+        diagnosticsByFile[file] = diagnostics
     }
 
     private fun locations(method: String, file: Path, line: Int, column: Int, extra: String?): List<SwiftDocumentPosition> {
@@ -108,6 +155,8 @@ class LspSwiftLanguageService(
         val TOKEN = Regex("[A-Za-z_][A-Za-z0-9_]*$")
         val COMPLETION = Regex("\\{[^{}]*\\\"label\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"(?:[^{}]*\\\"detail\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\")?[^{}]*}")
         val LOCATION = Regex("\\\"uri\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"[^{}]*?\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)")
+        val DIAGNOSTIC_URI = Regex("\\\"uri\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
+        val DIAGNOSTIC = Regex("\\\"range\\\"\\s*:\\s*\\{\\s*\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"severity\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"message\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
         fun json(value: String): String = LspProcessManager.jsonString(value)
         fun unescape(value: String): String = value.replace("\\\"", "\"").replace("\\\\", "\\")
     }

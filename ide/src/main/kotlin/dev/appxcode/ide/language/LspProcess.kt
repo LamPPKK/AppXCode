@@ -5,6 +5,7 @@ import java.io.BufferedOutputStream
 import java.nio.charset.StandardCharsets
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
 data class LspServerConfig(val executable: Path, val workspace: Path, val arguments: List<String> = emptyList())
@@ -19,6 +20,7 @@ class LspProcessManager(private val config: LspServerConfig) : AutoCloseable {
     private var readerThread: Thread? = null
     private val nextId = AtomicInteger(1)
     private val responses = ConcurrentHashMap<Int, String>()
+    private val notificationListeners = CopyOnWriteArrayList<(String, String) -> Unit>()
 
     @Synchronized
     fun start(): Boolean {
@@ -92,6 +94,11 @@ class LspProcessManager(private val config: LspServerConfig) : AutoCloseable {
         return notify("initialized", "{}")
     }
 
+    fun onNotification(listener: (method: String, message: String) -> Unit): AutoCloseable {
+        notificationListeners += listener
+        return AutoCloseable { notificationListeners -= listener }
+    }
+
     @Synchronized
     override fun close() {
         runCatching { output?.let { writeMessage("{\"jsonrpc\":\"2.0\",\"method\":\"exit\",\"params\":{}}") } }
@@ -121,7 +128,14 @@ class LspProcessManager(private val config: LspServerConfig) : AutoCloseable {
             while (process?.isAlive == true) {
                 val message = readMessage(stream) ?: break
                 val id = ID.find(message)?.groupValues?.getOrNull(1)?.toIntOrNull()
-                if (id != null) responses[id] = message
+                if (id != null) {
+                    responses[id] = message
+                } else {
+                    val method = METHOD.find(message)?.groupValues?.getOrNull(1)
+                    if (method != null) notificationListeners.forEach { listener ->
+                        runCatching { listener(method, message) }
+                    }
+                }
             }
         } catch (_: Exception) {
             if (state != LspState.STOPPED) state = LspState.FAILED
@@ -160,6 +174,7 @@ class LspProcessManager(private val config: LspServerConfig) : AutoCloseable {
 
     internal companion object {
         val ID = Regex("\\\"id\\\"\\s*:\\s*(\\d+)")
+        val METHOD = Regex("\\\"method\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
         fun jsonString(value: String): String = buildString {
             append('"')
             value.forEach { character ->
