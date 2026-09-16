@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">AppXCode AX logo</title>
+  <defs>
+    <linearGradient id="ax" x1="12" y1="12" x2="116" y2="116" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00C7D9"/>
+      <stop offset=".52" stop-color="#2583E8"/>
+      <stop offset="1" stop-color="#16D7A0"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#ax)" d="M9 20 104 4l15 28-67 11 16 56 49-11 6 28-96 18L9 20Z"/>
+  <path fill="#0B0D12" d="M35 31h58v66H35z"/>
+  <path fill="#FFF" d="m45 82 15-38h10l15 38H75l-3-9H58l-3 9h-10Zm16-18h8l-4-12-4 12Zm17 18 11-20-11-20h10l6 11 6-11h10L99 62l11 20H100l-7-12-7 12H78Z"/>
+</svg>

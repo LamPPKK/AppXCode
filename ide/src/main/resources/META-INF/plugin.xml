@@ -2,6 +2,7 @@
   <id>dev.appxcode.ide</id>
   <name>AppXCode</name>
   <vendor email="hello@appxcode.dev">AppXCode</vendor>
+  <icon>/icons/appxcode-logo.svg</icon>
   <description>Apple platform development support for the IntelliJ Platform.</description>
   <idea-version since-build="251" />
   <depends>com.intellij.modules.platform</depends>
