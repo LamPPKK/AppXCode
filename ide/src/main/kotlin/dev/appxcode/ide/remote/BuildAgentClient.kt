@@ -23,7 +23,7 @@ class BuildAgentClient(
     private val retryPolicy: RetryPolicy = RetryPolicy(),
     private val healthProvider: (() -> BuildAgentHealth?)? = null,
     private val healthMaxAgeMillis: Long = 30_000,
-) {
+) : AutoCloseable {
     private val states = ConcurrentHashMap<String, BuildAgentResponse>()
     private val requests = ConcurrentHashMap<String, BuildAgentRequest>()
     private val executor: ExecutorService = Executors.newCachedThreadPool { runnable ->
@@ -187,7 +187,7 @@ class BuildAgentClient(
 
     fun forget(requestId: String): Boolean = states.remove(requestId) != null
 
-    fun close() {
+    override fun close() {
         cancelAll()
         executor.shutdownNow()
     }
