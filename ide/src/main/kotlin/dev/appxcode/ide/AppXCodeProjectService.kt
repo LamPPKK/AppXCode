@@ -139,6 +139,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun launchOnDevice(deviceId: String, bundleId: String): DeviceOperationResult = devices.launch(deviceId, bundleId)
     fun deviceLogs(deviceId: String, bundleId: String? = null): Sequence<String> = devices.logs(deviceId, bundleId)
     fun deviceScreenshot(deviceId: String, destination: Path): DeviceOperationResult = devices.screenshot(deviceId, destination)
+    fun deviceOperations(deviceId: String): dev.appxcode.ide.device.DeviceOperations? = devices.operations(deviceId)
     fun registerDeviceProvider(provider: DeviceProvider) = devices.register(provider)
     fun unregisterDeviceProvider(providerId: String) = devices.unregister(providerId)
     fun dependencies(root: Path): List<DependencyPin> = DependencyModel.read(root)

@@ -97,6 +97,12 @@ class DeviceRegistry : AutoCloseable {
         return snapshot().capabilities(deviceId)
     }
     fun supports(deviceId: String, capability: DeviceCapability): Boolean = capabilities(deviceId).contains(capability)
+    fun operations(deviceId: String): DeviceOperations? {
+        require(deviceId.isNotBlank()) { "Device id must not be blank" }
+        val snapshot = snapshot()
+        val device = snapshot.find(deviceId) ?: return null
+        return deviceProviders[device.id]?.operations(device)
+    }
     fun isRunnable(deviceId: String): Boolean = snapshot().isRunnable(deviceId)
     fun install(deviceId: String, app: java.nio.file.Path): DeviceOperationResult =
         execute(deviceId, DeviceCapability.INSTALL_APP) { operations, device -> operations.install(device.id, app) }
