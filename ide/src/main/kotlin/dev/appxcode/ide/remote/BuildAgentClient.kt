@@ -189,6 +189,8 @@ class BuildAgentClient(
 
     override fun close() {
         cancelAll()
+        states.clear()
+        requests.clear()
         executor.shutdownNow()
     }
 
