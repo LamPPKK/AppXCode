@@ -11,6 +11,10 @@ interface BuildArtifactTransport {
     fun download(request: BuildAgentArtifactRequest, destination: java.nio.file.Path): BuildAgentResponse
 }
 
+interface BuildAgentLogTransport {
+    fun logs(requestId: String): Sequence<BuildAgentLogEvent>
+}
+
 class BuildAgentClient(
     private val transport: BuildAgentTransport,
     private val retryPolicy: RetryPolicy = RetryPolicy(),
@@ -144,6 +148,21 @@ class BuildAgentClient(
             !java.nio.file.Files.isRegularFile(file) || !metadata.matches(java.nio.file.Files.readAllBytes(file))
         }
         return if (invalid.isEmpty()) response else BuildAgentResponse(requestId = request.requestId, accepted = false, errorCode = BuildAgentErrorCode.INVALID_REQUEST, message = "artifact verification failed: ${invalid.joinToString()}")
+    }
+
+    fun streamLogs(requestId: String, onEvent: (BuildAgentLogEvent) -> Unit): Boolean {
+        require(requestId.isNotBlank()) { "requestId must not be blank" }
+        val logTransport = transport as? BuildAgentLogTransport ?: return false
+        return runCatching {
+            var previousSequence = -1L
+            logTransport.logs(requestId).forEach { event ->
+                require(event.requestId == requestId) { "log event request id mismatch" }
+                require(event.sequence > previousSequence) { "log event sequence must increase" }
+                previousSequence = event.sequence
+                onEvent(event)
+            }
+            true
+        }.getOrDefault(false)
     }
 
     fun forget(requestId: String): Boolean = states.remove(requestId) != null
