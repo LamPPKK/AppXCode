@@ -92,14 +92,14 @@ class LspSwiftLanguageService(
         ) ?: return null
         val edits = RENAME_EDIT.findAll(response).mapNotNull { match ->
             val target = runCatching { Path.of(URI(unescape(match.groupValues[1]))).toAbsolutePath().normalize() }.getOrNull() ?: return@mapNotNull null
-            val startLine = match.groupValues[3].toIntOrNull() ?: return@mapNotNull null
-            val startColumn = match.groupValues[4].toIntOrNull() ?: return@mapNotNull null
-            val endLine = match.groupValues[5].toIntOrNull() ?: return@mapNotNull null
-            val endColumn = match.groupValues[6].toIntOrNull() ?: return@mapNotNull null
+            val startLine = match.groupValues[2].toIntOrNull() ?: return@mapNotNull null
+            val startColumn = match.groupValues[3].toIntOrNull() ?: return@mapNotNull null
+            val endLine = match.groupValues[4].toIntOrNull() ?: return@mapNotNull null
+            val endColumn = match.groupValues[5].toIntOrNull() ?: return@mapNotNull null
             val text = runCatching { Files.readString(target) }.getOrNull() ?: return@mapNotNull null
             val start = offsetAt(text, startLine, startColumn) ?: return@mapNotNull null
             val end = offsetAt(text, endLine, endColumn) ?: return@mapNotNull null
-            TextEdit(target, start, end, unescape(match.groupValues[7]))
+            TextEdit(target, start, end, unescape(match.groupValues[6]))
         }.toList()
         val symbol = runCatching { Files.readLines(file)[line - 1].substring(0, column).takeLastWhile { it.isLetterOrDigit() || it == '_' } }.getOrDefault("")
         return RenamePreview(symbol, replacement, edits)
@@ -193,7 +193,7 @@ class LspSwiftLanguageService(
         val LOCATION = Regex("\\\"uri\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"[^{}]*?\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)")
         val DIAGNOSTIC_URI = Regex("\\\"uri\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
         val DIAGNOSTIC = Regex("\\\"range\\\"\\s*:\\s*\\{\\s*\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"severity\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"message\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
-        val RENAME_EDIT = Regex("\\\"(file|uri)\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"[\\s\\S]*?\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"end\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"newText\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
+        val RENAME_EDIT = Regex("\\\"((?:[A-Za-z][A-Za-z0-9+.-]*://|/)(?:\\\\.|[^\\\"])*)\\\"\\s*:\\s*\\[[\\s\\S]*?\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"end\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"newText\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
         fun json(value: String): String = LspProcessManager.jsonString(value)
         fun unescape(value: String): String = value.replace("\\\"", "\"").replace("\\\\", "\\")
     }
