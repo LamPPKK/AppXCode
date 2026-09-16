@@ -81,6 +81,7 @@ import dev.appxcode.ide.device.DeviceRegistry
 import dev.appxcode.ide.device.AppleDevice
 import dev.appxcode.ide.device.DeviceRegistrySnapshot
 import dev.appxcode.ide.device.DeviceProvider
+import dev.appxcode.ide.device.DeviceOperationResult
 import dev.appxcode.ide.project.XcodeProjectModel
 import dev.appxcode.ide.project.XcodeBuildConfiguration
 @Service(Service.Level.PROJECT)
@@ -132,6 +133,10 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun findDevice(deviceId: String): AppleDevice? = devices.find(deviceId)
     fun preferredDevice(): AppleDevice? = devices.preferred()
     fun selectDevice(deviceId: String? = null): AppleDevice? = devices.select(deviceId)
+    fun installOnDevice(deviceId: String, app: Path): DeviceOperationResult = devices.install(deviceId, app)
+    fun launchOnDevice(deviceId: String, bundleId: String): DeviceOperationResult = devices.launch(deviceId, bundleId)
+    fun deviceLogs(deviceId: String, bundleId: String? = null): Sequence<String> = devices.logs(deviceId, bundleId)
+    fun deviceScreenshot(deviceId: String, destination: Path): DeviceOperationResult = devices.screenshot(deviceId, destination)
     fun registerDeviceProvider(provider: DeviceProvider) = devices.register(provider)
     fun unregisterDeviceProvider(providerId: String) = devices.unregister(providerId)
     fun dependencies(root: Path): List<DependencyPin> = DependencyModel.read(root)
