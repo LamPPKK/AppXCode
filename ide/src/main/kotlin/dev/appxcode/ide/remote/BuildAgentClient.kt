@@ -128,6 +128,24 @@ class BuildAgentClient(
     fun downloadArtifacts(request: BuildAgentArtifactRequest, destination: java.nio.file.Path): BuildAgentResponse =
         downloadArtifact(request.normalized(), destination)
 
+    fun downloadAndVerifyArtifacts(
+        request: BuildAgentArtifactRequest,
+        destination: java.nio.file.Path,
+        expected: Collection<BuildAgentArtifact>,
+    ): BuildAgentResponse {
+        val expectedByReference = expected.associateBy { it.reference }
+        val missingMetadata = request.references.filter { it !in expectedByReference }
+        if (missingMetadata.isNotEmpty()) return BuildAgentResponse(requestId = request.requestId, accepted = false, errorCode = BuildAgentErrorCode.INVALID_REQUEST, message = "missing artifact metadata: ${missingMetadata.joinToString()}")
+        val response = downloadArtifacts(request, destination)
+        if (!response.isSuccessful) return response
+        val invalid = request.references.filter { reference ->
+            val metadata = expectedByReference.getValue(reference)
+            val file = destination.resolve(java.nio.file.Path.of(reference).fileName.toString())
+            !java.nio.file.Files.isRegularFile(file) || !metadata.matches(java.nio.file.Files.readAllBytes(file))
+        }
+        return if (invalid.isEmpty()) response else BuildAgentResponse(requestId = request.requestId, accepted = false, errorCode = BuildAgentErrorCode.INVALID_REQUEST, message = "artifact verification failed: ${invalid.joinToString()}")
+    }
+
     fun forget(requestId: String): Boolean = states.remove(requestId) != null
 
     fun forgetCompleted(): Int {
