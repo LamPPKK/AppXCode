@@ -37,7 +37,7 @@ object PluginCompatibility {
         return 0
     }
 
-    private fun parseBuild(value: String): List<Int>? = value.trim().split('.').takeIf { it.isNotEmpty() }
+    private fun parseBuild(value: String): List<Int>? = value.trim().removeSuffix(".*").split('.').takeIf { it.isNotEmpty() }
         ?.map { it.toIntOrNull() ?: return null }
         ?.dropLastWhile { it == 0 }
 }
