@@ -55,6 +55,7 @@ import dev.appxcode.ide.language.SwiftDiagnostic
 import dev.appxcode.ide.language.SwiftDocumentPosition
 import dev.appxcode.ide.language.SwiftDocumentation
 import dev.appxcode.ide.language.SwiftHighlightSpan
+import dev.appxcode.ide.language.SwiftCodeAction
 import dev.appxcode.ide.language.LspSwiftLanguageService
 import dev.appxcode.ide.language.SwiftFormatterService
 import dev.appxcode.ide.language.FormatResult
@@ -172,6 +173,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
         swiftLanguage?.onDiagnosticsChanged(listener) ?: AutoCloseable {}
     fun swiftSemanticHighlights(file: Path): List<SwiftHighlightSpan> =
         swiftLanguage?.semanticHighlights(file).orEmpty()
+    fun swiftCodeActions(file: Path, line: Int, column: Int): List<SwiftCodeAction> =
+        swiftLanguage?.codeActions(file, line, column).orEmpty()
     fun swiftDefinition(file: Path, line: Int, column: Int): List<SwiftDocumentPosition> = swiftLanguage?.definition(file, line, column).orEmpty()
     fun swiftLspReferences(file: Path, line: Int, column: Int, includeDeclaration: Boolean = true): List<SwiftDocumentPosition> =
         swiftLanguage?.references(file, line, column, includeDeclaration).orEmpty()

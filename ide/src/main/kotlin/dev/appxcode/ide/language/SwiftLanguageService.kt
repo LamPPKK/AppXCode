@@ -14,6 +14,7 @@ data class SwiftDocumentation(val contents: String, val range: SwiftDocumentRang
 data class SwiftDocumentRange(val startLine: Int, val startColumn: Int, val endLine: Int, val endColumn: Int)
 data class SwiftHighlightSpan(val line: Int, val startColumn: Int, val endColumn: Int, val kind: SwiftHighlightKind)
 enum class SwiftHighlightKind { KEYWORD, TYPE, FUNCTION, PROPERTY, STRING, COMMENT, NUMBER }
+data class SwiftCodeAction(val title: String, val kind: String? = null)
 enum class Severity { ERROR, WARNING, INFO }
 
 interface SwiftLanguageService {
@@ -24,6 +25,7 @@ interface SwiftLanguageService {
     fun documentation(file: Path, line: Int, column: Int): SwiftDocumentation? = null
     fun onDiagnosticsChanged(listener: (Path, List<SwiftDiagnostic>) -> Unit): AutoCloseable = AutoCloseable {}
     fun semanticHighlights(file: Path): List<SwiftHighlightSpan> = emptyList()
+    fun codeActions(file: Path, line: Int, column: Int): List<SwiftCodeAction> = emptyList()
     fun rename(file: Path, line: Int, column: Int, replacement: String): RenamePreview? = null
 }
 
@@ -114,6 +116,12 @@ class LspSwiftLanguageService(
         return AutoCloseable { diagnosticsListeners -= listener }
     }
     override fun semanticHighlights(file: Path): List<SwiftHighlightSpan> = SwiftSemanticHighlighter.highlight(file)
+    override fun codeActions(file: Path, line: Int, column: Int): List<SwiftCodeAction> {
+        if (!Files.isRegularFile(file) || line < 1 || column < 0) return emptyList()
+        syncDocument(file)
+        val response = processManager.request("textDocument/codeAction", "{\"textDocument\":{\"uri\":${json(file.toUri().toASCIIString())}},\"range\":{\"start\":{\"line\":${line - 1},\"character\":$column},\"end\":{\"line\":${line - 1},\"character\":$column}},\"context\":{\"diagnostics\":[]}}") ?: return emptyList()
+        return CODE_ACTION.findAll(response).map { SwiftCodeAction(unescape(it.groupValues[1]), it.groupValues.getOrNull(2)?.takeIf(String::isNotBlank)?.let(::unescape)) }.distinctBy(SwiftCodeAction::title).toList()
+    }
     override fun rename(file: Path, line: Int, column: Int, replacement: String): RenamePreview? {
         require(replacement.matches(IDENTIFIER)) { "replacement must be an identifier" }
         if (!Files.isRegularFile(file) || line < 1 || column < 0) return null
@@ -232,6 +240,7 @@ class LspSwiftLanguageService(
         val LOCATION_LINK = Regex("\\\"targetUri\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"[^{}]*?\\\"targetRange\\\"\\s*:\\s*\\{\\s*\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)")
         val HOVER_CONTENT = Regex("\\\"value\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
         val HOVER_CONTENTS = Regex("\\\"contents\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
+        val CODE_ACTION = Regex("\\\"title\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"(?:[\\s\\S]*?\\\"kind\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\")?")
         val HOVER_RANGE = Regex("\\\"range\\\"\\s*:\\s*\\{\\s*\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"end\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)")
         val DIAGNOSTIC_URI = Regex("\\\"uri\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
         val DIAGNOSTIC = Regex("\\\"range\\\"\\s*:\\s*\\{\\s*\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"severity\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"message\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
@@ -256,6 +265,7 @@ class UnavailableSwiftLanguageService(private val toolchain: AppleToolchain) : S
         }
     }
     override fun semanticHighlights(file: Path): List<SwiftHighlightSpan> = SwiftSemanticHighlighter.highlight(file)
+    override fun codeActions(file: Path, line: Int, column: Int): List<SwiftCodeAction> = emptyList()
 }
 
 object SwiftSemanticHighlighter {
