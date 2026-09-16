@@ -25,7 +25,12 @@ object PluginCompatibility {
         val number = parseBuild(build) ?: return false
         val min = since?.let(::parseBuild)
         val max = until?.let(::parseBuild)
-        return (min == null || compareBuild(number, min) >= 0) && (max == null || compareBuild(number, max) <= 0)
+        val maxOk = when {
+            max == null -> true
+            until?.endsWith(".*") == true -> number.take(max.size) == max
+            else -> compareBuild(number, max) <= 0
+        }
+        return (min == null || compareBuild(number, min) >= 0) && maxOk
     }
 
     private fun compareBuild(left: List<Int>, right: List<Int>): Int {
