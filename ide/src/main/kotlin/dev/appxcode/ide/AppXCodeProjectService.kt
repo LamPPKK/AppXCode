@@ -155,6 +155,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun swiftDefinition(file: Path, line: Int, column: Int): List<SwiftDocumentPosition> = swiftLanguage?.definition(file, line, column).orEmpty()
     fun swiftLspReferences(file: Path, line: Int, column: Int, includeDeclaration: Boolean = true): List<SwiftDocumentPosition> =
         swiftLanguage?.references(file, line, column, includeDeclaration).orEmpty()
+    fun swiftLspRename(file: Path, line: Int, column: Int, replacement: String): RenamePreview? =
+        swiftLanguage?.rename(file, line, column, replacement)
     fun swiftLanguageAlive(): Boolean = (swiftLanguage as? LspSwiftLanguageService)?.isAlive() ?: false
     fun restartSwiftLanguage(): Boolean = (swiftLanguage as? LspSwiftLanguageService)?.restart() ?: false
     fun formatSwift(file: Path): FormatResult = swiftFormatter.format(file)

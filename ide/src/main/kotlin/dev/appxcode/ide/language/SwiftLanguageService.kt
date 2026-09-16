@@ -16,6 +16,7 @@ interface SwiftLanguageService {
     fun diagnostics(files: List<Path>): List<SwiftDiagnostic>
     fun definition(file: Path, line: Int, column: Int): List<SwiftDocumentPosition> = emptyList()
     fun references(file: Path, line: Int, column: Int, includeDeclaration: Boolean = true): List<SwiftDocumentPosition> = emptyList()
+    fun rename(file: Path, line: Int, column: Int, replacement: String): RenamePreview? = null
 }
 
 object SwiftLanguageServiceFactory {
@@ -81,6 +82,28 @@ class LspSwiftLanguageService(
         locations("textDocument/definition", file, line, column, null)
     override fun references(file: Path, line: Int, column: Int, includeDeclaration: Boolean): List<SwiftDocumentPosition> =
         locations("textDocument/references", file, line, column, "\"context\":{\"includeDeclaration\":$includeDeclaration}")
+    override fun rename(file: Path, line: Int, column: Int, replacement: String): RenamePreview? {
+        require(replacement.matches(IDENTIFIER)) { "replacement must be an identifier" }
+        if (!Files.isRegularFile(file) || line < 1 || column < 0) return null
+        syncDocument(file)
+        val response = processManager.request(
+            "textDocument/rename",
+            "{\"textDocument\":{\"uri\":${json(file.toUri().toASCIIString())}},\"position\":{\"line\":${line - 1},\"character\":$column},\"newName\":${json(replacement)}}",
+        ) ?: return null
+        val edits = RENAME_EDIT.findAll(response).mapNotNull { match ->
+            val target = runCatching { Path.of(URI(unescape(match.groupValues[1]))).toAbsolutePath().normalize() }.getOrNull() ?: return@mapNotNull null
+            val startLine = match.groupValues[3].toIntOrNull() ?: return@mapNotNull null
+            val startColumn = match.groupValues[4].toIntOrNull() ?: return@mapNotNull null
+            val endLine = match.groupValues[5].toIntOrNull() ?: return@mapNotNull null
+            val endColumn = match.groupValues[6].toIntOrNull() ?: return@mapNotNull null
+            val text = runCatching { Files.readString(target) }.getOrNull() ?: return@mapNotNull null
+            val start = offsetAt(text, startLine, startColumn) ?: return@mapNotNull null
+            val end = offsetAt(text, endLine, endColumn) ?: return@mapNotNull null
+            TextEdit(target, start, end, unescape(match.groupValues[7]))
+        }.toList()
+        val symbol = runCatching { Files.readLines(file)[line - 1].substring(0, column).takeLastWhile { it.isLetterOrDigit() || it == '_' } }.getOrDefault("")
+        return RenamePreview(symbol, replacement, edits)
+    }
     fun closeDocument(file: Path) {
         val normalized = file.toAbsolutePath().normalize()
         openedDocuments.remove(normalized) ?: return
@@ -130,6 +153,19 @@ class LspSwiftLanguageService(
         diagnosticsByFile[file] = diagnostics
     }
 
+    private fun offsetAt(text: String, line: Int, column: Int): Int? {
+        if (line < 0 || column < 0) return null
+        var current = 0
+        var offset = 0
+        while (current < line) {
+            val next = text.indexOf('\n', offset)
+            if (next < 0) return null
+            offset = next + 1
+            current++
+        }
+        return (offset + column).takeIf { it <= text.length }
+    }
+
     private fun locations(method: String, file: Path, line: Int, column: Int, extra: String?): List<SwiftDocumentPosition> {
         if (!Files.isRegularFile(file) || line < 1 || column < 0) return emptyList()
         syncDocument(file)
@@ -157,6 +193,7 @@ class LspSwiftLanguageService(
         val LOCATION = Regex("\\\"uri\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"[^{}]*?\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)")
         val DIAGNOSTIC_URI = Regex("\\\"uri\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
         val DIAGNOSTIC = Regex("\\\"range\\\"\\s*:\\s*\\{\\s*\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"severity\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"message\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
+        val RENAME_EDIT = Regex("\\\"(file|uri)\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"[\\s\\S]*?\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"end\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"newText\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
         fun json(value: String): String = LspProcessManager.jsonString(value)
         fun unescape(value: String): String = value.replace("\\\"", "\"").replace("\\\\", "\\")
     }
