@@ -3,6 +3,7 @@ package dev.appxcode.ide.flutter
 import java.nio.file.Path
 
 data class FlutterCommandResult(val success: Boolean, val output: String, val exitCode: Int?)
+data class FlutterDevToolsEndpoint(val uri: java.net.URI, val kind: String = "devtools")
 
 class FlutterToolService(
     private val flutter: String = "flutter",
@@ -52,6 +53,12 @@ class FlutterToolService(
     }
     override fun close() = stopSession()
     fun sessionOutput(): String = synchronized(sessionOutput) { sessionOutput.toString() }
+    fun devToolsEndpoints(): List<FlutterDevToolsEndpoint> {
+        val output = sessionOutput()
+        return DEVTOOLS_URL.findAll(output).mapNotNull { match ->
+            runCatching { FlutterDevToolsEndpoint(java.net.URI(match.groupValues[1]), match.groupValues[2].ifBlank { "devtools" }) }.getOrNull()
+        }.distinctBy { it.uri }.toList()
+    }
     fun clearSessionOutput() = synchronized(sessionOutput) { sessionOutput.setLength(0) }
     @Synchronized fun sessionAlive(): Boolean = session?.isAlive == true
     @Synchronized fun sessionExitCode(): Int? = session?.takeIf { !it.isAlive }?.let { runCatching { it.exitValue() }.getOrNull() }
@@ -85,5 +92,9 @@ class FlutterToolService(
         if (!process.isAlive) { session = null; sessionRoot = null; return FlutterCommandResult(false, "Flutter session has exited", process.exitValue()) }
         return runCatching { val writer = process.outputStream.bufferedWriter(); writer.write(signal); writer.flush(); FlutterCommandResult(true, "Sent $signal", null) }
             .getOrElse { FlutterCommandResult(false, it.message ?: "Unable to send Flutter command", null) }
+    }
+
+    private companion object {
+        val DEVTOOLS_URL = Regex("(?i)(https?://[^\\s\\u001b]+)(?:\\s+\\((devtools|observatory|timeline)[^)]*\\))?")
     }
 }

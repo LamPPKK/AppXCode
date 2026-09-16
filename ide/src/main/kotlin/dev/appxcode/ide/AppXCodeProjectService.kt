@@ -37,6 +37,7 @@ import dev.appxcode.ide.dependency.ResolveResult
 import dev.appxcode.ide.flutter.FlutterProject
 import dev.appxcode.ide.flutter.FlutterProjectDetector
 import dev.appxcode.ide.flutter.FlutterCommandResult
+import dev.appxcode.ide.flutter.FlutterDevToolsEndpoint
 import dev.appxcode.ide.flutter.FlutterAppleProject
 import dev.appxcode.ide.flutter.FlutterAppleProjectResolver
 import dev.appxcode.ide.language.SwiftSymbol
@@ -215,6 +216,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun debuggerBreakpoints(sessionId: String): List<Breakpoint> = lldb.listBreakpoints(sessionId)
     fun clearDebuggerBreakpoint(sessionId: String, breakpoint: Breakpoint) = lldb.clearBreakpoint(sessionId, breakpoint)
     fun flutterService(): FlutterToolService = flutter
+    fun flutterDevToolsEndpoints(): List<FlutterDevToolsEndpoint> = flutter.devToolsEndpoints()
     fun putRunConfiguration(configuration: RunConfiguration) = runConfigurations.put(configuration)
     fun removeRunConfiguration(name: String) = runConfigurations.remove(name)
     fun runConfiguration(name: String): RunConfiguration? = runConfigurations.get(name)
