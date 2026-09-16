@@ -152,6 +152,10 @@ class GitService(private val command: (List<String>, Path) -> String? = { args, 
 
     fun hooks(root: Path): List<String> = run(root, listOf("git", "config", "--get-regexp", "^core.hooksPath$"))
         ?.lineSequence()?.map { it.substringAfterLast(' ').trim() }?.filter(String::isNotBlank)?.toList() ?: emptyList()
+    fun runHook(root: Path, hook: String): String? {
+        require(hook.matches(Regex("[A-Za-z][A-Za-z0-9-]*"))) { "invalid hook name" }
+        return run(root, listOf("git", "hook", "run", hook))
+    }
 
     private fun run(root: Path, args: List<String>): String? = runCatching { command(args, root) }.getOrNull()
     private fun updateIndex(root: Path, files: Collection<Path>, add: Boolean): Boolean {
