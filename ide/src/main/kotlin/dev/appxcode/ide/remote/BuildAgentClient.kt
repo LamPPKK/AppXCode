@@ -48,8 +48,8 @@ class BuildAgentClient(
 
     fun submitAsync(request: BuildAgentRequest): CompletableFuture<BuildAgentResponse> {
         val future = CompletableFuture<BuildAgentResponse>()
-        executor.submit {
-            if (future.isCancelled) return@submit
+        executor.execute {
+            if (future.isCancelled) return@execute
             runCatching { submit(request) }
                 .onSuccess { if (!future.isCancelled) future.complete(it) }
                 .onFailure { future.completeExceptionally(it) }
