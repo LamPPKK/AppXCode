@@ -20,10 +20,25 @@ class LldbDebuggerAdapter(private val command: (List<String>) -> String = { args
     fun setBreakpoint(sessionId: String, breakpoint: Breakpoint): Boolean {
         require(breakpoint.line > 0) { "Breakpoint line must be positive" }
         if (!processes.containsKey(sessionId)) return false
+        val process = processes[sessionId] ?: return false
+        val output = command(listOf(
+            "lldb", "-p", process.pid().toString(),
+            "-o", "breakpoint set --file ${lldbQuote(breakpoint.file.toString())} --line ${breakpoint.line}",
+            "-o", "detach", "-o", "quit",
+        ))
+        if (output.contains("error:", ignoreCase = true)) return false
         breakpoints.computeIfAbsent(sessionId) { ConcurrentHashMap.newKeySet() }.add(breakpoint)
         return true
     }
-    fun clearBreakpoint(sessionId: String, breakpoint: Breakpoint) { breakpoints[sessionId]?.remove(breakpoint) }
+    fun clearBreakpoint(sessionId: String, breakpoint: Breakpoint) {
+        val process = processes[sessionId]
+        if (process != null) command(listOf(
+            "lldb", "-p", process.pid().toString(),
+            "-o", "breakpoint delete --file ${lldbQuote(breakpoint.file.toString())} --line ${breakpoint.line}",
+            "-o", "detach", "-o", "quit",
+        ))
+        breakpoints[sessionId]?.remove(breakpoint)
+    }
     fun listBreakpoints(sessionId: String): List<Breakpoint> = breakpoints[sessionId]?.toList()?.sortedWith(compareBy({ it.file.toString() }, { it.line })) ?: emptyList()
     fun clearBreakpoints(sessionId: String) { breakpoints.remove(sessionId) }
     override fun pause(sessionId: String) { processes[sessionId]?.let { command(listOf("kill", "-STOP", it.pid().toString())) } }
@@ -42,4 +57,6 @@ class LldbDebuggerAdapter(private val command: (List<String>) -> String = { args
             DebugVariable(match.groupValues[1], match.groupValues[2])
         }.toList()
     } ?: emptyList()
+
+    private fun lldbQuote(value: String): String = "'" + value.replace("'", "'\\''") + "'"
 }
