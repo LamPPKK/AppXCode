@@ -12,6 +12,8 @@ data class SwiftDiagnostic(val file: Path, val line: Int, val column: Int, val m
 data class SwiftDocumentPosition(val file: Path, val line: Int, val column: Int)
 data class SwiftDocumentation(val contents: String, val range: SwiftDocumentRange? = null)
 data class SwiftDocumentRange(val startLine: Int, val startColumn: Int, val endLine: Int, val endColumn: Int)
+data class SwiftHighlightSpan(val line: Int, val startColumn: Int, val endColumn: Int, val kind: SwiftHighlightKind)
+enum class SwiftHighlightKind { KEYWORD, TYPE, FUNCTION, PROPERTY, STRING, COMMENT, NUMBER }
 enum class Severity { ERROR, WARNING, INFO }
 
 interface SwiftLanguageService {
@@ -21,6 +23,7 @@ interface SwiftLanguageService {
     fun references(file: Path, line: Int, column: Int, includeDeclaration: Boolean = true): List<SwiftDocumentPosition> = emptyList()
     fun documentation(file: Path, line: Int, column: Int): SwiftDocumentation? = null
     fun onDiagnosticsChanged(listener: (Path, List<SwiftDiagnostic>) -> Unit): AutoCloseable = AutoCloseable {}
+    fun semanticHighlights(file: Path): List<SwiftHighlightSpan> = emptyList()
     fun rename(file: Path, line: Int, column: Int, replacement: String): RenamePreview? = null
 }
 
@@ -110,6 +113,7 @@ class LspSwiftLanguageService(
         diagnosticsListeners += listener
         return AutoCloseable { diagnosticsListeners -= listener }
     }
+    override fun semanticHighlights(file: Path): List<SwiftHighlightSpan> = SwiftSemanticHighlighter.highlight(file)
     override fun rename(file: Path, line: Int, column: Int, replacement: String): RenamePreview? {
         require(replacement.matches(IDENTIFIER)) { "replacement must be an identifier" }
         if (!Files.isRegularFile(file) || line < 1 || column < 0) return null
@@ -251,4 +255,27 @@ class UnavailableSwiftLanguageService(private val toolchain: AppleToolchain) : S
             if (balance != 0) add(SwiftDiagnostic(file, lines.size, 1, "Unbalanced braces", Severity.ERROR))
         }
     }
+    override fun semanticHighlights(file: Path): List<SwiftHighlightSpan> = SwiftSemanticHighlighter.highlight(file)
+}
+
+object SwiftSemanticHighlighter {
+    private val TOKEN = Regex("//.*|\"(?:\\\\.|[^\"])*\"|\\b(?:class|struct|enum|protocol|extension|func|var|let|if|else|for|while|guard|return|import|in|where|switch|case|do|catch|throws|async|await|actor|deinit|init)\\b|\\b\\d+(?:\\.\\d+)?\\b|\\b[A-Z][A-Za-z0-9_]*\\b")
+    fun highlight(file: Path): List<SwiftHighlightSpan> {
+        if (!Files.isRegularFile(file) || !file.toString().endsWith(".swift")) return emptyList()
+        return runCatching { Files.readAllLines(file) }.getOrDefault(emptyList()).flatMapIndexed { index, text ->
+            TOKEN.findAll(text).map { match ->
+                val value = match.value
+                val kind = when {
+                    value.startsWith("//") -> SwiftHighlightKind.COMMENT
+                    value.startsWith("\"") -> SwiftHighlightKind.STRING
+                    value.firstOrNull()?.isDigit() == true -> SwiftHighlightKind.NUMBER
+                    value in KEYWORDS -> if (value == "func") SwiftHighlightKind.FUNCTION else SwiftHighlightKind.KEYWORD
+                    value.firstOrNull()?.isUpperCase() == true -> SwiftHighlightKind.TYPE
+                    else -> SwiftHighlightKind.PROPERTY
+                }
+                SwiftHighlightSpan(index + 1, match.range.first, match.range.last + 1, kind)
+            }.toList()
+        }
+    }
+    private val KEYWORDS = setOf("class", "struct", "enum", "protocol", "extension", "func", "var", "let", "if", "else", "for", "while", "guard", "return", "import", "in", "where", "switch", "case", "do", "catch", "throws", "async", "await", "actor", "deinit", "init")
 }
