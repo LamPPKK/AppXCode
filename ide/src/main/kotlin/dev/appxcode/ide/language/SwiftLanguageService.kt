@@ -51,7 +51,11 @@ class LspSwiftLanguageService(
         }
     }
     fun isAlive(): Boolean = processManager.isAlive()
-    fun restart(): Boolean = processManager.restart() && processManager.initialize(workspace.toUri().toASCIIString())
+    fun restart(): Boolean {
+        openedDocuments.clear()
+        diagnosticsByFile.clear()
+        return processManager.restart() && processManager.initialize(workspace.toUri().toASCIIString())
+    }
     override fun complete(file: Path, line: Int, column: Int): List<SwiftCompletion> {
         if (!java.nio.file.Files.isRegularFile(file) || line < 1 || column < 0) return emptyList()
         syncDocument(file)
