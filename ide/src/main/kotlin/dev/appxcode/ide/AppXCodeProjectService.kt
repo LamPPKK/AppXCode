@@ -13,6 +13,9 @@ import dev.appxcode.ide.project.ProjectSnapshot
 import dev.appxcode.ide.project.ProjectSnapshotLoader
 import dev.appxcode.ide.debug.DebugSessionRegistry
 import dev.appxcode.ide.debug.DebugSessionState
+import dev.appxcode.ide.debug.LldbDebuggerAdapter
+import dev.appxcode.ide.debug.Breakpoint
+import dev.appxcode.ide.debug.DebugVariable
 import dev.appxcode.ide.flutter.FlutterToolService
 import dev.appxcode.ide.git.GitBranch
 import dev.appxcode.ide.git.GitService
@@ -89,6 +92,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     private val git = GitService()
     private val dependencyResolver = DependencyResolver()
     private val debugSessions = DebugSessionRegistry()
+    private val lldb = LldbDebuggerAdapter()
     private val flutter = FlutterToolService()
     private val runConfigurations = RunConfigurationRegistry()
     private val devices: DeviceRegistry by lazy {
@@ -201,6 +205,15 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun updateDebugSession(sessionId: String, state: DebugSessionState) = debugSessions.update(sessionId, state)
     fun debugSessionState(sessionId: String): DebugSessionState? = debugSessions.state(sessionId)
     fun debugSessions(): Map<String, DebugSessionState> = debugSessions.all()
+    fun launchDebugger(executable: Path, arguments: List<String> = emptyList()): String = lldb.launch(executable, arguments)
+    fun pauseDebugger(sessionId: String) = lldb.pause(sessionId)
+    fun resumeDebugger(sessionId: String) = lldb.resume(sessionId)
+    fun terminateDebugger(sessionId: String) = lldb.terminate(sessionId)
+    fun debuggerStack(sessionId: String): List<String> = lldb.stack(sessionId)
+    fun debuggerVariables(sessionId: String): List<DebugVariable> = lldb.variables(sessionId)
+    fun setDebuggerBreakpoint(sessionId: String, breakpoint: Breakpoint): Boolean = lldb.setBreakpoint(sessionId, breakpoint)
+    fun debuggerBreakpoints(sessionId: String): List<Breakpoint> = lldb.listBreakpoints(sessionId)
+    fun clearDebuggerBreakpoint(sessionId: String, breakpoint: Breakpoint) = lldb.clearBreakpoint(sessionId, breakpoint)
     fun flutterService(): FlutterToolService = flutter
     fun putRunConfiguration(configuration: RunConfiguration) = runConfigurations.put(configuration)
     fun removeRunConfiguration(name: String) = runConfigurations.remove(name)
