@@ -1,6 +1,7 @@
 package dev.appxcode.ide.device
 
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.Executors
 
 enum class DeviceKind { SIMULATOR, PHYSICAL, VPHONE }
 enum class DeviceState { AVAILABLE, BOOTING, OFFLINE, UNKNOWN }
@@ -18,6 +19,9 @@ class DeviceRegistry : AutoCloseable {
     private val providers = CopyOnWriteArrayList<DeviceProvider>()
     private val listeners = CopyOnWriteArrayList<(List<AppleDevice>) -> Unit>()
     private val snapshotListeners = CopyOnWriteArrayList<(DeviceRegistrySnapshot) -> Unit>()
+    private val refreshExecutor = Executors.newSingleThreadExecutor { runnable ->
+        Thread(runnable, "appxcode-device-refresh").apply { isDaemon = true }
+    }
     @Volatile private var providerErrors: Map<String, String> = emptyMap()
     @Volatile private var deviceProviders: Map<String, DeviceProvider> = emptyMap()
     @Volatile private var closed = false
@@ -34,6 +38,14 @@ class DeviceRegistry : AutoCloseable {
     fun unregister(providerId: String) { if (providers.removeIf { it.id == providerId }) { providerErrors = providerErrors - providerId; notifyListeners() } }
     fun clear() { if (providers.isNotEmpty()) { providers.clear(); providerErrors = emptyMap(); notifyListeners() } }
     fun refresh() { if (!closed) notifyListeners() }
+    fun refreshAsync(onComplete: (DeviceRegistrySnapshot) -> Unit = {}) {
+        if (closed) return
+        refreshExecutor.execute {
+            if (closed) return@execute
+            val result = refreshSnapshot()
+            runCatching { onComplete(result) }
+        }
+    }
     fun refreshSnapshot(): DeviceRegistrySnapshot {
         if (!closed) notifyListeners()
         return snapshot()
@@ -147,6 +159,7 @@ class DeviceRegistry : AutoCloseable {
         deviceProviders = emptyMap()
         listeners.clear()
         snapshotListeners.clear()
+        refreshExecutor.shutdownNow()
     }
 }
 

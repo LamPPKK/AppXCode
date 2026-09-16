@@ -130,6 +130,7 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun appleToolchain(): AppleToolchain = AppleToolchainDetector.detect()
     fun deviceRegistry(): DeviceRegistry = devices
     fun discoverDevices(): List<AppleDevice> = devices.discover()
+    fun refreshDevicesAsync(onComplete: (DeviceRegistrySnapshot) -> Unit = {}) = devices.refreshAsync(onComplete)
     fun deviceProviderErrors(): Map<String, String> = devices.providerErrors()
     fun deviceSnapshot(): DeviceRegistrySnapshot = devices.snapshot()
     fun findDevice(deviceId: String): AppleDevice? = devices.find(deviceId)
