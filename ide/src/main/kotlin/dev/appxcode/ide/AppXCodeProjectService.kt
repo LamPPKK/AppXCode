@@ -167,6 +167,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
                 sourceLine.take(column.coerceIn(0, sourceLine.length)).takeLastWhile { it.isLetterOrDigit() || it == '_' }
             }.getOrDefault("")).map { SwiftCompletion(it.name, it.kind) }
     fun swiftDiagnostics(files: List<Path>): List<SwiftDiagnostic> = swiftLanguage?.diagnostics(files).orEmpty()
+    fun onSwiftDiagnosticsChanged(listener: (Path, List<SwiftDiagnostic>) -> Unit): AutoCloseable =
+        swiftLanguage?.onDiagnosticsChanged(listener) ?: AutoCloseable {}
     fun swiftDefinition(file: Path, line: Int, column: Int): List<SwiftDocumentPosition> = swiftLanguage?.definition(file, line, column).orEmpty()
     fun swiftLspReferences(file: Path, line: Int, column: Int, includeDeclaration: Boolean = true): List<SwiftDocumentPosition> =
         swiftLanguage?.references(file, line, column, includeDeclaration).orEmpty()

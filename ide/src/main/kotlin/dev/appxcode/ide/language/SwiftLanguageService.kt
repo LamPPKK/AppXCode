@@ -5,6 +5,7 @@ import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
 
 data class SwiftCompletion(val label: String, val detail: String? = null, val insertText: String = label)
 data class SwiftDiagnostic(val file: Path, val line: Int, val column: Int, val message: String, val severity: Severity)
@@ -19,6 +20,7 @@ interface SwiftLanguageService {
     fun definition(file: Path, line: Int, column: Int): List<SwiftDocumentPosition> = emptyList()
     fun references(file: Path, line: Int, column: Int, includeDeclaration: Boolean = true): List<SwiftDocumentPosition> = emptyList()
     fun documentation(file: Path, line: Int, column: Int): SwiftDocumentation? = null
+    fun onDiagnosticsChanged(listener: (Path, List<SwiftDiagnostic>) -> Unit): AutoCloseable = AutoCloseable {}
     fun rename(file: Path, line: Int, column: Int, replacement: String): RenamePreview? = null
 }
 
@@ -43,6 +45,7 @@ class LspSwiftLanguageService(
     private data class OpenDocument(var text: String, var version: Int)
     private val openedDocuments = mutableMapOf<Path, OpenDocument>()
     private val diagnosticsByFile = ConcurrentHashMap<Path, List<SwiftDiagnostic>>()
+    private val diagnosticsListeners = CopyOnWriteArrayList<(Path, List<SwiftDiagnostic>) -> Unit>()
     private val notificationSubscription: AutoCloseable
 
     init {
@@ -103,6 +106,10 @@ class LspSwiftLanguageService(
         }
         return SwiftDocumentation(contents, range)
     }
+    override fun onDiagnosticsChanged(listener: (Path, List<SwiftDiagnostic>) -> Unit): AutoCloseable {
+        diagnosticsListeners += listener
+        return AutoCloseable { diagnosticsListeners -= listener }
+    }
     override fun rename(file: Path, line: Int, column: Int, replacement: String): RenamePreview? {
         require(replacement.matches(IDENTIFIER)) { "replacement must be an identifier" }
         if (!Files.isRegularFile(file) || line < 1 || column < 0) return null
@@ -138,6 +145,7 @@ class LspSwiftLanguageService(
     override fun close() {
         openedDocuments.keys.toList().forEach(::closeDocument)
         runCatching { notificationSubscription.close() }
+        diagnosticsListeners.clear()
         processManager.close()
     }
 
@@ -172,6 +180,7 @@ class LspSwiftLanguageService(
             SwiftDiagnostic(file, line, column, unescape(match.groupValues[4]), severity)
         }.toList()
         diagnosticsByFile[file] = diagnostics
+        diagnosticsListeners.forEach { listener -> runCatching { listener(file, diagnostics) } }
     }
 
     private fun offsetAt(text: String, line: Int, column: Int): Int? {
