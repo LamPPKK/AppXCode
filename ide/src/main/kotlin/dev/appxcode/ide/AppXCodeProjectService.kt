@@ -49,6 +49,7 @@ import dev.appxcode.ide.language.SwiftLanguageServiceFactory
 import dev.appxcode.ide.language.SwiftCompletion
 import dev.appxcode.ide.language.SwiftDiagnostic
 import dev.appxcode.ide.language.SwiftDocumentPosition
+import dev.appxcode.ide.language.SwiftDocumentation
 import dev.appxcode.ide.language.LspSwiftLanguageService
 import dev.appxcode.ide.language.SwiftFormatterService
 import dev.appxcode.ide.language.FormatResult
@@ -157,6 +158,8 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
         swiftLanguage?.references(file, line, column, includeDeclaration).orEmpty()
     fun swiftLspRename(file: Path, line: Int, column: Int, replacement: String): RenamePreview? =
         swiftLanguage?.rename(file, line, column, replacement)
+    fun swiftDocumentation(file: Path, line: Int, column: Int): SwiftDocumentation? =
+        swiftLanguage?.documentation(file, line, column)
     fun swiftLanguageAlive(): Boolean = (swiftLanguage as? LspSwiftLanguageService)?.isAlive() ?: false
     fun restartSwiftLanguage(): Boolean = (swiftLanguage as? LspSwiftLanguageService)?.restart() ?: false
     fun formatSwift(file: Path): FormatResult = swiftFormatter.format(file)

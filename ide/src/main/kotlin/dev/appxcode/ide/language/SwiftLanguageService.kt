@@ -9,6 +9,8 @@ import java.util.concurrent.ConcurrentHashMap
 data class SwiftCompletion(val label: String, val detail: String? = null, val insertText: String = label)
 data class SwiftDiagnostic(val file: Path, val line: Int, val column: Int, val message: String, val severity: Severity)
 data class SwiftDocumentPosition(val file: Path, val line: Int, val column: Int)
+data class SwiftDocumentation(val contents: String, val range: SwiftDocumentRange? = null)
+data class SwiftDocumentRange(val startLine: Int, val startColumn: Int, val endLine: Int, val endColumn: Int)
 enum class Severity { ERROR, WARNING, INFO }
 
 interface SwiftLanguageService {
@@ -16,6 +18,7 @@ interface SwiftLanguageService {
     fun diagnostics(files: List<Path>): List<SwiftDiagnostic>
     fun definition(file: Path, line: Int, column: Int): List<SwiftDocumentPosition> = emptyList()
     fun references(file: Path, line: Int, column: Int, includeDeclaration: Boolean = true): List<SwiftDocumentPosition> = emptyList()
+    fun documentation(file: Path, line: Int, column: Int): SwiftDocumentation? = null
     fun rename(file: Path, line: Int, column: Int, replacement: String): RenamePreview? = null
 }
 
@@ -86,6 +89,20 @@ class LspSwiftLanguageService(
         locations("textDocument/definition", file, line, column, null)
     override fun references(file: Path, line: Int, column: Int, includeDeclaration: Boolean): List<SwiftDocumentPosition> =
         locations("textDocument/references", file, line, column, "\"context\":{\"includeDeclaration\":$includeDeclaration}")
+    override fun documentation(file: Path, line: Int, column: Int): SwiftDocumentation? {
+        if (!Files.isRegularFile(file) || line < 1 || column < 0) return null
+        syncDocument(file)
+        val response = processManager.request(
+            "textDocument/hover",
+            "{\"textDocument\":{\"uri\":${json(file.toUri().toASCIIString())}},\"position\":{\"line\":${line - 1},\"character\":$column}}",
+        ) ?: return null
+        val contents = (HOVER_CONTENT.find(response) ?: HOVER_CONTENTS.find(response))?.groupValues?.getOrNull(1)?.let(::unescape)?.trim().orEmpty()
+        if (contents.isEmpty()) return null
+        val range = HOVER_RANGE.find(response)?.let { match ->
+            SwiftDocumentRange(match.groupValues[1].toInt() + 1, match.groupValues[2].toInt(), match.groupValues[3].toInt() + 1, match.groupValues[4].toInt())
+        }
+        return SwiftDocumentation(contents, range)
+    }
     override fun rename(file: Path, line: Int, column: Int, replacement: String): RenamePreview? {
         require(replacement.matches(IDENTIFIER)) { "replacement must be an identifier" }
         if (!Files.isRegularFile(file) || line < 1 || column < 0) return null
@@ -200,6 +217,9 @@ class LspSwiftLanguageService(
         val COMPLETION = Regex("\\{[^{}]*\\\"label\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"(?:[^{}]*\\\"detail\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\")?[^{}]*}")
         val LOCATION = Regex("\\\"uri\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"[^{}]*?\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)")
         val LOCATION_LINK = Regex("\\\"targetUri\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"[^{}]*?\\\"targetRange\\\"\\s*:\\s*\\{\\s*\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)")
+        val HOVER_CONTENT = Regex("\\\"value\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
+        val HOVER_CONTENTS = Regex("\\\"contents\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
+        val HOVER_RANGE = Regex("\\\"range\\\"\\s*:\\s*\\{\\s*\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"end\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)")
         val DIAGNOSTIC_URI = Regex("\\\"uri\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
         val DIAGNOSTIC = Regex("\\\"range\\\"\\s*:\\s*\\{\\s*\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"severity\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"message\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
         val RENAME_EDIT = Regex("\\\"((?:[A-Za-z][A-Za-z0-9+.-]*://|/)(?:\\\\.|[^\\\"])*)\\\"\\s*:\\s*\\[[\\s\\S]*?\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"end\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"newText\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
