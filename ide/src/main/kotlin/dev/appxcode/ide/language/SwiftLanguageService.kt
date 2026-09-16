@@ -175,9 +175,13 @@ class LspSwiftLanguageService(
             "{\"textDocument\":{\"uri\":${json(file.toUri().toASCIIString())}},\"position\":{\"line\":${line - 1},\"character\":$column}$suffix}",
         ) ?: return emptyList()
         return LOCATION.findAll(response).mapNotNull { match ->
-            val path = runCatching { Path.of(URI(match.groupValues[1])) }.getOrNull() ?: return@mapNotNull null
+            val path = runCatching { Path.of(URI(unescape(match.groupValues[1]))).toAbsolutePath().normalize() }.getOrNull() ?: return@mapNotNull null
+            SwiftDocumentPosition(path, match.groupValues[2].toInt() + 1, match.groupValues[3].toInt())
+        }.plus(LOCATION_LINK.findAll(response).mapNotNull { match ->
+            val path = runCatching { Path.of(URI(unescape(match.groupValues[1]))).toAbsolutePath().normalize() }.getOrNull() ?: return@mapNotNull null
             SwiftDocumentPosition(path, match.groupValues[2].toInt() + 1, match.groupValues[3].toInt())
         }.toList()
+        ).distinct()
     }
 
     private fun parseCompletions(response: String?): List<SwiftCompletion> {
@@ -190,7 +194,8 @@ class LspSwiftLanguageService(
     private companion object {
         val TOKEN = Regex("[A-Za-z_][A-Za-z0-9_]*$")
         val COMPLETION = Regex("\\{[^{}]*\\\"label\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"(?:[^{}]*\\\"detail\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\")?[^{}]*}")
-        val LOCATION = Regex("\\\"uri\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"[^{}]*?\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)")
+        val LOCATION = Regex("\\\"uri\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"[^{}]*?\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)")
+        val LOCATION_LINK = Regex("\\\"targetUri\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"[^{}]*?\\\"targetRange\\\"\\s*:\\s*\\{\\s*\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)")
         val DIAGNOSTIC_URI = Regex("\\\"uri\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
         val DIAGNOSTIC = Regex("\\\"range\\\"\\s*:\\s*\\{\\s*\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"severity\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"message\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
         val RENAME_EDIT = Regex("\\\"((?:[A-Za-z][A-Za-z0-9+.-]*://|/)(?:\\\\.|[^\\\"])*)\\\"\\s*:\\s*\\[[\\s\\S]*?\\\"start\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"end\\\"\\s*:\\s*\\{\\s*\\\"line\\\"\\s*:\\s*(\\d+)\\s*,\\s*\\\"character\\\"\\s*:\\s*(\\d+)[\\s\\S]*?\\\"newText\\\"\\s*:\\s*\\\"((?:\\\\.|[^\\\"])*)\\\"")
