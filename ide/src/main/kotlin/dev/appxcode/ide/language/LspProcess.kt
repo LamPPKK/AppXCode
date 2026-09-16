@@ -70,7 +70,12 @@ class LspProcessManager(private val config: LspServerConfig) : AutoCloseable {
             if (!isAlive()) break
             Thread.sleep(5)
         }
-        return responses.remove(id)
+        return responses.remove(id) ?: run {
+            if (isAlive()) {
+                writeMessage("{\"jsonrpc\":\"2.0\",\"method\":\"\$/cancelRequest\",\"params\":{\"id\":$id}}")
+            }
+            null
+        }
     }
 
     @Synchronized
