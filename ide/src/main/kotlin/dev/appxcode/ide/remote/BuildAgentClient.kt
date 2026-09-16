@@ -1,6 +1,9 @@
 package dev.appxcode.ide.remote
 
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 interface BuildAgentTransport {
     fun submit(request: BuildAgentRequest): BuildAgentResponse
@@ -23,6 +26,9 @@ class BuildAgentClient(
 ) {
     private val states = ConcurrentHashMap<String, BuildAgentResponse>()
     private val requests = ConcurrentHashMap<String, BuildAgentRequest>()
+    private val executor: ExecutorService = Executors.newCachedThreadPool { runnable ->
+        Thread(runnable, "appxcode-build-agent").apply { isDaemon = true }
+    }
 
     fun submit(request: BuildAgentRequest): BuildAgentResponse {
         if (!request.isValid()) return BuildAgentResponse.rejected(request, BuildAgentErrorCode.INVALID_REQUEST, "invalid build agent request")
@@ -38,6 +44,20 @@ class BuildAgentClient(
         return runCatching { submitWithRetry(request) }.getOrElse {
             BuildAgentResponse.failed(request, BuildAgentErrorCode.TRANSPORT_UNAVAILABLE, it.message ?: "transport failure")
         }.also { states[request.requestId] = it }
+    }
+
+    fun submitAsync(request: BuildAgentRequest): CompletableFuture<BuildAgentResponse> {
+        val future = CompletableFuture<BuildAgentResponse>()
+        executor.submit {
+            if (future.isCancelled) return@submit
+            runCatching { submit(request) }
+                .onSuccess { if (!future.isCancelled) future.complete(it) }
+                .onFailure { future.completeExceptionally(it) }
+        }
+        future.whenComplete { _, _ ->
+            if (future.isCancelled && requests.containsKey(request.requestId)) runCatching { cancel(request.requestId) }
+        }
+        return future
     }
 
     private fun submitWithRetry(request: BuildAgentRequest): BuildAgentResponse {
@@ -166,6 +186,11 @@ class BuildAgentClient(
     }
 
     fun forget(requestId: String): Boolean = states.remove(requestId) != null
+
+    fun close() {
+        cancelAll()
+        executor.shutdownNow()
+    }
 
     fun forgetCompleted(): Int {
         val completed = states.entries.filter { it.value.isSuccessful || it.value.errorCode == BuildAgentErrorCode.CANCELLED }
