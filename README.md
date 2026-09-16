@@ -47,13 +47,7 @@ Apple Simulator and physical-device adapters, opt-in vphone support, Flutter
 project/run detection, Embedded Devices UI, and versioned remote build-agent
 contracts. Each slice is committed independently on `main`.
 
-The current development plan is:
-
-- [AppXCode development roadmap](plans/20260825012548-appxcode-development-roadmap/plan.md)
-- [Modern AppXCode experience workstream](plans/20260825012548-appxcode-development-roadmap/modern-appxcode-experience.md)
-- [IntelliJ plugin compatibility workstream](plans/20260825012548-appxcode-development-roadmap/intellij-plugin-compatibility.md)
-- [Flutter optimized profile](plans/20260825012548-appxcode-development-roadmap/flutter-optimized-profile.md)
-- [Embedded Devices and vPhone integration](plans/20260825012548-appxcode-development-roadmap/embedded-device-hub.md)
-
-Implementation should not begin until the Phase 0 decisions and acceptance gates
-in the roadmap have been reviewed.
+The current development plan is [AppXCode feature development plan](plans/20260907202352-feature-development-plan.md).
+It is the source of truth for the phased implementation, acceptance gates, and
+known platform constraints. Completed slices are committed independently on
+`main`; the implementation is progressing through the plan incrementally.
