@@ -2,6 +2,7 @@ package dev.appxcode.ide.device
 
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executors
+import java.util.concurrent.CompletableFuture
 
 enum class DeviceKind { SIMULATOR, PHYSICAL, VPHONE }
 enum class DeviceState { AVAILABLE, BOOTING, OFFLINE, UNKNOWN }
@@ -45,6 +46,15 @@ class DeviceRegistry : AutoCloseable {
             val result = refreshSnapshot()
             runCatching { onComplete(result) }
         }
+    }
+    fun refreshAsyncFuture(): CompletableFuture<DeviceRegistrySnapshot> {
+        val future = CompletableFuture<DeviceRegistrySnapshot>()
+        if (closed) { future.completeExceptionally(IllegalStateException("Device registry is closed")); return future }
+        refreshExecutor.execute {
+            if (closed) future.completeExceptionally(IllegalStateException("Device registry is closed"))
+            else runCatching { refreshSnapshot() }.onSuccess(future::complete).onFailure(future::completeExceptionally)
+        }
+        return future
     }
     fun refreshSnapshot(): DeviceRegistrySnapshot {
         if (!closed) notifyListeners()
