@@ -137,8 +137,12 @@ class AppXCodeProjectService(private val project: Project) : Disposable {
     fun dependencies(root: Path): List<DependencyPin> = DependencyModel.read(root)
     fun resolveSwiftPackages(root: Path, timeoutMillis: Long = 600_000): ResolveResult =
         dependencyResolver.resolveSwift(root, timeoutMillis = timeoutMillis)
+    fun resolveSwiftPackages(root: Path, update: Boolean, timeoutMillis: Long = 600_000, onOutput: (String) -> Unit = {}): ResolveResult =
+        dependencyResolver.resolveSwift(root, update = update, timeoutMillis = timeoutMillis, onOutput = onOutput)
     fun installCocoaPods(root: Path, timeoutMillis: Long = 600_000): ResolveResult =
         dependencyResolver.installPods(root, timeoutMillis = timeoutMillis)
+    fun installCocoaPods(root: Path, update: Boolean, timeoutMillis: Long = 600_000, onOutput: (String) -> Unit = {}): ResolveResult =
+        dependencyResolver.installPods(root, update = update, timeoutMillis = timeoutMillis, onOutput = onOutput)
     fun flutterProject(root: Path): FlutterProject? = FlutterProjectDetector.detect(root)
     fun discoverFlutterProjects(root: Path): List<FlutterProject> = FlutterProjectDetector.discover(root)
     fun flutterAppleProjects(project: FlutterProject): List<FlutterAppleProject> = FlutterAppleProjectResolver.resolve(project)
